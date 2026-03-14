@@ -136,7 +136,6 @@ export function TableManager({ activeDb }: { activeDb: string }) {
 
   return (
     <div className="space-y-6 animate-in fade-in duration-500">
-      {/* Header */}
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-3">
           <h1 className="text-2xl font-bold text-slate-900">Table Manager</h1>
@@ -162,7 +161,6 @@ export function TableManager({ activeDb }: { activeDb: string }) {
         </div>
       </div>
 
-      {/* Alert Bar */}
       <div className="bg-[#FFF4E5] border border-amber-100 rounded-xl p-3 flex items-center justify-between shadow-sm">
         <div className="flex items-center gap-3">
           <div className="h-2 w-2 rounded-full bg-amber-500" />
@@ -175,7 +173,6 @@ export function TableManager({ activeDb }: { activeDb: string }) {
         <X className="h-4 w-4 text-amber-400 cursor-pointer hover:text-amber-600" />
       </div>
 
-      {/* Summary Grid */}
       <div className="grid grid-cols-1 md:grid-cols-5 gap-4">
         {SUMMARY_CARDS.map((card, i) => (
           <Card key={i} className="bg-white border-none shadow-sm rounded-xl">
@@ -191,7 +188,6 @@ export function TableManager({ activeDb }: { activeDb: string }) {
         ))}
       </div>
 
-      {/* Tables Section */}
       <div className="space-y-4 pt-2">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-4">
@@ -236,7 +232,6 @@ export function TableManager({ activeDb }: { activeDb: string }) {
           </div>
         </div>
 
-        {/* Bulk Actions Bar */}
         {selectedTables.length > 0 && (
           <div className="flex items-center gap-3 p-2 px-4 bg-[#E8F0FE] border border-[#D2E3FC] rounded-xl animate-in slide-in-from-top-2">
             <span className="text-sm font-semibold text-[#1967D2] mr-2 whitespace-nowrap">
@@ -351,7 +346,7 @@ export function TableManager({ activeDb }: { activeDb: string }) {
                         className={cn(
                           "font-bold text-[9px] px-2 py-0.5 rounded border-none shadow-none",
                           table.statusVariant === "critical" && "bg-rose-50 text-rose-500",
-                          table.statusVariant === "warning" && "bg-amber-50 text-amber-500",
+                          table.statusVariant === "warning" && "bg-amber-50 text-amber-600",
                           table.statusVariant === "healthy" && "bg-emerald-50 text-emerald-500"
                         )}
                       >
