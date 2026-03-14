@@ -11,7 +11,10 @@ import {
   AlertCircle,
   Table as TableIcon,
   Layers,
-  CheckCircle2
+  CheckCircle2,
+  RefreshCw,
+  Zap,
+  Play
 } from "lucide-react"
 import { Card, CardContent } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
@@ -71,6 +74,7 @@ export function TableManager({ activeDb }: { activeDb: string }) {
   const [isGroupModalOpen, setIsGroupModalOpen] = React.useState(false)
   const [groupName, setGroupName] = React.useState("")
   const [groups, setGroups] = React.useState<{name: string, tables: string[]}[]>([])
+  const [isExecuting, setIsExecuting] = React.useState(false)
 
   const filteredTables = React.useMemo(() => {
     return MOCK_TABLES.filter(table => {
@@ -132,6 +136,21 @@ export function TableManager({ activeDb }: { activeDb: string }) {
       description: `Successfully added ${selectedTables.length} tables to "${groupName}".`,
     })
     setSelectedTables([])
+  }
+
+  const runBulkAction = (action: string) => {
+    setIsExecuting(true)
+    const tableCount = selectedTables.length
+    
+    // Simulate complex maintenance task
+    setTimeout(() => {
+      setIsExecuting(false)
+      toast({
+        title: `${action} Complete`,
+        description: `Successfully processed ${tableCount} tables in ${activeDb}. Optimization complete.`,
+      })
+      setSelectedTables([])
+    }, 2000)
   }
 
   return (
@@ -240,27 +259,37 @@ export function TableManager({ activeDb }: { activeDb: string }) {
             <div className="flex items-center gap-2 overflow-x-auto no-scrollbar">
               <Button 
                 onClick={() => setIsGroupModalOpen(true)}
+                disabled={isExecuting}
                 variant="outline" 
                 size="sm" 
                 className="h-8 text-xs rounded-full bg-white border-white text-[#1967D2] hover:bg-white hover:text-[#185ABC] shadow-sm font-semibold px-4 whitespace-nowrap"
               >
+                <Plus className="h-3 w-3 mr-1" />
                 Create Group
               </Button>
               <Button 
+                onClick={() => runBulkAction("Index Rebuild")}
+                disabled={isExecuting}
                 variant="outline" 
                 size="sm" 
                 className="h-8 text-xs rounded-full bg-white border-white text-[#1967D2] hover:bg-white hover:text-[#185ABC] shadow-sm font-semibold px-4 whitespace-nowrap"
               >
+                {isExecuting ? <RefreshCw className="h-3 w-3 animate-spin mr-1" /> : <Zap className="h-3 w-3 mr-1" />}
                 Rebuild Indexes
               </Button>
               <Button 
+                onClick={() => runBulkAction("Stats Update")}
+                disabled={isExecuting}
                 variant="outline" 
                 size="sm" 
                 className="h-8 text-xs rounded-full bg-white border-white text-[#1967D2] hover:bg-white hover:text-[#185ABC] shadow-sm font-semibold px-4 whitespace-nowrap"
               >
+                <RefreshCw className={cn("h-3 w-3 mr-1", isExecuting && "animate-spin")} />
                 Update Stats
               </Button>
               <Button 
+                onClick={() => runBulkAction("Archive Flagging")}
+                disabled={isExecuting}
                 variant="outline" 
                 size="sm" 
                 className="h-8 text-xs rounded-full bg-white border-white text-[#1967D2] hover:bg-white hover:text-[#185ABC] shadow-sm font-semibold px-4 whitespace-nowrap"
