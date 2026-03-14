@@ -21,6 +21,7 @@ import {
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { cn } from "@/lib/utils"
+import { ConnectDatabaseModal } from "@/components/connect-database-modal"
 
 const summaryStats = [
   {
@@ -101,6 +102,8 @@ const databaseInstances = [
 ]
 
 export function DashboardOverview() {
+  const [isModalOpen, setIsModalOpen] = React.useState(false)
+
   return (
     <div className="space-y-6 animate-in fade-in duration-500">
       {/* Header Area */}
@@ -118,7 +121,11 @@ export function DashboardOverview() {
           <Button variant="outline" size="sm" className="h-8 text-xs border-slate-300 rounded-full px-4">
             Run Scan
           </Button>
-          <Button size="sm" className="h-8 bg-[#1E8E3E] hover:bg-[#1A7F37] gap-1.5 text-xs rounded-lg px-4">
+          <Button 
+            onClick={() => setIsModalOpen(true)}
+            size="sm" 
+            className="h-8 bg-[#1E8E3E] hover:bg-[#1A7F37] gap-1.5 text-xs rounded-lg px-4"
+          >
             + Connect DB
           </Button>
         </div>
@@ -143,7 +150,12 @@ export function DashboardOverview() {
       <div className="space-y-4 pt-2">
         <div className="flex items-center justify-between">
           <h2 className="text-sm font-bold text-slate-900">Connected SQL Server databases</h2>
-          <Button variant="link" size="sm" className="h-8 bg-[#1E8E3E] hover:bg-[#1A7F37] text-white no-underline px-4 rounded-lg text-xs font-bold gap-1.5 shadow-sm">
+          <Button 
+            onClick={() => setIsModalOpen(true)}
+            variant="link" 
+            size="sm" 
+            className="h-8 bg-[#1E8E3E] hover:bg-[#1A7F37] text-white no-underline px-4 rounded-lg text-xs font-bold gap-1.5 shadow-sm"
+          >
             + Connect DB
           </Button>
         </div>
@@ -200,6 +212,11 @@ export function DashboardOverview() {
           ))}
         </div>
       </div>
+
+      <ConnectDatabaseModal 
+        isOpen={isModalOpen} 
+        onClose={() => setIsModalOpen(false)} 
+      />
     </div>
   )
 }
