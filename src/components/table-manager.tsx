@@ -32,6 +32,7 @@ import {
   SelectValue 
 } from "@/components/ui/select"
 import { cn } from "@/lib/utils"
+import { Checkbox } from "@/components/ui/checkbox"
 
 const MOCK_TABLES = [
   { name: "invoices", schema: "sys.tables", status: "Critical", statusVariant: "critical", rowCount: "4.2M", size: "245 GB", fragmentation: 68, lastRead: "2h ago", deadlocks: 12, slowQ: 58 },
@@ -53,6 +54,57 @@ const SUMMARY_CARDS = [
 
 export function TableManager({ activeDb }: { activeDb: string }) {
   const [search, setSearch] = React.useState("")
+  const [statusFilter, setStatusFilter] = React.useState("all")
+  const [selectedTables, setSelectedTables] = React.useState<string[]>([])
+
+  const filteredTables = React.useMemo(() => {
+    return MOCK_TABLES.filter(table => {
+      const matchesSearch = table.name.toLowerCase().includes(search.toLowerCase())
+      const matchesStatus = statusFilter === "all" || table.status.toLowerCase() === statusFilter.toLowerCase()
+      return matchesSearch && matchesStatus
+    })
+  }, [search, statusFilter])
+
+  const isAllSelected = filteredTables.length > 0 && selectedTables.length === filteredTables.length
+
+  const handleToggleAll = () => {
+    if (isAllSelected) {
+      setSelectedTables([])
+    } else {
+      setSelectedTables(filteredTables.map(t => t.name))
+    }
+  }
+
+  const handleToggleOne = (name: string) => {
+    setSelectedTables(prev => 
+      prev.includes(name) ? prev.filter(n => n !== name) : [...prev, name]
+    )
+  }
+
+  const handleExport = () => {
+    const headers = ["Table Name", "Schema", "Status", "Row Count", "Size", "Fragmentation (%)", "Last Read", "Deadlocks", "Slow Q"]
+    const rows = filteredTables.map(t => [
+      t.name,
+      t.schema,
+      t.status,
+      t.rowCount,
+      t.size,
+      t.fragmentation,
+      t.lastRead,
+      t.deadlocks,
+      t.slowQ
+    ])
+
+    const csvContent = [headers, ...rows].map(e => e.join(",")).join("\n")
+    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' })
+    const url = URL.createObjectURL(blob)
+    const link = document.createElement("a")
+    link.setAttribute("href", url)
+    link.setAttribute("download", `${activeDb}_tables_export.csv`)
+    document.body.appendChild(link)
+    link.click()
+    document.body.removeChild(link)
+  }
 
   return (
     <div className="space-y-6 animate-in fade-in duration-500">
@@ -123,7 +175,7 @@ export function TableManager({ activeDb }: { activeDb: string }) {
                 onChange={(e) => setSearch(e.target.value)}
               />
             </div>
-            <Select defaultValue="all">
+            <Select value={statusFilter} onValueChange={setStatusFilter}>
               <SelectTrigger className="h-8 text-xs w-28 bg-white border-slate-200 rounded-lg shadow-none">
                 <SelectValue placeholder="Status" />
               </SelectTrigger>
@@ -134,7 +186,13 @@ export function TableManager({ activeDb }: { activeDb: string }) {
                 <SelectItem value="healthy">Healthy</SelectItem>
               </SelectContent>
             </Select>
-            <Button variant="outline" size="sm" className="h-8 text-xs bg-white rounded-lg">
+            <Button 
+              variant="outline" 
+              size="sm" 
+              className="h-8 text-xs bg-white rounded-lg gap-1.5"
+              onClick={handleExport}
+            >
+              <Download className="h-3 w-3" />
               Export
             </Button>
           </div>
@@ -144,7 +202,13 @@ export function TableManager({ activeDb }: { activeDb: string }) {
           <Table>
             <TableHeader className="bg-slate-50/50">
               <TableRow className="hover:bg-transparent">
-                <TableHead className="w-12 text-center"><Input type="checkbox" className="h-3 w-3" /></TableHead>
+                <TableHead className="w-12 text-center">
+                  <Checkbox 
+                    checked={isAllSelected}
+                    onCheckedChange={handleToggleAll}
+                    className="h-4 w-4"
+                  />
+                </TableHead>
                 <TableHead className="text-[10px] font-bold uppercase text-slate-400">
                   <div className="flex flex-col">
                     Table name <span className="text-[8px] font-mono opacity-50">sys.tables</span>
@@ -173,9 +237,21 @@ export function TableManager({ activeDb }: { activeDb: string }) {
               </TableRow>
             </TableHeader>
             <TableBody>
-              {MOCK_TABLES.map((table, i) => (
-                <TableRow key={i} className="group hover:bg-slate-50/50 transition-colors border-b border-slate-50 last:border-0">
-                  <TableCell className="text-center"><Input type="checkbox" className="h-3 w-3" /></TableCell>
+              {filteredTables.map((table, i) => (
+                <TableRow 
+                  key={i} 
+                  className={cn(
+                    "group hover:bg-slate-50/50 transition-colors border-b border-slate-50 last:border-0",
+                    selectedTables.includes(table.name) && "bg-slate-50/80"
+                  )}
+                >
+                  <TableCell className="text-center">
+                    <Checkbox 
+                      checked={selectedTables.includes(table.name)}
+                      onCheckedChange={() => handleToggleOne(table.name)}
+                      className="h-4 w-4"
+                    />
+                  </TableCell>
                   <TableCell>
                     <div className="flex flex-col">
                       <span className="text-sm font-bold text-slate-800">{table.name}</span>
@@ -224,6 +300,13 @@ export function TableManager({ activeDb }: { activeDb: string }) {
                   </TableCell>
                 </TableRow>
               ))}
+              {filteredTables.length === 0 && (
+                <TableRow>
+                  <TableCell colSpan={10} className="h-32 text-center text-slate-400 font-medium">
+                    No tables found matching your search.
+                  </TableCell>
+                </TableRow>
+              )}
             </TableBody>
           </Table>
         </div>
