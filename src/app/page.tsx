@@ -8,7 +8,7 @@ import { RedundancyScanner } from "@/components/redundancy-scanner"
 import { MaintenancePlanner } from "@/components/maintenance-planner"
 import { Separator } from "@/components/ui/separator"
 import { Button } from "@/components/ui/button"
-import { Bell, Search, Filter, Download } from "lucide-react"
+import { Bell, Search } from "lucide-react"
 import { Input } from "@/components/ui/input"
 
 export default function SQLSentinelApp() {
@@ -36,17 +36,6 @@ export default function SQLSentinelApp() {
     }
   }
 
-  const getPageTitle = () => {
-    switch (currentView) {
-      case "overview": return "Database Health Overview"
-      case "performance": return "Performance Analytics"
-      case "redundancy": return "Redundancy Scanner"
-      case "maintenance": return "Maintenance Scheduling"
-      case "table-manager": return "Table Manager"
-      default: return currentView.split('-').map(word => word.charAt(0).toUpperCase() + word.slice(1)).join(' ')
-    }
-  }
-
   return (
     <SidebarProvider>
       <AppSidebar 
@@ -55,40 +44,39 @@ export default function SQLSentinelApp() {
         activeDb={activeDb}
         onDbChange={setActiveDb}
       />
-      <SidebarInset className="bg-slate-50/30">
-        <header className="flex h-16 shrink-0 items-center justify-between px-6 border-b bg-white/50 backdrop-blur-sm sticky top-0 z-10">
+      <SidebarInset className="bg-background">
+        <header className="flex h-16 shrink-0 items-center justify-between px-6 bg-transparent">
           <div className="flex items-center gap-4">
-            <SidebarTrigger />
+            <SidebarTrigger className="text-slate-400 hover:text-slate-900" />
             <Separator orientation="vertical" className="h-6" />
             <div className="flex items-center gap-2">
-              <span className="text-sm font-semibold text-slate-700">Instance:</span>
-              <span className="text-sm font-medium text-slate-500">PROD-SQL-01</span>
+              <span className="text-xs font-bold text-slate-700">Instance:</span>
+              <span className="text-xs font-bold text-slate-400">PROD-SQL-01</span>
             </div>
           </div>
           <div className="flex items-center gap-4 flex-1 justify-end max-w-2xl">
-            <div className="relative w-full max-w-sm">
-              <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
+            <div className="relative w-full max-w-xs">
+              <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-slate-400" />
               <Input
                 type="search"
                 placeholder="Search logs, queries..."
-                className="pl-8 bg-muted/40 border-none shadow-none focus-visible:ring-1"
+                className="pl-8 bg-white/50 border-none shadow-none h-9 text-xs focus-visible:ring-1"
               />
             </div>
-            <Button variant="ghost" size="icon" className="relative text-muted-foreground hover:text-primary">
+            <Button variant="ghost" size="icon" className="relative text-slate-400 hover:text-primary h-9 w-9">
               <Bell className="h-5 w-5" />
-              <span className="absolute top-2 right-2.5 w-2 h-2 bg-accent rounded-full border-2 border-white" />
+              <span className="absolute top-2 right-2.5 w-2 h-2 bg-rose-500 rounded-full border-2 border-background" />
             </Button>
           </div>
         </header>
 
-        <main className="flex-1 p-8 overflow-auto">
+        <main className="flex-1 px-8 py-4 overflow-auto">
           <div className="max-w-7xl mx-auto">
-            {/* The individual components now handle their own titles to match the image precisely */}
             {renderContent()}
           </div>
         </main>
         
-        <footer className="py-6 px-8 border-t bg-white/30 text-center text-xs text-muted-foreground">
+        <footer className="py-4 px-8 text-center text-[10px] font-bold text-slate-400 uppercase tracking-widest">
           &copy; 2024 SQL Sentinel Health Management • Professional Data Intelligence Platform
         </footer>
       </SidebarInset>

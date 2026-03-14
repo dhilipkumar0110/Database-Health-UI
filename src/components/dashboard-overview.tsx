@@ -102,25 +102,24 @@ const databaseInstances = [
 
 export function DashboardOverview() {
   return (
-    <div className="space-y-8 animate-in fade-in duration-500">
+    <div className="space-y-6 animate-in fade-in duration-500">
       {/* Header Area */}
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-3">
           <h1 className="text-2xl font-bold text-slate-900">All Databases</h1>
-          <Badge className="bg-[#E6F4EA] text-[#1E8E3E] hover:bg-[#E6F4EA] border-none font-medium">
+          <Badge className="bg-[#E6F4EA] text-[#1E8E3E] hover:bg-[#E6F4EA] border-none font-medium px-2 py-0.5 text-[10px]">
             SQL Server
           </Badge>
         </div>
         <div className="flex items-center gap-4">
-          <div className="text-sm text-slate-400">
+          <div className="text-xs text-slate-400">
             Last scan: today 08:42 AM
           </div>
-          <Button variant="outline" size="sm" className="h-9 border-slate-200">
+          <Button variant="outline" size="sm" className="h-8 text-xs border-slate-300 rounded-full px-4">
             Run Scan
           </Button>
-          <Button size="sm" className="h-9 bg-[#1E8E3E] hover:bg-[#1A7F37] gap-2">
-            <Plus className="h-4 w-4" />
-            Connect DB
+          <Button size="sm" className="h-8 bg-[#1E8E3E] hover:bg-[#1A7F37] gap-1.5 text-xs rounded-lg px-4">
+            + Connect DB
           </Button>
         </div>
       </div>
@@ -128,11 +127,11 @@ export function DashboardOverview() {
       {/* Summary Stats Grid */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
         {summaryStats.map((stat, i) => (
-          <Card key={i} className="bg-[#F8F9F3] border-none shadow-none">
-            <CardContent className="pt-6">
-              <div className="text-xs font-medium text-slate-400 mb-1">{stat.title}</div>
+          <Card key={i} className="bg-[#F1F3ED] border-none shadow-none rounded-xl">
+            <CardContent className="p-4">
+              <div className="text-[10px] font-bold text-slate-400 uppercase tracking-tight mb-1">{stat.title}</div>
               <div className="text-2xl font-bold text-slate-900">{stat.value}</div>
-              <div className={cn("text-xs mt-1 font-medium", stat.subtextColor)}>
+              <div className={cn("text-[10px] mt-0.5 font-bold", stat.subtextColor)}>
                 {stat.subtext}
               </div>
             </CardContent>
@@ -141,33 +140,32 @@ export function DashboardOverview() {
       </div>
 
       {/* Connected DBs Section */}
-      <div className="space-y-4">
+      <div className="space-y-4 pt-2">
         <div className="flex items-center justify-between">
-          <h2 className="text-lg font-bold text-slate-900">Connected SQL Server databases</h2>
-          <Button variant="ghost" size="sm" className="text-[#1E8E3E] hover:text-[#1E8E3E] hover:bg-[#E6F4EA] gap-2">
-            <Plus className="h-4 w-4" />
-            Connect DB
+          <h2 className="text-sm font-bold text-slate-900">Connected SQL Server databases</h2>
+          <Button variant="link" size="sm" className="h-8 bg-[#1E8E3E] hover:bg-[#1A7F37] text-white no-underline px-4 rounded-lg text-xs font-bold gap-1.5 shadow-sm">
+            + Connect DB
           </Button>
         </div>
 
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
           {databaseInstances.map((db, i) => (
             <Card 
               key={i} 
               className={cn(
-                "relative overflow-hidden transition-all duration-300",
-                db.isActive ? "border-2 border-[#1E8E3E] shadow-lg" : "border border-slate-200"
+                "relative overflow-hidden transition-all duration-300 bg-white border shadow-sm rounded-xl",
+                db.isActive ? "border-[#1E8E3E] ring-1 ring-[#1E8E3E]" : "border-slate-200"
               )}
             >
-              <CardHeader className="pb-4">
+              <CardHeader className="p-4 pb-2">
                 <div className="flex items-start justify-between">
                   <div>
-                    <CardTitle className="text-xl font-bold text-slate-900">{db.name}</CardTitle>
-                    <div className="text-xs text-slate-400 font-medium mt-1">{db.server}</div>
+                    <CardTitle className="text-base font-bold text-slate-900">{db.name}</CardTitle>
+                    <div className="text-[10px] text-slate-400 font-bold mt-0.5">{db.server}</div>
                   </div>
                   <Badge 
                     className={cn(
-                      "font-semibold border-none px-3 py-1",
+                      "font-bold border-none px-2 py-0.5 text-[10px] rounded-md",
                       db.statusVariant === "warning" && "bg-amber-50 text-amber-600",
                       db.statusVariant === "critical" && "bg-rose-50 text-rose-600",
                       db.statusVariant === "healthy" && "bg-emerald-50 text-emerald-600"
@@ -177,21 +175,21 @@ export function DashboardOverview() {
                   </Badge>
                 </div>
               </CardHeader>
-              <CardContent className="space-y-6">
-                <div className="grid grid-cols-2 gap-y-4">
+              <CardContent className="p-4 pt-2 space-y-4">
+                <div className="grid grid-cols-2 gap-x-2 gap-y-3">
                   {db.metrics.map((metric, j) => (
-                    <div key={j} className="space-y-1">
-                      <div className="text-[10px] uppercase font-bold tracking-wider text-slate-400">{metric.label}</div>
-                      <div className={cn("text-lg font-bold", metric.color || "text-slate-900")}>
+                    <div key={j} className="space-y-0.5">
+                      <div className="text-[9px] uppercase font-bold tracking-tight text-slate-400">{metric.label}</div>
+                      <div className={cn("text-xs font-bold", metric.color || "text-slate-900")}>
                         {metric.value}
                       </div>
                     </div>
                   ))}
                 </div>
                 
-                <div className="pt-4 border-t border-slate-100">
+                <div className="pt-3 border-t border-slate-100">
                   <p className={cn(
-                    "text-xs font-medium",
+                    "text-[10px] font-bold leading-tight",
                     db.statusVariant === "healthy" ? "text-emerald-600" : "text-amber-800"
                   )}>
                     {db.footer}
