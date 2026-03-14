@@ -477,7 +477,10 @@ export function ConnectDatabaseModal({ isOpen, onClose, onComplete }: ConnectDat
         <DialogHeader className="px-8 py-6 border-b flex flex-row items-center justify-between bg-white">
           <div className="space-y-1">
             <DialogTitle className="text-xl font-bold text-[#4A6076]">
-              {currentStep === 4 ? "Finished" : `New Data Source — Step ${currentStep}`}
+              {currentStep === 4 
+                ? "Finished" 
+                : `New Data Source — Step ${currentStep}${currentStep === 3 ? " (Optional)" : ""}`
+              }
             </DialogTitle>
             <div className="flex items-center gap-1.5 pt-1">
               {stepIcons.map((_, idx) => (
