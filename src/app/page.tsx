@@ -6,7 +6,6 @@ import { AppSidebar } from "@/components/app-sidebar"
 import { DashboardOverview } from "@/components/dashboard-overview"
 import { RedundancyScanner } from "@/components/redundancy-scanner"
 import { MaintenancePlanner } from "@/components/maintenance-planner"
-import { ConnectionSelector } from "@/components/connection-selector"
 import { Separator } from "@/components/ui/separator"
 import { Button } from "@/components/ui/button"
 import { Bell, Search, Filter, Download } from "lucide-react"
@@ -14,11 +13,14 @@ import { Input } from "@/components/ui/input"
 
 export default function SQLSentinelApp() {
   const [currentView, setCurrentView] = React.useState("overview")
+  const [activeDb, setActiveDb] = React.useState("PortalDB")
 
   const renderContent = () => {
     switch (currentView) {
       case "overview":
         return <DashboardOverview />
+      case "table-manager":
+        return <DashboardOverview /> // Using this as placeholder for table manager
       case "redundancy":
         return <RedundancyScanner />
       case "maintenance":
@@ -27,7 +29,7 @@ export default function SQLSentinelApp() {
         return (
           <div className="flex flex-col items-center justify-center h-[60vh] text-center p-12">
             <h2 className="text-2xl font-bold text-slate-300">Feature Under Development</h2>
-            <p className="text-slate-400 mt-2">The {currentView} interface is currently being integrated.</p>
+            <p className="text-slate-400 mt-2">The {currentView} interface is currently being integrated for {activeDb}.</p>
             <Button variant="link" onClick={() => setCurrentView("overview")} className="mt-4 text-primary">Return to Dashboard</Button>
           </div>
         )
@@ -40,27 +42,35 @@ export default function SQLSentinelApp() {
       case "performance": return "Performance Analytics"
       case "redundancy": return "Redundancy Scanner"
       case "maintenance": return "Maintenance Scheduling"
-      case "reports": return "Reports & Export"
+      case "table-manager": return "Table Manager"
       default: return currentView.split('-').map(word => word.charAt(0).toUpperCase() + word.slice(1)).join(' ')
     }
   }
 
   return (
     <SidebarProvider>
-      <AppSidebar currentView={currentView} onViewChange={setCurrentView} />
-      <SidebarInset className="bg-background">
+      <AppSidebar 
+        currentView={currentView} 
+        onViewChange={setCurrentView}
+        activeDb={activeDb}
+        onDbChange={setActiveDb}
+      />
+      <SidebarInset className="bg-slate-50/30">
         <header className="flex h-16 shrink-0 items-center justify-between px-6 border-b bg-white/50 backdrop-blur-sm sticky top-0 z-10">
           <div className="flex items-center gap-4">
             <SidebarTrigger />
             <Separator orientation="vertical" className="h-6" />
-            <ConnectionSelector />
+            <div className="flex items-center gap-2">
+              <span className="text-sm font-semibold text-slate-700">Instance:</span>
+              <span className="text-sm font-medium text-slate-500">PROD-SQL-01</span>
+            </div>
           </div>
           <div className="flex items-center gap-4 flex-1 justify-end max-w-2xl">
             <div className="relative w-full max-w-sm">
               <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
               <Input
                 type="search"
-                placeholder="Search tables, logs, queries..."
+                placeholder="Search logs, queries..."
                 className="pl-8 bg-muted/40 border-none shadow-none focus-visible:ring-1"
               />
             </div>
@@ -77,7 +87,7 @@ export default function SQLSentinelApp() {
               <div>
                 <h2 className="text-3xl font-bold tracking-tight text-slate-800 font-headline">{getPageTitle()}</h2>
                 <p className="text-muted-foreground mt-1">
-                  Managed monitoring for <span className="text-primary font-medium">Production_Main</span>
+                  Managed monitoring for <span className="text-primary font-medium">{activeDb}</span>
                 </p>
               </div>
               <div className="flex items-center gap-3">

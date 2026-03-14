@@ -2,184 +2,201 @@
 
 import * as React from "react"
 import {
-  Database,
-  LayoutDashboard,
+  LayoutGrid,
+  Table,
   Activity,
-  ShieldCheck,
-  CalendarDays,
-  Settings,
-  Bell,
+  ShieldAlert,
+  Archive,
+  Clock,
   FileText,
-  Search,
-  Server,
-  ChevronRight,
-  ChevronDown
+  ListFilter,
+  ChevronDown,
+  Search
 } from "lucide-react"
 
 import {
   Sidebar,
   SidebarContent,
-  SidebarFooter,
-  SidebarGroup,
-  SidebarGroupContent,
-  SidebarGroupLabel,
   SidebarHeader,
   SidebarMenu,
   SidebarMenuButton,
   SidebarMenuItem,
-  SidebarMenuSub,
-  SidebarMenuSubButton,
-  SidebarMenuSubItem,
+  SidebarGroup,
+  SidebarGroupLabel,
 } from "@/components/ui/sidebar"
 import {
-  Collapsible,
-  CollapsibleContent,
-  CollapsibleTrigger,
-} from "@/components/ui/collapsible"
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select"
+import { Badge } from "@/components/ui/badge"
 
-interface NavItem {
-  title: string
-  icon?: any
-  id: string
-  children?: NavItem[]
-}
-
-const navItems: NavItem[] = [
-  {
-    title: "Dashboard",
-    icon: LayoutDashboard,
-    id: "overview"
-  },
-  {
-    title: "Performance",
-    icon: Activity,
-    id: "performance"
-  },
-  {
-    title: "Health Checks",
-    icon: ShieldCheck,
-    id: "health",
-    children: [
-      { title: "Redundancy Scanner", id: "redundancy" },
-      { title: "Query Optimization", id: "query-opt" },
-      { title: "Table Statistics", id: "table-stats" }
-    ]
-  },
-  {
-    title: "Maintenance",
-    icon: CalendarDays,
-    id: "maintenance"
-  },
-  {
-    title: "Reports & Alerts",
-    icon: FileText,
-    id: "reports",
-    children: [
-      { title: "Generate Reports", id: "gen-reports" },
-      { title: "Alert Rules", id: "alert-rules" }
-    ]
-  }
-]
+const databases = ["PortalDB", "Sales_DB", "Production_Main", "AuditLogs"]
 
 export function AppSidebar({ 
   currentView, 
-  onViewChange 
+  onViewChange,
+  activeDb,
+  onDbChange
 }: { 
   currentView: string, 
-  onViewChange: (id: string) => void 
+  onViewChange: (id: string) => void,
+  activeDb: string,
+  onDbChange: (db: string) => void
 }) {
   return (
-    <Sidebar variant="sidebar" collapsible="icon">
-      <SidebarHeader className="border-b px-6 py-4">
-        <div className="flex items-center gap-3">
-          <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary text-primary-foreground shadow-lg">
-            <Database className="h-5 w-5" />
-          </div>
-          <span className="text-xl font-bold tracking-tight text-primary font-headline">SQL Sentinel</span>
-        </div>
+    <Sidebar variant="sidebar" className="border-r bg-white">
+      <SidebarHeader className="px-6 py-6 space-y-1">
+        <h1 className="text-xl font-bold tracking-tight text-slate-900 font-headline">MPM Health</h1>
+        <p className="text-sm text-slate-400 font-medium">SQL Server Management</p>
       </SidebarHeader>
-      <SidebarContent>
+      
+      <SidebarContent className="px-2">
+        {/* Active Database Selector */}
         <SidebarGroup>
-          <SidebarGroupLabel className="px-4 py-2 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
-            Management
+          <SidebarGroupLabel className="px-4 py-2 text-[10px] font-bold uppercase tracking-widest text-slate-400">
+            Active Database
+          </SidebarGroupLabel>
+          <div className="px-4 pb-4">
+            <Select value={activeDb} onValueChange={onDbChange}>
+              <SelectTrigger className="w-full bg-slate-50 border-slate-200 h-10 focus:ring-1">
+                <div className="flex items-center gap-2">
+                  <div className="h-2 w-2 rounded-full bg-emerald-500" />
+                  <SelectValue placeholder="Select Database" />
+                </div>
+              </SelectTrigger>
+              <SelectContent>
+                {databases.map((db) => (
+                  <SelectItem key={db} value={db}>
+                    {db}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+        </SidebarGroup>
+
+        <div className="border-t border-slate-100 mx-4 my-2" />
+
+        {/* Overview Section */}
+        <SidebarGroup>
+          <SidebarGroupLabel className="px-4 py-2 text-[10px] font-bold uppercase tracking-widest text-slate-400">
+            Overview
           </SidebarGroupLabel>
           <SidebarMenu>
-            {navItems.map((item) => {
-              if (item.children) {
-                return (
-                  <Collapsible key={item.id} asChild defaultOpen={currentView.startsWith(item.id)} className="group/collapsible">
-                    <SidebarMenuItem>
-                      <CollapsibleTrigger asChild>
-                        <SidebarMenuButton tooltip={item.title} className="hover:bg-sidebar-accent transition-colors">
-                          {item.icon && <item.icon className="h-4 w-4" />}
-                          <span className="font-medium">{item.title}</span>
-                          <ChevronRight className="ml-auto h-4 w-4 transition-transform duration-200 group-data-[state=open]/collapsible:rotate-90" />
-                        </SidebarMenuButton>
-                      </CollapsibleTrigger>
-                      <CollapsibleContent>
-                        <SidebarMenuSub>
-                          {item.children.map((subItem) => (
-                            <SidebarMenuSubItem key={subItem.id}>
-                              <SidebarMenuSubButton 
-                                isActive={currentView === subItem.id}
-                                onClick={() => onViewChange(subItem.id)}
-                                className="cursor-pointer"
-                              >
-                                {subItem.title}
-                              </SidebarMenuSubButton>
-                            </SidebarMenuSubItem>
-                          ))}
-                        </SidebarMenuSub>
-                      </CollapsibleContent>
-                    </SidebarMenuItem>
-                  </Collapsible>
-                )
-              }
-              return (
-                <SidebarMenuItem key={item.id}>
-                  <SidebarMenuButton 
-                    tooltip={item.title}
-                    isActive={currentView === item.id}
-                    onClick={() => onViewChange(item.id)}
-                    className="hover:bg-sidebar-accent transition-colors"
-                  >
-                    {item.icon && <item.icon className="h-4 w-4" />}
-                    <span className="font-medium">{item.title}</span>
-                  </SidebarMenuButton>
-                </SidebarMenuItem>
-              )
-            })}
+            <SidebarMenuItem>
+              <SidebarMenuButton 
+                isActive={currentView === "overview"}
+                onClick={() => onViewChange("overview")}
+                className={`px-4 py-6 hover:bg-slate-50 transition-colors ${currentView === "overview" ? "bg-slate-100 text-slate-900 font-bold" : "text-slate-600"}`}
+              >
+                <LayoutGrid className="h-5 w-5" />
+                <span className="text-sm font-semibold">All Databases</span>
+              </SidebarMenuButton>
+            </SidebarMenuItem>
+          </SidebarMenu>
+        </SidebarGroup>
+
+        {/* Dynamic Database Section */}
+        <SidebarGroup>
+          <SidebarGroupLabel className="px-4 py-2 text-[10px] font-bold uppercase tracking-widest text-slate-400">
+            {activeDb.toUpperCase()}
+          </SidebarGroupLabel>
+          <SidebarMenu>
+            <SidebarMenuItem>
+              <SidebarMenuButton 
+                isActive={currentView === "table-manager"}
+                onClick={() => onViewChange("table-manager")}
+                className="px-4 py-3 text-slate-500 hover:text-slate-900"
+              >
+                <Table className="h-4 w-4" />
+                <span className="text-sm font-medium flex-1">Table Manager</span>
+                <Badge variant="secondary" className="bg-rose-50 text-rose-400 border-none font-bold text-[10px] px-1.5 py-0">4</Badge>
+              </SidebarMenuButton>
+            </SidebarMenuItem>
+            <SidebarMenuItem>
+              <SidebarMenuButton 
+                isActive={currentView === "performance"}
+                onClick={() => onViewChange("performance")}
+                className="px-4 py-3 text-slate-500 hover:text-slate-900"
+              >
+                <Activity className="h-4 w-4" />
+                <span className="text-sm font-medium">Performance</span>
+              </SidebarMenuButton>
+            </SidebarMenuItem>
+            <SidebarMenuItem>
+              <SidebarMenuButton 
+                isActive={currentView === "redundancy"}
+                onClick={() => onViewChange("redundancy")}
+                className="px-4 py-3 text-slate-500 hover:text-slate-900"
+              >
+                <ShieldAlert className="h-4 w-4" />
+                <span className="text-sm font-medium">Redundancy Scan</span>
+              </SidebarMenuButton>
+            </SidebarMenuItem>
+          </SidebarMenu>
+        </SidebarGroup>
+
+        {/* Maintain Section */}
+        <SidebarGroup>
+          <SidebarGroupLabel className="px-4 py-2 text-[10px] font-bold uppercase tracking-widest text-slate-400">
+            Maintain
+          </SidebarGroupLabel>
+          <SidebarMenu>
+            <SidebarMenuItem>
+              <SidebarMenuButton 
+                isActive={currentView === "archive"}
+                onClick={() => onViewChange("archive")}
+                className="px-4 py-3 text-slate-500 hover:text-slate-900"
+              >
+                <Archive className="h-4 w-4" />
+                <span className="text-sm font-medium">Archive Manager</span>
+              </SidebarMenuButton>
+            </SidebarMenuItem>
+            <SidebarMenuItem>
+              <SidebarMenuButton 
+                isActive={currentView === "maintenance"}
+                onClick={() => onViewChange("maintenance")}
+                className="px-4 py-3 text-slate-500 hover:text-slate-900"
+              >
+                <Clock className="h-4 w-4" />
+                <span className="text-sm font-medium">Scheduler</span>
+              </SidebarMenuButton>
+            </SidebarMenuItem>
+          </SidebarMenu>
+        </SidebarGroup>
+
+        {/* Reports Section */}
+        <SidebarGroup>
+          <SidebarGroupLabel className="px-4 py-2 text-[10px] font-bold uppercase tracking-widest text-slate-400">
+            Reports
+          </SidebarGroupLabel>
+          <SidebarMenu>
+            <SidebarMenuItem>
+              <SidebarMenuButton 
+                isActive={currentView === "export"}
+                onClick={() => onViewChange("export")}
+                className="px-4 py-3 text-slate-500 hover:text-slate-900"
+              >
+                <FileText className="h-4 w-4" />
+                <span className="text-sm font-medium">Export Reports</span>
+              </SidebarMenuButton>
+            </SidebarMenuItem>
+            <SidebarMenuItem>
+              <SidebarMenuButton 
+                isActive={currentView === "alerts"}
+                onClick={() => onViewChange("alerts")}
+                className="px-4 py-3 text-slate-500 hover:text-slate-900"
+              >
+                <ListFilter className="h-4 w-4" />
+                <span className="text-sm font-medium">Alerts & Rules</span>
+              </SidebarMenuButton>
+            </SidebarMenuItem>
           </SidebarMenu>
         </SidebarGroup>
       </SidebarContent>
-      <SidebarFooter className="border-t p-4">
-        <div className="space-y-4">
-           <SidebarMenu>
-            <SidebarMenuItem>
-              <SidebarMenuButton tooltip="Notifications" className="hover:bg-sidebar-accent">
-                <Bell className="h-4 w-4" />
-                <span>Notifications</span>
-                <span className="ml-auto flex h-5 w-5 items-center justify-center rounded-full bg-accent text-[10px] text-accent-foreground">
-                  3
-                </span>
-              </SidebarMenuButton>
-            </SidebarMenuItem>
-            <SidebarMenuItem>
-              <SidebarMenuButton tooltip="Settings" className="hover:bg-sidebar-accent">
-                <Settings className="h-4 w-4" />
-                <span>Settings</span>
-              </SidebarMenuButton>
-            </SidebarMenuItem>
-          </SidebarMenu>
-          <div className="flex items-center gap-3 px-2">
-            <div className="h-8 w-8 rounded-full bg-slate-200" />
-            <div className="flex flex-col">
-              <span className="text-xs font-semibold">Admin User</span>
-              <span className="text-[10px] text-muted-foreground">Master DB Account</span>
-            </div>
-          </div>
-        </div>
-      </SidebarFooter>
     </Sidebar>
   )
 }
