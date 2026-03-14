@@ -82,26 +82,8 @@ export default function SQLSentinelApp() {
         </header>
 
         <main className="flex-1 p-8 overflow-auto">
-          <div className="max-w-7xl mx-auto space-y-8">
-            <div className="flex items-center justify-between">
-              <div>
-                <h2 className="text-3xl font-bold tracking-tight text-slate-800 font-headline">{getPageTitle()}</h2>
-                <p className="text-muted-foreground mt-1">
-                  Managed monitoring for <span className="text-primary font-medium">{activeDb}</span>
-                </p>
-              </div>
-              <div className="flex items-center gap-3">
-                <Button variant="outline" size="sm" className="gap-2">
-                  <Filter className="h-4 w-4" />
-                  Filters
-                </Button>
-                <Button size="sm" className="gap-2 bg-primary">
-                  <Download className="h-4 w-4" />
-                  Export Report
-                </Button>
-              </div>
-            </div>
-
+          <div className="max-w-7xl mx-auto">
+            {/* The individual components now handle their own titles to match the image precisely */}
             {renderContent()}
           </div>
         </main>
