@@ -9,7 +9,9 @@ import {
   Filter, 
   X,
   AlertCircle,
-  Table as TableIcon
+  Table as TableIcon,
+  Layers,
+  CheckCircle2
 } from "lucide-react"
 import { Card, CardContent } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
@@ -33,6 +35,16 @@ import {
 } from "@/components/ui/select"
 import { cn } from "@/lib/utils"
 import { Checkbox } from "@/components/ui/checkbox"
+import { 
+  Dialog, 
+  DialogContent, 
+  DialogHeader, 
+  DialogTitle, 
+  DialogFooter,
+  DialogDescription
+} from "@/components/ui/dialog"
+import { Label } from "@/components/ui/label"
+import { toast } from "@/hooks/use-toast"
 
 const MOCK_TABLES = [
   { name: "invoices", schema: "sys.tables", status: "Critical", statusVariant: "critical", rowCount: "4.2M", size: "245 GB", fragmentation: 68, lastRead: "2h ago", deadlocks: 12, slowQ: 58 },
@@ -56,6 +68,9 @@ export function TableManager({ activeDb }: { activeDb: string }) {
   const [search, setSearch] = React.useState("")
   const [statusFilter, setStatusFilter] = React.useState("all")
   const [selectedTables, setSelectedTables] = React.useState<string[]>([])
+  const [isGroupModalOpen, setIsGroupModalOpen] = React.useState(false)
+  const [groupName, setGroupName] = React.useState("")
+  const [groups, setGroups] = React.useState<{name: string, tables: string[]}[]>([])
 
   const filteredTables = React.useMemo(() => {
     return MOCK_TABLES.filter(table => {
@@ -106,6 +121,19 @@ export function TableManager({ activeDb }: { activeDb: string }) {
     document.body.removeChild(link)
   }
 
+  const handleCreateGroup = () => {
+    if (!groupName) return
+    const newGroup = { name: groupName, tables: [...selectedTables] }
+    setGroups(prev => [...prev, newGroup])
+    setGroupName("")
+    setIsGroupModalOpen(false)
+    toast({
+      title: "Table Group Created",
+      description: `Successfully added ${selectedTables.length} tables to "${groupName}".`,
+    })
+    setSelectedTables([])
+  }
+
   return (
     <div className="space-y-6 animate-in fade-in duration-500">
       {/* Header */}
@@ -124,10 +152,12 @@ export function TableManager({ activeDb }: { activeDb: string }) {
             Run Scan
           </Button>
           <Button 
+            onClick={() => setIsGroupModalOpen(true)}
             size="sm" 
             className="h-8 bg-[#1E8E3E] hover:bg-[#1A7F37] gap-1.5 text-xs rounded-lg px-4"
           >
-            + Add Table Group
+            <Plus className="h-3 w-3" />
+            Add Table Group
           </Button>
         </div>
       </div>
@@ -164,7 +194,15 @@ export function TableManager({ activeDb }: { activeDb: string }) {
       {/* Tables Section */}
       <div className="space-y-4 pt-2">
         <div className="flex items-center justify-between">
-          <h2 className="text-sm font-bold text-slate-900">All tables — {activeDb}</h2>
+          <div className="flex items-center gap-4">
+            <h2 className="text-sm font-bold text-slate-900">All tables — {activeDb}</h2>
+            {groups.length > 0 && (
+              <div className="flex items-center gap-2">
+                <Layers className="h-3 w-3 text-slate-400" />
+                <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">{groups.length} Groups Active</span>
+              </div>
+            )}
+          </div>
           <div className="flex items-center gap-2">
             <div className="relative">
               <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-slate-400" />
@@ -206,30 +244,31 @@ export function TableManager({ activeDb }: { activeDb: string }) {
             </span>
             <div className="flex items-center gap-2 overflow-x-auto no-scrollbar">
               <Button 
+                onClick={() => setIsGroupModalOpen(true)}
                 variant="outline" 
                 size="sm" 
-                className="h-8 text-xs rounded-full bg-white border-white text-[#1967D2] hover:bg-white hover:text-[#185ABC] shadow-sm font-semibold px-4"
+                className="h-8 text-xs rounded-full bg-white border-white text-[#1967D2] hover:bg-white hover:text-[#185ABC] shadow-sm font-semibold px-4 whitespace-nowrap"
+              >
+                Create Group
+              </Button>
+              <Button 
+                variant="outline" 
+                size="sm" 
+                className="h-8 text-xs rounded-full bg-white border-white text-[#1967D2] hover:bg-white hover:text-[#185ABC] shadow-sm font-semibold px-4 whitespace-nowrap"
               >
                 Rebuild Indexes
               </Button>
               <Button 
                 variant="outline" 
                 size="sm" 
-                className="h-8 text-xs rounded-full bg-white border-white text-[#1967D2] hover:bg-white hover:text-[#185ABC] shadow-sm font-semibold px-4"
+                className="h-8 text-xs rounded-full bg-white border-white text-[#1967D2] hover:bg-white hover:text-[#185ABC] shadow-sm font-semibold px-4 whitespace-nowrap"
               >
                 Update Stats
               </Button>
               <Button 
                 variant="outline" 
                 size="sm" 
-                className="h-8 text-xs rounded-full bg-white border-white text-[#1967D2] hover:bg-white hover:text-[#185ABC] shadow-sm font-semibold px-4"
-              >
-                Schedule
-              </Button>
-              <Button 
-                variant="outline" 
-                size="sm" 
-                className="h-8 text-xs rounded-full bg-white border-white text-[#1967D2] hover:bg-white hover:text-[#185ABC] shadow-sm font-semibold px-4"
+                className="h-8 text-xs rounded-full bg-white border-white text-[#1967D2] hover:bg-white hover:text-[#185ABC] shadow-sm font-semibold px-4 whitespace-nowrap"
               >
                 Flag Archive
               </Button>
@@ -276,69 +315,81 @@ export function TableManager({ activeDb }: { activeDb: string }) {
               </TableRow>
             </TableHeader>
             <TableBody>
-              {filteredTables.map((table, i) => (
-                <TableRow 
-                  key={i} 
-                  className={cn(
-                    "group hover:bg-slate-50/50 transition-colors border-b border-slate-50 last:border-0",
-                    selectedTables.includes(table.name) && "bg-slate-50/80"
-                  )}
-                >
-                  <TableCell className="text-center">
-                    <Checkbox 
-                      checked={selectedTables.includes(table.name)}
-                      onCheckedChange={() => handleToggleOne(table.name)}
-                      className="h-4 w-4"
-                    />
-                  </TableCell>
-                  <TableCell>
-                    <div className="flex flex-col">
-                      <span className="text-sm font-bold text-slate-800">{table.name}</span>
-                    </div>
-                  </TableCell>
-                  <TableCell>
-                    <Badge 
-                      className={cn(
-                        "font-bold text-[9px] px-2 py-0.5 rounded border-none shadow-none",
-                        table.statusVariant === "critical" && "bg-rose-50 text-rose-500",
-                        table.statusVariant === "warning" && "bg-amber-50 text-amber-500",
-                        table.statusVariant === "healthy" && "bg-emerald-50 text-emerald-500"
-                      )}
-                    >
-                      {table.status}
-                    </Badge>
-                  </TableCell>
-                  <TableCell className="text-xs font-bold text-slate-600">{table.rowCount}</TableCell>
-                  <TableCell className="text-xs font-bold text-slate-600">{table.size}</TableCell>
-                  <TableCell className="min-w-[140px]">
-                    <div className="flex items-center gap-3">
-                      <div className="flex-1 h-1.5 bg-slate-100 rounded-full overflow-hidden">
-                        <div 
-                          className={cn(
-                            "h-full rounded-full",
-                            table.fragmentation > 50 ? "bg-rose-500" : table.fragmentation > 20 ? "bg-amber-500" : "bg-emerald-500"
-                          )}
-                          style={{ width: `${table.fragmentation}%` }}
-                        />
+              {filteredTables.map((table, i) => {
+                const tableGroups = groups.filter(g => g.tables.includes(table.name))
+                return (
+                  <TableRow 
+                    key={i} 
+                    className={cn(
+                      "group hover:bg-slate-50/50 transition-colors border-b border-slate-50 last:border-0",
+                      selectedTables.includes(table.name) && "bg-slate-50/80"
+                    )}
+                  >
+                    <TableCell className="text-center">
+                      <Checkbox 
+                        checked={selectedTables.includes(table.name)}
+                        onCheckedChange={() => handleToggleOne(table.name)}
+                        className="h-4 w-4"
+                      />
+                    </TableCell>
+                    <TableCell>
+                      <div className="flex flex-col gap-1">
+                        <span className="text-sm font-bold text-slate-800">{table.name}</span>
+                        {tableGroups.length > 0 && (
+                          <div className="flex flex-wrap gap-1">
+                            {tableGroups.map(g => (
+                              <Badge key={g.name} variant="outline" className="text-[8px] font-bold bg-slate-50 text-slate-400 h-4 border-slate-200">
+                                {g.name}
+                              </Badge>
+                            ))}
+                          </div>
+                        )}
                       </div>
-                      <span className={cn(
-                        "text-[10px] font-bold w-7 text-right",
-                        table.fragmentation > 50 ? "text-rose-500" : table.fragmentation > 20 ? "text-amber-500" : "text-emerald-500"
-                      )}>
-                        {table.fragmentation}%
-                      </span>
-                    </div>
-                  </TableCell>
-                  <TableCell className="text-[10px] font-bold text-slate-500">{table.lastRead}</TableCell>
-                  <TableCell className="text-xs font-bold text-rose-500">{table.deadlocks}</TableCell>
-                  <TableCell className="text-xs font-bold text-rose-500">{table.slowQ}</TableCell>
-                  <TableCell className="text-right">
-                    <Button variant="outline" size="sm" className="h-7 text-[10px] font-bold rounded-lg border-slate-200 text-slate-600 hover:bg-white hover:border-slate-300">
-                      Details
-                    </Button>
-                  </TableCell>
-                </TableRow>
-              ))}
+                    </TableCell>
+                    <TableCell>
+                      <Badge 
+                        className={cn(
+                          "font-bold text-[9px] px-2 py-0.5 rounded border-none shadow-none",
+                          table.statusVariant === "critical" && "bg-rose-50 text-rose-500",
+                          table.statusVariant === "warning" && "bg-amber-50 text-amber-500",
+                          table.statusVariant === "healthy" && "bg-emerald-50 text-emerald-500"
+                        )}
+                      >
+                        {table.status}
+                      </Badge>
+                    </TableCell>
+                    <TableCell className="text-xs font-bold text-slate-600">{table.rowCount}</TableCell>
+                    <TableCell className="text-xs font-bold text-slate-600">{table.size}</TableCell>
+                    <TableCell className="min-w-[140px]">
+                      <div className="flex items-center gap-3">
+                        <div className="flex-1 h-1.5 bg-slate-100 rounded-full overflow-hidden">
+                          <div 
+                            className={cn(
+                              "h-full rounded-full",
+                              table.fragmentation > 50 ? "bg-rose-500" : table.fragmentation > 20 ? "bg-amber-500" : "bg-emerald-500"
+                            )}
+                            style={{ width: `${table.fragmentation}%` }}
+                          />
+                        </div>
+                        <span className={cn(
+                          "text-[10px] font-bold w-7 text-right",
+                          table.fragmentation > 50 ? "text-rose-500" : table.fragmentation > 20 ? "text-amber-500" : "text-emerald-500"
+                        )}>
+                          {table.fragmentation}%
+                        </span>
+                      </div>
+                    </TableCell>
+                    <TableCell className="text-[10px] font-bold text-slate-500">{table.lastRead}</TableCell>
+                    <TableCell className="text-xs font-bold text-rose-500">{table.deadlocks}</TableCell>
+                    <TableCell className="text-xs font-bold text-rose-500">{table.slowQ}</TableCell>
+                    <TableCell className="text-right">
+                      <Button variant="outline" size="sm" className="h-7 text-[10px] font-bold rounded-lg border-slate-200 text-slate-600 hover:bg-white hover:border-slate-300">
+                        Details
+                      </Button>
+                    </TableCell>
+                  </TableRow>
+                )
+              })}
               {filteredTables.length === 0 && (
                 <TableRow>
                   <TableCell colSpan={10} className="h-32 text-center text-slate-400 font-medium">
@@ -350,6 +401,59 @@ export function TableManager({ activeDb }: { activeDb: string }) {
           </Table>
         </div>
       </div>
+
+      <Dialog open={isGroupModalOpen} onOpenChange={setIsGroupModalOpen}>
+        <DialogContent className="sm:max-w-[425px]">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <Layers className="h-5 w-5 text-[#1E8E3E]" />
+              Create Table Group
+            </DialogTitle>
+            <DialogDescription>
+              Organize related tables into a group for easier monitoring and bulk management.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="grid gap-4 py-4">
+            <div className="space-y-2">
+              <Label htmlFor="group-name" className="text-sm font-semibold">Group Name</Label>
+              <Input 
+                id="group-name" 
+                placeholder="e.g., Financial_Records, Archive_Candidates" 
+                value={groupName}
+                onChange={(e) => setGroupName(e.target.value)}
+                className="h-10 border-slate-200"
+              />
+            </div>
+            <div className="space-y-2">
+              <Label className="text-sm font-semibold">Selected Tables ({selectedTables.length})</Label>
+              <div className="max-h-[120px] overflow-y-auto p-3 bg-slate-50 rounded-lg border border-slate-200">
+                {selectedTables.length > 0 ? (
+                  <ul className="text-xs font-medium text-slate-600 space-y-1">
+                    {selectedTables.map(t => (
+                      <li key={t} className="flex items-center gap-2">
+                        <CheckCircle2 className="h-3 w-3 text-emerald-500" />
+                        {t}
+                      </li>
+                    ))}
+                  </ul>
+                ) : (
+                  <p className="text-xs text-slate-400 italic">No tables selected. Close this and select tables first.</p>
+                )}
+              </div>
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setIsGroupModalOpen(false)}>Cancel</Button>
+            <Button 
+              onClick={handleCreateGroup} 
+              disabled={!groupName || selectedTables.length === 0}
+              className="bg-[#1E8E3E] hover:bg-[#1A7F37]"
+            >
+              Create Group
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   )
 }
