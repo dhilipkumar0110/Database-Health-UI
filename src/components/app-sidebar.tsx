@@ -9,9 +9,7 @@ import {
   Archive,
   Clock,
   FileText,
-  ListFilter,
-  ChevronDown,
-  Search
+  ListFilter
 } from "lucide-react"
 
 import {
@@ -26,10 +24,10 @@ import {
 } from "@/components/ui/sidebar"
 import {
   Select,
-  SelectContent,
-  SelectItem,
   SelectTrigger,
   SelectValue,
+  SelectContent,
+  SelectItem,
 } from "@/components/ui/select"
 import { Badge } from "@/components/ui/badge"
 
@@ -90,7 +88,7 @@ export function AppSidebar({
               <SidebarMenuButton 
                 isActive={currentView === "overview"}
                 onClick={() => onViewChange("overview")}
-                className={`px-4 py-6 hover:bg-slate-50 transition-colors ${currentView === "overview" ? "bg-slate-100 text-slate-900 font-bold" : "text-slate-600"}`}
+                className={`px-4 py-6 hover:bg-slate-50 transition-colors ${currentView === "overview" ? "bg-[#E6F4EA] text-[#1E8E3E] font-bold" : "text-slate-600"}`}
               >
                 <LayoutGrid className="h-5 w-5" />
                 <span className="text-sm font-semibold">All Databases</span>

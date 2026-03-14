@@ -21,7 +21,7 @@ export default function SQLSentinelApp() {
       case "overview":
         return <DashboardOverview />
       case "table-manager":
-        return <DashboardOverview /> // Using this as placeholder for table manager
+        return <DashboardOverview />
       case "redundancy":
         return <RedundancyScanner />
       case "maintenance":
@@ -45,8 +45,9 @@ export default function SQLSentinelApp() {
         activeDb={activeDb}
         onDbChange={setActiveDb}
       />
-      <SidebarInset className="bg-background">
-        <header className="flex h-14 shrink-0 items-center justify-between px-6 bg-transparent">
+      <SidebarInset className="bg-background flex flex-col">
+        {/* Top Header Panel - White Background with Border */}
+        <header className="flex h-14 shrink-0 items-center justify-between px-6 bg-white border-b border-slate-200 sticky top-0 z-10">
           <div className="flex items-center gap-4">
             <SidebarTrigger className="text-slate-400 hover:text-slate-600 h-8 w-8" />
             <Separator orientation="vertical" className="h-4" />
@@ -61,16 +62,16 @@ export default function SQLSentinelApp() {
               <Input
                 type="search"
                 placeholder="Search logs, queries..."
-                className="pl-9 bg-white border-slate-200 h-9 text-xs rounded-lg focus-visible:ring-1 shadow-sm"
+                className="pl-9 bg-[#F8F9FA] border-slate-200 h-9 text-xs rounded-full focus-visible:ring-1 shadow-none"
               />
             </div>
             <Button 
               variant="outline" 
               size="icon" 
-              className="relative h-9 w-9 rounded-lg border-emerald-600/50 hover:bg-emerald-50 hover:border-emerald-600 transition-colors"
+              className="relative h-9 w-9 rounded-lg border-[#E6F4EA] bg-[#F8F9FA] hover:bg-white transition-colors"
             >
               <Bell className="h-4 w-4 text-slate-400" />
-              <span className="absolute top-2 right-2 w-1.5 h-1.5 bg-rose-500 rounded-full border border-white" />
+              <span className="absolute top-2.5 right-2.5 w-1.5 h-1.5 bg-rose-500 rounded-full border border-white" />
             </Button>
             <Avatar className="h-8 w-8 rounded-lg border border-slate-200 shadow-sm">
               <AvatarImage src="https://picsum.photos/seed/user-main/32/32" />
@@ -79,13 +80,14 @@ export default function SQLSentinelApp() {
           </div>
         </header>
 
-        <main className="flex-1 px-8 py-4 overflow-auto">
+        {/* Content Area - Sandal Background */}
+        <main className="flex-1 px-8 py-6 overflow-auto bg-background">
           <div className="max-w-7xl mx-auto">
             {renderContent()}
           </div>
         </main>
         
-        <footer className="py-4 px-8 text-center text-[10px] font-bold text-slate-400 uppercase tracking-widest">
+        <footer className="py-4 px-8 text-center text-[10px] font-bold text-slate-400 uppercase tracking-widest bg-background">
           &copy; 2024 SQL Sentinel Health Management • Professional Data Intelligence Platform
         </footer>
       </SidebarInset>
