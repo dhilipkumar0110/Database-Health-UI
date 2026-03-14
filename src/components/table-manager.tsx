@@ -198,6 +198,45 @@ export function TableManager({ activeDb }: { activeDb: string }) {
           </div>
         </div>
 
+        {/* Bulk Actions Bar */}
+        {selectedTables.length > 0 && (
+          <div className="flex items-center gap-3 p-2 px-4 bg-[#E8F0FE] border border-[#D2E3FC] rounded-xl animate-in slide-in-from-top-2">
+            <span className="text-sm font-semibold text-[#1967D2] mr-2 whitespace-nowrap">
+              {selectedTables.length} selected
+            </span>
+            <div className="flex items-center gap-2 overflow-x-auto no-scrollbar">
+              <Button 
+                variant="outline" 
+                size="sm" 
+                className="h-8 text-xs rounded-full bg-white border-white text-[#1967D2] hover:bg-white hover:text-[#185ABC] shadow-sm font-semibold px-4"
+              >
+                Rebuild Indexes
+              </Button>
+              <Button 
+                variant="outline" 
+                size="sm" 
+                className="h-8 text-xs rounded-full bg-white border-white text-[#1967D2] hover:bg-white hover:text-[#185ABC] shadow-sm font-semibold px-4"
+              >
+                Update Stats
+              </Button>
+              <Button 
+                variant="outline" 
+                size="sm" 
+                className="h-8 text-xs rounded-full bg-white border-white text-[#1967D2] hover:bg-white hover:text-[#185ABC] shadow-sm font-semibold px-4"
+              >
+                Schedule
+              </Button>
+              <Button 
+                variant="outline" 
+                size="sm" 
+                className="h-8 text-xs rounded-full bg-white border-white text-[#1967D2] hover:bg-white hover:text-[#185ABC] shadow-sm font-semibold px-4"
+              >
+                Flag Archive
+              </Button>
+            </div>
+          </div>
+        )}
+
         <div className="bg-white rounded-2xl border border-slate-100 shadow-sm overflow-hidden">
           <Table>
             <TableHeader className="bg-slate-50/50">
