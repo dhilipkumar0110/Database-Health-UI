@@ -31,18 +31,18 @@ import {
 } from "@/components/ui/select"
 import { Badge } from "@/components/ui/badge"
 
-const databases = ["PortalDB", "Sales_DB", "Production_Main", "AuditLogs"]
-
 export function AppSidebar({ 
   currentView, 
   onViewChange,
   activeDb,
-  onDbChange
+  onDbChange,
+  databases
 }: { 
   currentView: string, 
   onViewChange: (id: string) => void,
   activeDb: string,
-  onDbChange: (db: string) => void
+  onDbChange: (db: string) => void,
+  databases: string[]
 }) {
   return (
     <Sidebar variant="sidebar" className="border-r bg-white">
@@ -52,7 +52,6 @@ export function AppSidebar({
       </SidebarHeader>
       
       <SidebarContent className="px-2">
-        {/* Active Database Selector */}
         <SidebarGroup>
           <SidebarGroupLabel className="px-4 py-2 text-[10px] font-bold uppercase tracking-widest text-slate-400">
             Active Database
@@ -78,7 +77,6 @@ export function AppSidebar({
 
         <div className="border-t border-slate-100 mx-4 my-2" />
 
-        {/* Overview Section */}
         <SidebarGroup>
           <SidebarGroupLabel className="px-4 py-2 text-[10px] font-bold uppercase tracking-widest text-slate-400">
             Overview
@@ -97,7 +95,6 @@ export function AppSidebar({
           </SidebarMenu>
         </SidebarGroup>
 
-        {/* Dynamic Database Section */}
         <SidebarGroup>
           <SidebarGroupLabel className="px-4 py-2 text-[10px] font-bold uppercase tracking-widest text-slate-400">
             {activeDb.toUpperCase()}
@@ -137,7 +134,6 @@ export function AppSidebar({
           </SidebarMenu>
         </SidebarGroup>
 
-        {/* Maintain Section */}
         <SidebarGroup>
           <SidebarGroupLabel className="px-4 py-2 text-[10px] font-bold uppercase tracking-widest text-slate-400">
             Maintain
@@ -166,7 +162,6 @@ export function AppSidebar({
           </SidebarMenu>
         </SidebarGroup>
 
-        {/* Reports Section */}
         <SidebarGroup>
           <SidebarGroupLabel className="px-4 py-2 text-[10px] font-bold uppercase tracking-widest text-slate-400">
             Reports

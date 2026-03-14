@@ -2,6 +2,7 @@
 
 import * as React from "react"
 import { 
+  Badge as BadgeIcon,
   Plus, 
   RefreshCw, 
   Database, 
@@ -22,6 +23,7 @@ import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { cn } from "@/lib/utils"
 import { ConnectDatabaseModal } from "@/components/connect-database-modal"
+import { DatabaseInstance } from "@/app/page"
 
 const INITIAL_STATS = [
   {
@@ -50,86 +52,17 @@ const INITIAL_STATS = [
   }
 ]
 
-const INITIAL_DATABASES = [
-  {
-    name: "PortalDB",
-    server: "SQLSRV-PROD-01 · port 1433",
-    status: "Warning",
-    statusVariant: "warning",
-    metrics: [
-      { label: "Size", value: "842 GB" },
-      { label: "Tables", value: "20" },
-      { label: "Avg frag", value: "24%", color: "text-amber-600" },
-      { label: "Cache hit", value: "91%", color: "text-emerald-600" },
-      { label: "Deadlocks", value: "7", color: "text-rose-600" },
-      { label: "Slow queries", value: "243", color: "text-rose-600" },
-    ],
-    footer: "3 tables above 30% fragmentation · 1 redundant table detected",
-    isActive: true
-  },
-  {
-    name: "ReportingDB",
-    server: "SQLSRV-PROD-01 · port 1433",
-    status: "Critical",
-    statusVariant: "critical",
-    metrics: [
-      { label: "Size", value: "210 GB" },
-      { label: "Tables", value: "34" },
-      { label: "Avg frag", value: "41%", color: "text-rose-600" },
-      { label: "Cache hit", value: "78%", color: "text-rose-600" },
-      { label: "Deadlocks", value: "2", color: "text-slate-900" },
-      { label: "Slow queries", value: "189", color: "text-rose-600" },
-    ],
-    footer: "5 tables critical · cache hit below 80% threshold",
-    isActive: false
-  },
-  {
-    name: "ArchiveDB",
-    server: "SQLSRV-ARCH-01 · port 1433",
-    status: "Healthy",
-    statusVariant: "healthy",
-    metrics: [
-      { label: "Size", value: "1.4 TB" },
-      { label: "Tables", value: "58" },
-      { label: "Avg frag", value: "8%", color: "text-emerald-600" },
-      { label: "Cache hit", value: "97%", color: "text-emerald-600" },
-      { label: "Deadlocks", value: "0", color: "text-slate-900" },
-      { label: "Slow queries", value: "12", color: "text-slate-900" },
-    ],
-    footer: "All metrics within healthy thresholds",
-    isActive: false
-  }
-]
-
-export function DashboardOverview() {
+export function DashboardOverview({ 
+  databases, 
+  onAddDatabase 
+}: { 
+  databases: DatabaseInstance[], 
+  onAddDatabase: (db: string, server: string, count: number) => void 
+}) {
   const [isModalOpen, setIsModalOpen] = React.useState(false)
-  const [databases, setDatabases] = React.useState(INITIAL_DATABASES)
-
-  const handleAddDatabase = (dbName: string, serverName: string, tableCount: number) => {
-    const newDb = {
-      name: dbName || "New_Connection",
-      server: `${serverName || "Localhost"} · port 1433`,
-      status: "Healthy",
-      statusVariant: "healthy",
-      metrics: [
-        { label: "Size", value: "0 GB" },
-        { label: "Tables", value: tableCount.toString() },
-        { label: "Avg frag", value: "0%", color: "text-emerald-600" },
-        { label: "Cache hit", value: "100%", color: "text-emerald-600" },
-        { label: "Deadlocks", value: "0", color: "text-slate-900" },
-        { label: "Slow queries", value: "0", color: "text-slate-900" },
-      ],
-      footer: "Initial scan in progress · No issues found",
-      isActive: true
-    }
-
-    // Set all others to inactive first, then add the new one
-    setDatabases(prev => [newDb, ...prev.map(d => ({ ...d, isActive: false }))])
-  }
 
   return (
     <div className="space-y-6 animate-in fade-in duration-500">
-      {/* Header Area */}
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-3">
           <h1 className="text-2xl font-bold text-slate-900">All Databases</h1>
@@ -154,7 +87,6 @@ export function DashboardOverview() {
         </div>
       </div>
 
-      {/* Summary Stats Grid */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
         {INITIAL_STATS.map((stat, i) => (
           <Card key={i} className="bg-[#F1F3ED] border-none shadow-none rounded-xl">
@@ -169,7 +101,6 @@ export function DashboardOverview() {
         ))}
       </div>
 
-      {/* Connected DBs Section */}
       <div className="space-y-4 pt-2">
         <div className="flex items-center justify-between">
           <h2 className="text-sm font-bold text-slate-900">Connected SQL Server databases</h2>
@@ -239,7 +170,7 @@ export function DashboardOverview() {
       <ConnectDatabaseModal 
         isOpen={isModalOpen} 
         onClose={() => setIsModalOpen(false)}
-        onComplete={handleAddDatabase}
+        onComplete={onAddDatabase}
       />
     </div>
   )
