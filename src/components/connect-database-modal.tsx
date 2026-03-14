@@ -21,8 +21,15 @@ import {
 } from "@/components/ui/select"
 import { useToast } from "@/hooks/use-toast"
 import { Checkbox } from "@/components/ui/checkbox"
-import { Separator } from "@/components/ui/separator"
 import { ScrollArea } from "@/components/ui/scroll-area"
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table"
 
 interface ConnectDatabaseModalProps {
   isOpen: boolean
@@ -31,15 +38,15 @@ interface ConnectDatabaseModalProps {
 }
 
 const MOCK_TABLES = [
-  { name: "Users", schema: "dbo", size: "124 MB" },
-  { name: "Orders", schema: "sales", size: "1.2 GB" },
-  { name: "OrderDetails", schema: "sales", size: "2.4 GB" },
-  { name: "Products", schema: "inv", size: "45 MB" },
-  { name: "Category", schema: "inv", size: "12 KB" },
-  { name: "Logs", schema: "audit", size: "14.2 GB" },
-  { name: "AuditTrail", schema: "audit", size: "8.1 GB" },
-  { name: "Transactions", schema: "dbo", size: "5.4 GB" },
-  { name: "CustomerProfiles", schema: "sales", size: "890 MB" },
+  { name: "Users", schema: "dbo", size: "124 MB", records: "12,500" },
+  { name: "Orders", schema: "sales", size: "1.2 GB", records: "450,200" },
+  { name: "OrderDetails", schema: "sales", size: "2.4 GB", records: "1,200,500" },
+  { name: "Products", schema: "inv", size: "45 MB", records: "8,400" },
+  { name: "Category", schema: "inv", size: "12 KB", records: "42" },
+  { name: "Logs", schema: "audit", size: "14.2 GB", records: "24,500,000" },
+  { name: "AuditTrail", schema: "audit", size: "8.1 GB", records: "12,200,000" },
+  { name: "Transactions", schema: "dbo", size: "5.4 GB", records: "8,900,000" },
+  { name: "CustomerProfiles", schema: "sales", size: "890 MB", records: "340,000" },
 ]
 
 export function ConnectDatabaseModal({ isOpen, onClose, onComplete }: ConnectDatabaseModalProps) {
@@ -68,6 +75,7 @@ export function ConnectDatabaseModal({ isOpen, onClose, onComplete }: ConnectDat
       setTimeout(() => {
         setCurrentStep(1)
         setIsTested(false)
+        setSelectedTables([])
       }, 300)
     }
   }, [isOpen])
@@ -107,6 +115,16 @@ export function ConnectDatabaseModal({ isOpen, onClose, onComplete }: ConnectDat
     t.name.toLowerCase().includes(tableSearch.toLowerCase()) || 
     t.schema.toLowerCase().includes(tableSearch.toLowerCase())
   )
+
+  const isAllSelected = filteredTables.length > 0 && selectedTables.length === filteredTables.length
+
+  const toggleSelectAll = () => {
+    if (isAllSelected) {
+      setSelectedTables([])
+    } else {
+      setSelectedTables(filteredTables.map(t => t.name))
+    }
+  }
 
   const handleFinalize = () => {
     if (onComplete) {
@@ -229,30 +247,63 @@ export function ConnectDatabaseModal({ isOpen, onClose, onComplete }: ConnectDat
                 onChange={(e) => setTableSearch(e.target.value)}
               />
             </div>
-            <div className="rounded-xl border border-slate-200 overflow-hidden">
-              <ScrollArea className="h-[300px] w-full bg-white">
-                <div className="p-1">
-                  {filteredTables.map((table) => (
-                    <div 
-                      key={table.name}
-                      className="flex items-center justify-between p-3 hover:bg-slate-50 cursor-pointer rounded-lg transition-colors group"
-                      onClick={() => toggleTable(table.name)}
-                    >
-                      <div className="flex items-center gap-3">
-                        <Checkbox checked={selectedTables.includes(table.name)} />
-                        <div className="flex flex-col">
-                          <span className="text-sm font-semibold text-slate-700">{table.name}</span>
-                          <span className="text-[10px] text-slate-400 font-bold uppercase">{table.schema}</span>
-                        </div>
-                      </div>
-                      <span className="text-xs text-slate-400 font-medium">{table.size}</span>
-                    </div>
-                  ))}
-                </div>
+            
+            <div className="rounded-xl border border-slate-200 overflow-hidden bg-white shadow-sm">
+              <ScrollArea className="h-[320px] w-full">
+                <Table>
+                  <TableHeader className="bg-slate-50/80 sticky top-0 z-10 backdrop-blur-sm">
+                    <TableRow className="hover:bg-transparent border-b border-slate-200">
+                      <TableHead className="w-[50px] py-3">
+                        <Checkbox 
+                          checked={isAllSelected} 
+                          onCheckedChange={toggleSelectAll}
+                        />
+                      </TableHead>
+                      <TableHead className="text-[10px] font-bold uppercase tracking-wider text-slate-400 py-3">Table Name</TableHead>
+                      <TableHead className="text-[10px] font-bold uppercase tracking-wider text-slate-400 py-3">Schema</TableHead>
+                      <TableHead className="text-[10px] font-bold uppercase tracking-wider text-slate-400 py-3">Records</TableHead>
+                      <TableHead className="text-right text-[10px] font-bold uppercase tracking-wider text-slate-400 py-3">Size</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {filteredTables.map((table) => (
+                      <TableRow 
+                        key={table.name}
+                        className="cursor-pointer hover:bg-slate-50/50 transition-colors border-b border-slate-100 last:border-0"
+                        onClick={() => toggleTable(table.name)}
+                      >
+                        <TableCell className="py-3">
+                          <Checkbox 
+                            checked={selectedTables.includes(table.name)}
+                            onCheckedChange={() => toggleTable(table.name)}
+                            onClick={(e) => e.stopPropagation()}
+                          />
+                        </TableCell>
+                        <TableCell className="py-3 text-sm font-semibold text-slate-700">{table.name}</TableCell>
+                        <TableCell className="py-3 text-[10px] font-bold text-slate-400 uppercase">{table.schema}</TableCell>
+                        <TableCell className="py-3 text-xs font-medium text-slate-500">{table.records}</TableCell>
+                        <TableCell className="py-3 text-right text-xs font-bold text-slate-600">{table.size}</TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
               </ScrollArea>
             </div>
-            <div className="text-xs text-slate-400 font-medium">
-              {selectedTables.length} tables selected to monitor
+            
+            <div className="flex items-center justify-between px-1">
+              <span className="text-xs text-slate-400 font-bold uppercase tracking-wide">
+                {selectedTables.length} tables selected
+              </span>
+              {selectedTables.length > 0 && (
+                <Button 
+                  variant="link" 
+                  size="sm" 
+                  onClick={() => setSelectedTables([])}
+                  className="text-[10px] h-auto p-0 text-rose-500 font-bold uppercase"
+                >
+                  Clear Selection
+                </Button>
+              )}
             </div>
           </div>
         )
@@ -331,14 +382,14 @@ export function ConnectDatabaseModal({ isOpen, onClose, onComplete }: ConnectDat
 
   return (
     <Dialog open={isOpen} onOpenChange={(open) => !open && onClose()}>
-      <DialogContent className="sm:max-w-[520px] p-0 gap-0 border-none overflow-hidden rounded-3xl shadow-2xl [&>button]:hidden">
+      <DialogContent className="sm:max-w-[560px] p-0 gap-0 border-none overflow-hidden rounded-[2rem] shadow-2xl [&>button]:hidden">
         <DialogHeader className="px-8 py-6 border-b flex flex-row items-center justify-between bg-white">
           <div className="space-y-1">
             <DialogTitle className="text-xl font-bold text-[#4A6076]">
               {currentStep === 4 ? "Finished" : `New Data Source — Step ${currentStep}`}
             </DialogTitle>
             <div className="flex items-center gap-1.5 pt-1">
-              {stepIcons.map((Icon, idx) => (
+              {stepIcons.map((_, idx) => (
                 <React.Fragment key={idx}>
                   <div 
                     className={`h-1.5 w-6 rounded-full transition-colors ${
@@ -353,13 +404,13 @@ export function ConnectDatabaseModal({ isOpen, onClose, onComplete }: ConnectDat
             variant="outline" 
             size="icon" 
             onClick={onClose}
-            className="h-8 w-8 rounded-full border-2 border-emerald-500 hover:bg-emerald-50 p-0 transition-colors shadow-none"
+            className="h-9 w-9 rounded-full border-2 border-emerald-500 hover:bg-emerald-50 p-0 transition-colors shadow-none"
           >
-            <X className="h-4 w-4 text-emerald-600 stroke-[3px]" />
+            <X className="h-4 w-4 text-emerald-600 stroke-[4px]" />
           </Button>
         </DialogHeader>
 
-        <div className="p-8 bg-white min-h-[400px]">
+        <div className="p-8 bg-white min-h-[440px]">
           {renderStep()}
         </div>
 
@@ -377,7 +428,7 @@ export function ConnectDatabaseModal({ isOpen, onClose, onComplete }: ConnectDat
               onClick={currentStep === 3 ? handleFinalize : () => setCurrentStep(prev => prev + 1)}
               className={`flex-1 h-12 font-bold rounded-xl transition-all shadow-sm ${
                 ((currentStep === 1 && isStep1Valid && isTested) || (currentStep === 2 && selectedTables.length > 0) || currentStep === 3)
-                  ? "bg-[#FCA5A5] hover:bg-[#F87171] text-white" 
+                  ? "bg-primary hover:bg-primary/90 text-white" 
                   : "bg-slate-200 text-slate-400 cursor-not-allowed"
               }`}
             >
