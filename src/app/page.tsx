@@ -7,6 +7,7 @@ import { DashboardOverview } from "@/components/dashboard-overview"
 import { RedundancyScanner } from "@/components/redundancy-scanner"
 import { MaintenancePlanner } from "@/components/maintenance-planner"
 import { TableManager } from "@/components/table-manager"
+import { PerformanceMonitor } from "@/components/performance-monitor"
 import { Separator } from "@/components/ui/separator"
 import { Button } from "@/components/ui/button"
 import { Bell, Search } from "lucide-react"
@@ -34,8 +35,8 @@ export default function SQLSentinelApp() {
       metrics: [
         { label: "Size", value: "842 GB" },
         { label: "Tables", value: "20" },
-        { label: "Avg frag", value: "24%", color: "text-amber-600" },
-        { label: "Cache hit", value: "91%", color: "text-emerald-600" },
+        { label: "Avg frag", value: "24.3%", color: "text-amber-600" },
+        { label: "Cache hit", value: "91.4%", color: "text-emerald-600" },
         { label: "Deadlocks", value: "7", color: "text-rose-600" },
         { label: "Slow queries", value: "243", color: "text-rose-600" },
       ],
@@ -88,6 +89,8 @@ export default function SQLSentinelApp() {
         return <DashboardOverview databases={databases} onAddDatabase={handleAddDatabase} />
       case "table-manager":
         return <TableManager activeDb={activeDbName} />
+      case "performance":
+        return <PerformanceMonitor activeDb={activeDbName} />
       case "redundancy":
         return <RedundancyScanner />
       case "maintenance":
@@ -113,46 +116,48 @@ export default function SQLSentinelApp() {
         databases={databases.map(db => db.name)}
       />
       <SidebarInset className="bg-background flex flex-col">
-        <header className="flex h-14 shrink-0 items-center justify-between px-6 bg-white border-b border-slate-200 sticky top-0 z-10">
+        <header className="flex h-16 shrink-0 items-center justify-between px-6 bg-white border-b border-slate-200 sticky top-0 z-10 shadow-sm">
           <div className="flex items-center gap-4">
             <SidebarTrigger className="text-slate-400 hover:text-slate-600 h-8 w-8" />
             <Separator orientation="vertical" className="h-4" />
             <div className="flex items-center gap-2">
               <span className="text-xs font-bold text-slate-700">Instance:</span>
-              <span className="text-xs font-medium text-slate-400">PROD-SQL-01</span>
+              <span className="text-xs font-medium text-slate-400 uppercase tracking-wider">PROD-SQL-01</span>
             </div>
           </div>
-          <div className="flex items-center gap-3 flex-1 justify-end">
+          <div className="flex items-center gap-4 flex-1 justify-end max-w-4xl">
             <div className="relative w-full max-w-md">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-slate-400" />
+              <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-slate-400" />
               <Input
                 type="search"
-                placeholder="Search logs, queries..."
-                className="pl-9 bg-[#F8F9FA] border-slate-200 h-9 text-xs rounded-full focus-visible:ring-1 shadow-none"
+                placeholder="Search logs, queries, tables..."
+                className="pl-10 bg-[#F8F9FA] border-slate-200 h-10 text-xs rounded-full focus-visible:ring-1 shadow-none w-full"
               />
             </div>
-            <Button 
-              variant="outline" 
-              size="icon" 
-              className="relative h-9 w-9 rounded-lg border-[#E6F4EA] bg-[#F8F9FA] hover:bg-white transition-colors"
-            >
-              <Bell className="h-4 w-4 text-slate-400" />
-              <span className="absolute top-2.5 right-2.5 w-1.5 h-1.5 bg-rose-500 rounded-full border border-white" />
-            </Button>
-            <Avatar className="h-8 w-8 rounded-lg border border-slate-200 shadow-sm">
-              <AvatarImage src="https://picsum.photos/seed/user-main/32/32" />
-              <AvatarFallback className="text-[10px] font-bold">AD</AvatarFallback>
-            </Avatar>
+            <div className="flex items-center gap-3">
+              <Button 
+                variant="outline" 
+                size="icon" 
+                className="relative h-10 w-10 rounded-full border-2 border-[#E6F4EA] bg-white hover:bg-[#F1F9F3] transition-all group"
+              >
+                <Bell className="h-4 w-4 text-slate-400 group-hover:text-emerald-600" />
+                <span className="absolute top-2 right-2 w-2 h-2 bg-rose-500 rounded-full border-2 border-white" />
+              </Button>
+              <Avatar className="h-10 w-10 rounded-full border-2 border-slate-100 shadow-sm">
+                <AvatarImage src="https://picsum.photos/seed/user-main/40/40" />
+                <AvatarFallback className="text-[10px] font-bold bg-emerald-50 text-emerald-700">AD</AvatarFallback>
+              </Avatar>
+            </div>
           </div>
         </header>
 
-        <main className="flex-1 px-8 py-6 overflow-auto bg-background">
+        <main className="flex-1 px-8 py-8 overflow-auto bg-background">
           <div className="max-w-7xl mx-auto">
             {renderContent()}
           </div>
         </main>
         
-        <footer className="py-4 px-8 text-center text-[10px] font-bold text-slate-400 uppercase tracking-widest bg-background">
+        <footer className="py-6 px-8 text-center text-[10px] font-bold text-slate-400 uppercase tracking-[0.2em] bg-background">
           &copy; 2024 SQL Sentinel Health Management • Professional Data Intelligence Platform
         </footer>
       </SidebarInset>
