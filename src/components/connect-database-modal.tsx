@@ -1,7 +1,7 @@
 "use client"
 
 import * as React from "react"
-import { X, Loader2, CheckCircle2, ChevronRight, Search, Table as TableIcon, Settings, Check } from "lucide-react"
+import { X, Loader2, CheckCircle2, ChevronRight, Search, Table as TableIcon, Settings, Check, ArrowUpDown, ChevronUp, ChevronDown } from "lucide-react"
 import {
   Dialog,
   DialogContent,
@@ -30,6 +30,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table"
+import { cn } from "@/lib/utils"
 
 interface ConnectDatabaseModalProps {
   isOpen: boolean
@@ -37,7 +38,14 @@ interface ConnectDatabaseModalProps {
   onComplete?: (dbName: string, serverName: string, tableCount: number) => void
 }
 
-const MOCK_TABLES = [
+type TableData = {
+  name: string
+  schema: string
+  size: string
+  records: string
+}
+
+const MOCK_TABLES: TableData[] = [
   { name: "Users", schema: "dbo", size: "124 MB", records: "12,500" },
   { name: "Orders", schema: "sales", size: "1.2 GB", records: "450,200" },
   { name: "OrderDetails", schema: "sales", size: "2.4 GB", records: "1,200,500" },
@@ -56,6 +64,7 @@ export function ConnectDatabaseModal({ isOpen, onClose, onComplete }: ConnectDat
   const [isTested, setIsTested] = React.useState(false)
   const [tableSearch, setTableSearch] = React.useState("")
   const [selectedTables, setSelectedTables] = React.useState<string[]>([])
+  const [sortConfig, setSortConfig] = React.useState<{ key: keyof TableData, direction: 'asc' | 'desc' } | null>({ key: 'name', direction: 'asc' })
   
   const [formData, setFormData] = React.useState({
     dataSourceName: "",
@@ -69,7 +78,6 @@ export function ConnectDatabaseModal({ isOpen, onClose, onComplete }: ConnectDat
     thresholdSlow: "5"
   })
 
-  // Reset modal state on close
   React.useEffect(() => {
     if (!isOpen) {
       setTimeout(() => {
@@ -111,10 +119,56 @@ export function ConnectDatabaseModal({ isOpen, onClose, onComplete }: ConnectDat
     )
   }
 
-  const filteredTables = MOCK_TABLES.filter(t => 
-    t.name.toLowerCase().includes(tableSearch.toLowerCase()) || 
-    t.schema.toLowerCase().includes(tableSearch.toLowerCase())
-  )
+  const handleSort = (key: keyof TableData) => {
+    let direction: 'asc' | 'desc' = 'asc'
+    if (sortConfig && sortConfig.key === key && sortConfig.direction === 'asc') {
+      direction = 'desc'
+    }
+    setSortConfig({ key, direction })
+  }
+
+  const parseSize = (sizeStr: string) => {
+    const value = parseFloat(sizeStr)
+    if (sizeStr.includes('GB')) return value * 1024 * 1024
+    if (sizeStr.includes('MB')) return value * 1024
+    if (sizeStr.includes('KB')) return value
+    return value
+  }
+
+  const parseRecords = (recordsStr: string) => {
+    return parseInt(recordsStr.replace(/,/g, ''), 10)
+  }
+
+  const filteredTables = React.useMemo(() => {
+    let results = MOCK_TABLES.filter(t => 
+      t.name.toLowerCase().includes(tableSearch.toLowerCase()) || 
+      t.schema.toLowerCase().includes(tableSearch.toLowerCase())
+    )
+
+    if (sortConfig) {
+      results = [...results].sort((a, b) => {
+        const aValue = a[sortConfig.key]
+        const bValue = b[sortConfig.key]
+
+        if (sortConfig.key === 'size') {
+          const aSize = parseSize(aValue)
+          const bSize = parseSize(bValue)
+          return sortConfig.direction === 'asc' ? aSize - bSize : bSize - aSize
+        }
+
+        if (sortConfig.key === 'records') {
+          const aRecs = parseRecords(aValue)
+          const bRecs = parseRecords(bValue)
+          return sortConfig.direction === 'asc' ? aRecs - bRecs : bRecs - aRecs
+        }
+
+        if (aValue < bValue) return sortConfig.direction === 'asc' ? -1 : 1
+        if (aValue > bValue) return sortConfig.direction === 'asc' ? 1 : -1
+        return 0
+      })
+    }
+    return results
+  }, [tableSearch, sortConfig])
 
   const isAllSelected = filteredTables.length > 0 && selectedTables.length === filteredTables.length
 
@@ -131,6 +185,11 @@ export function ConnectDatabaseModal({ isOpen, onClose, onComplete }: ConnectDat
       onComplete(formData.dataSourceName, formData.serverName, selectedTables.length)
     }
     setCurrentStep(4)
+  }
+
+  const SortIndicator = ({ column }: { column: keyof TableData }) => {
+    if (sortConfig?.key !== column) return <ArrowUpDown className="ml-2 h-3 w-3 opacity-30" />
+    return sortConfig.direction === 'asc' ? <ChevronUp className="ml-2 h-3 w-3" /> : <ChevronDown className="ml-2 h-3 w-3" />
   }
 
   const renderStep = () => {
@@ -259,10 +318,42 @@ export function ConnectDatabaseModal({ isOpen, onClose, onComplete }: ConnectDat
                           onCheckedChange={toggleSelectAll}
                         />
                       </TableHead>
-                      <TableHead className="text-[10px] font-bold uppercase tracking-wider text-slate-400 py-3">Table Name</TableHead>
-                      <TableHead className="text-[10px] font-bold uppercase tracking-wider text-slate-400 py-3">Schema</TableHead>
-                      <TableHead className="text-[10px] font-bold uppercase tracking-wider text-slate-400 py-3">Records</TableHead>
-                      <TableHead className="text-right text-[10px] font-bold uppercase tracking-wider text-slate-400 py-3">Size</TableHead>
+                      <TableHead 
+                        className="text-[10px] font-bold uppercase tracking-wider text-slate-400 py-3 cursor-pointer hover:text-slate-600 transition-colors"
+                        onClick={() => handleSort('name')}
+                      >
+                        <div className="flex items-center">
+                          Table Name
+                          <SortIndicator column="name" />
+                        </div>
+                      </TableHead>
+                      <TableHead 
+                        className="text-[10px] font-bold uppercase tracking-wider text-slate-400 py-3 cursor-pointer hover:text-slate-600 transition-colors"
+                        onClick={() => handleSort('schema')}
+                      >
+                        <div className="flex items-center">
+                          Schema
+                          <SortIndicator column="schema" />
+                        </div>
+                      </TableHead>
+                      <TableHead 
+                        className="text-[10px] font-bold uppercase tracking-wider text-slate-400 py-3 cursor-pointer hover:text-slate-600 transition-colors"
+                        onClick={() => handleSort('records')}
+                      >
+                        <div className="flex items-center">
+                          Records
+                          <SortIndicator column="records" />
+                        </div>
+                      </TableHead>
+                      <TableHead 
+                        className="text-right text-[10px] font-bold uppercase tracking-wider text-slate-400 py-3 cursor-pointer hover:text-slate-600 transition-colors"
+                        onClick={() => handleSort('size')}
+                      >
+                        <div className="flex items-center justify-end">
+                          Size
+                          <SortIndicator column="size" />
+                        </div>
+                      </TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>
