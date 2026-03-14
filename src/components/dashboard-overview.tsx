@@ -23,7 +23,7 @@ import { Button } from "@/components/ui/button"
 import { cn } from "@/lib/utils"
 import { ConnectDatabaseModal } from "@/components/connect-database-modal"
 
-const summaryStats = [
+const INITIAL_STATS = [
   {
     title: "Total databases",
     value: "3",
@@ -50,7 +50,7 @@ const summaryStats = [
   }
 ]
 
-const databaseInstances = [
+const INITIAL_DATABASES = [
   {
     name: "PortalDB",
     server: "SQLSRV-PROD-01 · port 1433",
@@ -103,6 +103,29 @@ const databaseInstances = [
 
 export function DashboardOverview() {
   const [isModalOpen, setIsModalOpen] = React.useState(false)
+  const [databases, setDatabases] = React.useState(INITIAL_DATABASES)
+
+  const handleAddDatabase = (dbName: string, serverName: string, tableCount: number) => {
+    const newDb = {
+      name: dbName || "New_Connection",
+      server: `${serverName || "Localhost"} · port 1433`,
+      status: "Healthy",
+      statusVariant: "healthy",
+      metrics: [
+        { label: "Size", value: "0 GB" },
+        { label: "Tables", value: tableCount.toString() },
+        { label: "Avg frag", value: "0%", color: "text-emerald-600" },
+        { label: "Cache hit", value: "100%", color: "text-emerald-600" },
+        { label: "Deadlocks", value: "0", color: "text-slate-900" },
+        { label: "Slow queries", value: "0", color: "text-slate-900" },
+      ],
+      footer: "Initial scan in progress · No issues found",
+      isActive: true
+    }
+
+    // Set all others to inactive first, then add the new one
+    setDatabases(prev => [newDb, ...prev.map(d => ({ ...d, isActive: false }))])
+  }
 
   return (
     <div className="space-y-6 animate-in fade-in duration-500">
@@ -133,7 +156,7 @@ export function DashboardOverview() {
 
       {/* Summary Stats Grid */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-        {summaryStats.map((stat, i) => (
+        {INITIAL_STATS.map((stat, i) => (
           <Card key={i} className="bg-[#F1F3ED] border-none shadow-none rounded-xl">
             <CardContent className="p-4">
               <div className="text-[10px] font-bold text-slate-400 uppercase tracking-tight mb-1">{stat.title}</div>
@@ -161,7 +184,7 @@ export function DashboardOverview() {
         </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
-          {databaseInstances.map((db, i) => (
+          {databases.map((db, i) => (
             <Card 
               key={i} 
               className={cn(
@@ -215,7 +238,8 @@ export function DashboardOverview() {
 
       <ConnectDatabaseModal 
         isOpen={isModalOpen} 
-        onClose={() => setIsModalOpen(false)} 
+        onClose={() => setIsModalOpen(false)}
+        onComplete={handleAddDatabase}
       />
     </div>
   )

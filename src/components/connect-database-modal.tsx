@@ -27,6 +27,7 @@ import { ScrollArea } from "@/components/ui/scroll-area"
 interface ConnectDatabaseModalProps {
   isOpen: boolean
   onClose: () => void
+  onComplete?: (dbName: string, serverName: string, tableCount: number) => void
 }
 
 const MOCK_TABLES = [
@@ -41,7 +42,7 @@ const MOCK_TABLES = [
   { name: "CustomerProfiles", schema: "sales", size: "890 MB" },
 ]
 
-export function ConnectDatabaseModal({ isOpen, onClose }: ConnectDatabaseModalProps) {
+export function ConnectDatabaseModal({ isOpen, onClose, onComplete }: ConnectDatabaseModalProps) {
   const { toast } = useToast()
   const [currentStep, setCurrentStep] = React.useState(1)
   const [isTesting, setIsTesting] = React.useState(false)
@@ -106,6 +107,13 @@ export function ConnectDatabaseModal({ isOpen, onClose }: ConnectDatabaseModalPr
     t.name.toLowerCase().includes(tableSearch.toLowerCase()) || 
     t.schema.toLowerCase().includes(tableSearch.toLowerCase())
   )
+
+  const handleFinalize = () => {
+    if (onComplete) {
+      onComplete(formData.dataSourceName, formData.serverName, selectedTables.length)
+    }
+    setCurrentStep(4)
+  }
 
   const renderStep = () => {
     switch (currentStep) {
@@ -319,7 +327,6 @@ export function ConnectDatabaseModal({ isOpen, onClose }: ConnectDatabaseModalPr
     }
   }
 
-  const stepTitles = ["Connect DB", "Select Tables", "Set Thresholds", "Done"]
   const stepIcons = [TableIcon, Search, Settings, CheckCircle2]
 
   return (
@@ -367,7 +374,7 @@ export function ConnectDatabaseModal({ isOpen, onClose }: ConnectDatabaseModalPr
             </Button>
             <Button 
               disabled={(currentStep === 1 && (!isStep1Valid || !isTested)) || (currentStep === 2 && selectedTables.length === 0)}
-              onClick={() => setCurrentStep(prev => prev + 1)}
+              onClick={currentStep === 3 ? handleFinalize : () => setCurrentStep(prev => prev + 1)}
               className={`flex-1 h-12 font-bold rounded-xl transition-all shadow-sm ${
                 ((currentStep === 1 && isStep1Valid && isTested) || (currentStep === 2 && selectedTables.length > 0) || currentStep === 3)
                   ? "bg-[#FCA5A5] hover:bg-[#F87171] text-white" 
