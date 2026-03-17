@@ -14,7 +14,8 @@ import {
   CheckCircle2,
   RefreshCw,
   Zap,
-  Play
+  Play,
+  Archive
 } from "lucide-react"
 import { Card, CardContent } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
@@ -198,7 +199,7 @@ export function TableManager({ activeDb }: { activeDb: string }) {
       setIsExecuting(false)
       toast({
         title: `${action} Complete`,
-        description: `Successfully processed ${tableCount} tables in ${activeDb}. Optimization complete.`,
+        description: `Successfully processed ${tableCount} tables in ${activeDb}. Operation complete.`,
       })
       setSelectedTables([])
     }, 2000)
@@ -337,6 +338,16 @@ export function TableManager({ activeDb }: { activeDb: string }) {
               >
                 <RefreshCw className={cn("h-3 w-3 mr-1", isExecuting && "animate-spin")} />
                 Update Stats
+              </Button>
+              <Button 
+                onClick={() => runBulkAction("Flag Archive")}
+                disabled={isExecuting}
+                variant="outline" 
+                size="sm" 
+                className="h-8 text-xs rounded-full bg-white border-white text-[#1967D2] hover:bg-white hover:text-[#185ABC] shadow-sm font-semibold px-4 whitespace-nowrap"
+              >
+                <Archive className="h-3 w-3 mr-1" />
+                Flag Archive
               </Button>
             </div>
           </div>
