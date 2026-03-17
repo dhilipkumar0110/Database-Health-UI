@@ -74,7 +74,7 @@ export function MaintenancePlanner({
     if (selectedTaskId) {
       const task = tasks.find(t => t.id === selectedTaskId)
       onUpdateTask(selectedTaskId, {
-        name: isEditModalOpen ? editableTaskName : task?.name,
+        name: task?.name, // Preservation of name
         status: 'scheduled',
         schedule: scheduleForm
       })
@@ -84,7 +84,7 @@ export function MaintenancePlanner({
       setEditableTaskName("")
       toast({
         title: isEditModalOpen ? "Schedule Updated" : "Schedule Created",
-        description: `"${isEditModalOpen ? editableTaskName : task?.name}" is now active.`
+        description: `"${task?.name}" is now active.`
       })
     }
   }
@@ -358,9 +358,9 @@ export function MaintenancePlanner({
               <Label className="text-sm font-semibold">Task Name</Label>
               <Input 
                 value={editableTaskName}
-                onChange={(e) => setEditableTaskName(e.target.value)}
-                className="h-11 border-slate-200 font-bold"
-                placeholder="Enter task name"
+                readOnly
+                className="h-11 border-slate-200 font-bold bg-slate-50 cursor-not-allowed"
+                placeholder="Task name"
               />
             </div>
 
