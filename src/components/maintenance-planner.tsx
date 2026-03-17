@@ -1,3 +1,4 @@
+
 "use client"
 
 import * as React from "react"
@@ -11,10 +12,11 @@ import {
   Database,
   RefreshCw,
   Zap,
-  Calendar
+  Calendar,
+  Edit2
 } from "lucide-react"
 import { Button } from "@/components/ui/button"
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card"
+import { Card, CardContent } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
 import { Badge } from "@/components/ui/badge"
 import { MaintenanceTask, ScheduleConfig } from "@/app/page"
@@ -47,15 +49,17 @@ import { cn } from "@/lib/utils"
 
 export function MaintenancePlanner({ 
   tasks, 
-  onUpdateTask 
+  onUpdateTask,
+  onDeleteTask
 }: { 
   tasks: MaintenanceTask[], 
-  onUpdateTask: (id: string, updates: Partial<MaintenanceTask>) => void 
+  onUpdateTask: (id: string, updates: Partial<MaintenanceTask>) => void,
+  onDeleteTask: (id: string) => void
 }) {
-  // Manual Schedule Creation
   const [isCreateModalOpen, setIsCreateModalOpen] = React.useState(false)
+  const [isEditModalOpen, setIsEditModalOpen] = React.useState(false)
   const [selectedTaskId, setSelectedTaskId] = React.useState<string>("")
-  const [manualScheduleForm, setManualScheduleForm] = React.useState<ScheduleConfig>({
+  const [scheduleForm, setScheduleForm] = React.useState<ScheduleConfig>({
     frequency: 'Daily',
     dayOfWeek: 'Monday',
     dayOfMonth: 1,
@@ -66,20 +70,39 @@ export function MaintenancePlanner({
   const scheduledTasks = tasks.filter(t => t.status === 'scheduled')
   const pendingTasks = tasks.filter(t => t.status !== 'scheduled')
 
-  const handleFinalizeManualSchedule = () => {
+  const handleFinalizeSchedule = () => {
     if (selectedTaskId) {
       const task = tasks.find(t => t.id === selectedTaskId)
       onUpdateTask(selectedTaskId, {
         status: 'scheduled',
-        schedule: manualScheduleForm
+        schedule: scheduleForm
       })
       setIsCreateModalOpen(false)
+      setIsEditModalOpen(false)
       setSelectedTaskId("")
       toast({
-        title: "Schedule Created",
+        title: isEditModalOpen ? "Schedule Updated" : "Schedule Created",
         description: `"${task?.name}" is now active.`
       })
     }
+  }
+
+  const openEditModal = (task: MaintenanceTask) => {
+    setSelectedTaskId(task.id)
+    if (task.schedule) {
+      setScheduleForm(task.schedule)
+    }
+    setIsEditModalOpen(true)
+  }
+
+  const resetForm = () => {
+    setScheduleForm({
+      frequency: 'Daily',
+      dayOfWeek: 'Monday',
+      dayOfMonth: 1,
+      startDate: new Date().toISOString().split('T')[0],
+      endDate: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString().split('T')[0]
+    })
   }
 
   return (
@@ -94,13 +117,12 @@ export function MaintenancePlanner({
             Manage your automated maintenance plans for enterprise databases.
           </p>
         </div>
-        <Button onClick={() => setIsCreateModalOpen(true)} className="bg-primary hover:bg-primary/90 text-white font-bold h-11 px-8 rounded-xl shadow-lg shadow-primary/10 transition-all gap-2">
+        <Button onClick={() => { resetForm(); setIsCreateModalOpen(true); }} className="bg-primary hover:bg-primary/90 text-white font-bold h-11 px-8 rounded-xl shadow-lg shadow-primary/10 transition-all gap-2">
           <Plus className="h-5 w-5" />
           Create New Schedule
         </Button>
       </div>
 
-      {/* Scheduled Tasks Grid */}
       <section className="space-y-4">
         <div className="flex items-center gap-2">
           <Clock className="h-5 w-5 text-slate-400" />
@@ -157,7 +179,7 @@ export function MaintenancePlanner({
                     <TableCell>
                       <span className="text-xs font-bold text-slate-600 italic">
                         {task.schedule?.frequency === 'Daily' ? 'Every day' :
-                         task.schedule?.frequency === 'Weekly' ? `Every ${task.schedule.dayOfWeek}` :
+                         task.schedule?.frequency === 'Weekly' ? `Every ${task.schedule?.dayOfWeek}` :
                          `On the ${task.schedule?.dayOfMonth}${task.schedule?.dayOfMonth === 1 ? 'st' : task.schedule?.dayOfMonth === 2 ? 'nd' : 'th'} of month`}
                       </span>
                     </TableCell>
@@ -177,9 +199,24 @@ export function MaintenancePlanner({
                       </div>
                     </TableCell>
                     <TableCell className="px-8 text-right">
-                      <Button variant="ghost" size="icon" className="h-8 w-8 text-slate-400 hover:text-rose-500 rounded-lg">
-                        <Trash2 className="h-4 w-4" />
-                      </Button>
+                      <div className="flex items-center justify-end gap-2">
+                        <Button 
+                          variant="ghost" 
+                          size="icon" 
+                          className="h-8 w-8 text-slate-400 hover:text-primary rounded-lg"
+                          onClick={() => openEditModal(task)}
+                        >
+                          <Edit2 className="h-4 w-4" />
+                        </Button>
+                        <Button 
+                          variant="ghost" 
+                          size="icon" 
+                          className="h-8 w-8 text-slate-400 hover:text-rose-500 rounded-lg"
+                          onClick={() => onDeleteTask(task.id)}
+                        >
+                          <Trash2 className="h-4 w-4" />
+                        </Button>
+                      </div>
                     </TableCell>
                   </TableRow>
                 ))
@@ -189,7 +226,7 @@ export function MaintenancePlanner({
         </Card>
       </section>
 
-      {/* Manual Creation Dialog */}
+      {/* Create Dialog */}
       <Dialog open={isCreateModalOpen} onOpenChange={setIsCreateModalOpen}>
         <DialogContent className="sm:max-w-[500px]">
           <DialogHeader>
@@ -219,8 +256,8 @@ export function MaintenancePlanner({
             <div className="space-y-2">
               <Label className="text-sm font-semibold">Frequency</Label>
               <Select 
-                value={manualScheduleForm.frequency} 
-                onValueChange={(v: any) => setManualScheduleForm(prev => ({ ...prev, frequency: v }))}
+                value={scheduleForm.frequency} 
+                onValueChange={(v: any) => setScheduleForm(prev => ({ ...prev, frequency: v }))}
               >
                 <SelectTrigger className="h-11 border-slate-200">
                   <SelectValue placeholder="Select frequency" />
@@ -233,12 +270,12 @@ export function MaintenancePlanner({
               </Select>
             </div>
 
-            {manualScheduleForm.frequency === 'Weekly' && (
+            {scheduleForm.frequency === 'Weekly' && (
               <div className="space-y-2 animate-in fade-in slide-in-from-top-2">
                 <Label className="text-sm font-semibold">Run on day</Label>
                 <Select 
-                  value={manualScheduleForm.dayOfWeek || "Monday"} 
-                  onValueChange={(v) => setManualScheduleForm(prev => ({ ...prev, dayOfWeek: v }))}
+                  value={scheduleForm.dayOfWeek || "Monday"} 
+                  onValueChange={(v) => setScheduleForm(prev => ({ ...prev, dayOfWeek: v }))}
                 >
                   <SelectTrigger className="h-11 border-slate-200">
                     <SelectValue placeholder="Select day" />
@@ -252,15 +289,15 @@ export function MaintenancePlanner({
               </div>
             )}
 
-            {manualScheduleForm.frequency === 'Monthly' && (
+            {scheduleForm.frequency === 'Monthly' && (
               <div className="space-y-2 animate-in fade-in slide-in-from-top-2">
                 <Label className="text-sm font-semibold">Run on date (1-31)</Label>
                 <Input 
                   type="number" 
                   min={1} 
                   max={31} 
-                  value={manualScheduleForm.dayOfMonth || 1}
-                  onChange={(e) => setManualScheduleForm(prev => ({ ...prev, dayOfMonth: parseInt(e.target.value) || 1 }))}
+                  value={scheduleForm.dayOfMonth || 1}
+                  onChange={(e) => setScheduleForm(prev => ({ ...prev, dayOfMonth: parseInt(e.target.value) || 1 }))}
                   className="h-11 border-slate-200"
                 />
               </div>
@@ -271,8 +308,8 @@ export function MaintenancePlanner({
                 <Label className="text-sm font-semibold text-slate-500">Start Date</Label>
                 <Input 
                   type="date" 
-                  value={manualScheduleForm.startDate}
-                  onChange={(e) => setManualScheduleForm(prev => ({ ...prev, startDate: e.target.value }))}
+                  value={scheduleForm.startDate}
+                  onChange={(e) => setScheduleForm(prev => ({ ...prev, startDate: e.target.value }))}
                   className="h-11 border-slate-200"
                 />
               </div>
@@ -280,8 +317,8 @@ export function MaintenancePlanner({
                 <Label className="text-sm font-semibold text-slate-500">End Date</Label>
                 <Input 
                   type="date" 
-                  value={manualScheduleForm.endDate}
-                  onChange={(e) => setManualScheduleForm(prev => ({ ...prev, endDate: e.target.value }))}
+                  value={scheduleForm.endDate}
+                  onChange={(e) => setScheduleForm(prev => ({ ...prev, endDate: e.target.value }))}
                   className="h-11 border-slate-200"
                 />
               </div>
@@ -291,10 +328,106 @@ export function MaintenancePlanner({
             <Button variant="outline" onClick={() => setIsCreateModalOpen(false)}>Cancel</Button>
             <Button 
               disabled={!selectedTaskId}
-              onClick={handleFinalizeManualSchedule} 
+              onClick={handleFinalizeSchedule} 
               className="bg-primary hover:bg-primary/90 text-white font-bold"
             >
               Finalize Schedule
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Edit Dialog */}
+      <Dialog open={isEditModalOpen} onOpenChange={setIsEditModalOpen}>
+        <DialogContent className="sm:max-w-[500px]">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <Edit2 className="h-5 w-5 text-primary" />
+              Edit Maintenance Schedule
+            </DialogTitle>
+            <DialogDescription>
+              Update frequency and details for the selected schedule.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="grid gap-6 py-4">
+            <div className="space-y-2">
+              <Label className="text-sm font-semibold">Frequency</Label>
+              <Select 
+                value={scheduleForm.frequency} 
+                onValueChange={(v: any) => setScheduleForm(prev => ({ ...prev, frequency: v }))}
+              >
+                <SelectTrigger className="h-11 border-slate-200">
+                  <SelectValue placeholder="Select frequency" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="Daily">Daily</SelectItem>
+                  <SelectItem value="Weekly">Weekly</SelectItem>
+                  <SelectItem value="Monthly">Monthly</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+
+            {scheduleForm.frequency === 'Weekly' && (
+              <div className="space-y-2 animate-in fade-in slide-in-from-top-2">
+                <Label className="text-sm font-semibold">Run on day</Label>
+                <Select 
+                  value={scheduleForm.dayOfWeek || "Monday"} 
+                  onValueChange={(v) => setScheduleForm(prev => ({ ...prev, dayOfWeek: v }))}
+                >
+                  <SelectTrigger className="h-11 border-slate-200">
+                    <SelectValue placeholder="Select day" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'].map(day => (
+                      <SelectItem key={day} value={day}>{day}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+            )}
+
+            {scheduleForm.frequency === 'Monthly' && (
+              <div className="space-y-2 animate-in fade-in slide-in-from-top-2">
+                <Label className="text-sm font-semibold">Run on date (1-31)</Label>
+                <Input 
+                  type="number" 
+                  min={1} 
+                  max={31} 
+                  value={scheduleForm.dayOfMonth || 1}
+                  onChange={(e) => setScheduleForm(prev => ({ ...prev, dayOfMonth: parseInt(e.target.value) || 1 }))}
+                  className="h-11 border-slate-200"
+                />
+              </div>
+            )}
+
+            <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label className="text-sm font-semibold text-slate-500">Start Date</Label>
+                <Input 
+                  type="date" 
+                  value={scheduleForm.startDate}
+                  onChange={(e) => setScheduleForm(prev => ({ ...prev, startDate: e.target.value }))}
+                  className="h-11 border-slate-200"
+                />
+              </div>
+              <div className="space-y-2">
+                <Label className="text-sm font-semibold text-slate-500">End Date</Label>
+                <Input 
+                  type="date" 
+                  value={scheduleForm.endDate}
+                  onChange={(e) => setScheduleForm(prev => ({ ...prev, endDate: e.target.value }))}
+                  className="h-11 border-slate-200"
+                />
+              </div>
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setIsEditModalOpen(false)}>Cancel</Button>
+            <Button 
+              onClick={handleFinalizeSchedule} 
+              className="bg-primary hover:bg-primary/90 text-white font-bold"
+            >
+              Update Schedule
             </Button>
           </DialogFooter>
         </DialogContent>

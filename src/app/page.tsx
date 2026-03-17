@@ -15,6 +15,7 @@ import { Button } from "@/components/ui/button"
 import { Bell, Search } from "lucide-react"
 import { Input } from "@/components/ui/input"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
+import { toast } from "@/hooks/use-toast"
 
 export type ScheduleConfig = {
   frequency: 'Daily' | 'Weekly' | 'Monthly'
@@ -103,6 +104,37 @@ export default function SQLSentinelApp() {
       tables: ["WEB_AUTH_DETAILS", "WEB_AUTH_NOTES"],
       createdAt: "2024-03-08T09:15:00Z",
       status: 'pending'
+    },
+    {
+      id: "task-3",
+      name: "Daily Stats Refresh",
+      type: "Update Stats",
+      server: "SQLSRV-PROD-01",
+      database: "WebPortalDB",
+      tables: ["USERS", "USER_PROVIDERS"],
+      createdAt: "2024-03-01T08:00:00Z",
+      status: 'scheduled',
+      schedule: {
+        frequency: 'Daily',
+        startDate: '2024-03-01',
+        endDate: '2024-12-31'
+      }
+    },
+    {
+      id: "task-4",
+      name: "Legacy Audit Archive",
+      type: "Archiving",
+      server: "SQLSRV-PROD-01",
+      database: "WebPortalDB",
+      tables: ["WEB_AUDIT_TRAIL"],
+      createdAt: "2024-03-05T10:00:00Z",
+      status: 'scheduled',
+      schedule: {
+        frequency: 'Weekly',
+        dayOfWeek: 'Sunday',
+        startDate: '2024-03-05',
+        endDate: '2024-06-05'
+      }
     }
   ])
 
@@ -144,6 +176,14 @@ export default function SQLSentinelApp() {
     setTasks(prev => prev.map(t => t.id === taskId ? { ...t, ...updates } : t))
   }
 
+  const handleDeleteTask = (taskId: string) => {
+    setTasks(prev => prev.filter(t => t.id !== taskId))
+    toast({
+      title: "Task Deleted",
+      description: "The maintenance task has been removed.",
+    })
+  }
+
   const renderContent = () => {
     const activeDb = databases.find(db => db.name === activeDbName)
     const serverName = activeDb?.server.split(' · ')[0] || "Unknown Server"
@@ -158,7 +198,7 @@ export default function SQLSentinelApp() {
       case "redundancy":
         return <RedundancyScanner activeDb={activeDbName} />
       case "maintenance":
-        return <MaintenancePlanner tasks={tasks} onUpdateTask={handleUpdateTask} />
+        return <MaintenancePlanner tasks={tasks} onUpdateTask={handleUpdateTask} onDeleteTask={handleDeleteTask} />
       case "archive":
         return <ArchiveManager tasks={tasks} onUpdateTask={handleUpdateTask} onViewChange={setCurrentView} />
       default:
