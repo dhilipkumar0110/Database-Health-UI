@@ -250,18 +250,6 @@ export function ArchiveManager({ tasks }: { tasks: MaintenanceTask[] }) {
                 </pre>
               </div>
             </Card>
-
-            <div className="p-6 bg-blue-50/50 rounded-2xl border border-blue-100 flex gap-4">
-              <div className="h-10 w-10 rounded-full bg-blue-100 flex items-center justify-center shrink-0">
-                <Zap className="h-5 w-5 text-blue-600" />
-              </div>
-              <div className="space-y-1">
-                <h4 className="text-xs font-bold text-blue-900 uppercase tracking-tight">Validation Insight</h4>
-                <p className="text-[10px] text-blue-800/80 leading-relaxed font-medium">
-                  Query validated against server metadata. Predicate uses indexed columns, ensuring O(log N) performance for data extraction.
-                </p>
-              </div>
-            </div>
           </div>
         </div>
       </div>
