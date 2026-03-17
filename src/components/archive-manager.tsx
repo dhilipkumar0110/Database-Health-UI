@@ -260,7 +260,7 @@ export function ArchiveManager({
                   Cancel
                 </Button>
                 <Button className="h-11 px-10 rounded-xl font-bold bg-primary text-white shadow-lg hover:shadow-primary/20 transition-all">
-                  Save Configuration
+                  Save
                 </Button>
               </div>
             </CardFooter>
