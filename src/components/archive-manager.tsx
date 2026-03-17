@@ -431,23 +431,30 @@ export function ArchiveManager({
             <Card key={task.id} className="bg-white border-none shadow-sm rounded-2xl overflow-hidden group hover:ring-2 hover:ring-primary/10 transition-all cursor-pointer" onClick={() => handleTaskClick(task)}>
               <CardHeader className="p-5 pb-3">
                 <div className="flex items-start justify-between">
-                  <div className="space-y-1">
+                  <div className="space-y-2">
                     <CardTitle className="text-base font-bold text-slate-900">{task.name}</CardTitle>
-                    <div className="flex items-center gap-2">
-                      <Badge 
-                        className={cn(
-                          "font-bold text-[8px] px-1.5 py-0 rounded border-none uppercase tracking-tighter",
-                          task.type === "Archiving" && "bg-amber-50 text-amber-600",
-                          task.type === "Index Rebuild" && "bg-blue-50 text-blue-600",
-                          task.type === "Update Stats" && "bg-emerald-50 text-emerald-600"
+                    <div className="flex items-center flex-wrap gap-2">
+                      <div className="flex items-center gap-1.5">
+                        <span className="text-[10px] font-bold text-slate-400 uppercase tracking-tight">Type:</span>
+                        <Badge 
+                          className={cn(
+                            "font-bold text-[8px] px-1.5 py-0 rounded border-none uppercase tracking-tighter",
+                            task.type === "Archiving" && "bg-amber-50 text-amber-600",
+                            task.type === "Index Rebuild" && "bg-blue-50 text-blue-600",
+                            task.type === "Update Stats" && "bg-emerald-50 text-emerald-600"
+                          )}
+                        >
+                          {task.type}
+                        </Badge>
+                      </div>
+                      <div className="flex items-center gap-1.5 ml-1 border-l pl-2 border-slate-100">
+                        <span className="text-[10px] font-bold text-slate-400 uppercase tracking-tight">Status:</span>
+                        {task.status === 'scheduled' ? (
+                          <Badge className="bg-emerald-500 text-white border-none font-bold text-[8px] uppercase px-1.5 py-0 rounded">Scheduled</Badge>
+                        ) : (
+                          <Badge className="bg-slate-100 text-slate-400 border-none font-bold text-[8px] uppercase px-1.5 py-0 rounded">Pending</Badge>
                         )}
-                      >
-                        {task.type}
-                      </Badge>
-                      {task.status === 'scheduled' && (
-                        <Badge className="bg-emerald-50 text-emerald-600 border-none font-bold text-[8px] uppercase">Scheduled</Badge>
-                      )}
-                      <span className="text-[10px] text-slate-400 font-medium">Created {new Date(task.createdAt).toLocaleDateString()}</span>
+                      </div>
                     </div>
                   </div>
                   <Button variant="ghost" size="icon" className="h-8 w-8 text-slate-400">
@@ -485,6 +492,9 @@ export function ArchiveManager({
                       </Badge>
                     )}
                   </div>
+                </div>
+                <div className="text-[9px] text-slate-300 font-medium italic">
+                  Modified on {new Date(task.createdAt).toLocaleDateString()}
                 </div>
               </CardContent>
               <CardFooter className="p-5 bg-slate-50/50 flex items-center justify-between border-t border-slate-50">
