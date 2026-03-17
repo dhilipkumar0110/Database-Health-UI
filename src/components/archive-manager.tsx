@@ -113,10 +113,6 @@ export function ArchiveManager({ tasks }: { tasks: MaintenanceTask[] }) {
               <span className="text-[10px] font-bold text-slate-400 uppercase tracking-tighter">Total Records</span>
               <span className="text-lg font-bold text-slate-900">1,244,102</span>
             </Card>
-            <Card className="bg-emerald-50 border-none shadow-none px-4 py-2 flex flex-col items-center">
-              <span className="text-[10px] font-bold text-emerald-600 uppercase tracking-tighter">Query Status</span>
-              <span className="text-lg font-bold text-emerald-700">Valid</span>
-            </Card>
           </div>
         </div>
 
@@ -207,11 +203,7 @@ export function ArchiveManager({ tasks }: { tasks: MaintenanceTask[] }) {
                 Add Condition
               </Button>
             </CardContent>
-            <CardFooter className="p-8 bg-slate-50 flex items-center justify-between border-t border-slate-100">
-              <div className="flex items-center gap-2 text-xs font-medium text-slate-500">
-                <Activity className="h-4 w-4 text-emerald-500" />
-                Estimated 12% reduction in target table size.
-              </div>
+            <CardFooter className="p-8 bg-slate-50 flex items-center justify-end border-t border-slate-100">
               <div className="flex items-center gap-3">
                 <Button variant="outline" className="h-11 px-8 rounded-xl font-bold bg-white" onClick={() => setView('task-details')}>
                   Cancel
