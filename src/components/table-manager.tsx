@@ -19,7 +19,8 @@ import {
   Archive,
   Database,
   Server as ServerIcon,
-  Clock
+  Clock,
+  ArrowLeft
 } from "lucide-react"
 import { Card, CardContent } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
@@ -54,8 +55,9 @@ import {
 import { Label } from "@/components/ui/label"
 import { toast } from "@/hooks/use-toast"
 import { ScrollArea } from "@/components/ui/scroll-area"
+import { TableDetailsView } from "./table-details-view"
 
-type TableData = {
+export type TableData = {
   name: string
   schema: string
   status: string
@@ -138,6 +140,10 @@ export function TableManager({
   const [groupName, setGroupName] = React.useState("")
   const [groups, setGroups] = React.useState<{name: string, tables: string[]}[]>([])
   
+  // View State
+  const [viewMode, setViewMode] = React.useState<'list' | 'details'>('list')
+  const [selectedTableForDetails, setSelectedTableForDetails] = React.useState<TableData | null>(null)
+
   // Task Creation Dialog State
   const [isTaskModalOpen, setIsTaskModalOpen] = React.useState(false)
   const [currentTaskType, setCurrentTaskType] = React.useState<any>(null)
@@ -215,6 +221,28 @@ export function TableManager({
       title: "Maintenance Task Created",
       description: `Task "${taskName}" has been added to the Archive Manager.`,
     })
+  }
+
+  const openTableDetails = (table: TableData) => {
+    setSelectedTableForDetails(table)
+    setViewMode('details')
+  }
+
+  if (viewMode === 'details' && selectedTableForDetails) {
+    return (
+      <div className="space-y-6">
+        <div className="flex items-center gap-4">
+          <Button variant="ghost" size="icon" onClick={() => setViewMode('list')} className="rounded-full">
+            <ArrowLeft className="h-5 w-5" />
+          </Button>
+          <div>
+            <h1 className="text-2xl font-bold text-slate-900">{selectedTableForDetails.name}</h1>
+            <p className="text-sm text-slate-400 font-medium">Detailed Analytics & Health Insights</p>
+          </div>
+        </div>
+        <TableDetailsView table={selectedTableForDetails} />
+      </div>
+    )
   }
 
   return (
@@ -453,7 +481,12 @@ export function TableManager({
                     <TableCell className="text-xs font-bold text-rose-500">{table.deadlocks}</TableCell>
                     <TableCell className="text-xs font-bold text-rose-500">{table.slowQ}</TableCell>
                     <TableCell className="text-right">
-                      <Button variant="outline" size="sm" className="h-7 text-[10px] font-bold rounded-lg border-slate-200 text-slate-600 hover:bg-white hover:border-slate-300">
+                      <Button 
+                        variant="outline" 
+                        size="sm" 
+                        onClick={() => openTableDetails(table)}
+                        className="h-7 text-[10px] font-bold rounded-lg border-slate-200 text-slate-600 hover:bg-white hover:border-slate-300"
+                      >
                         Details
                       </Button>
                     </TableCell>
