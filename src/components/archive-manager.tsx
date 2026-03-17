@@ -17,7 +17,6 @@ import {
   Plus,
   Trash2,
   CheckCircle2,
-  Play,
   Code
 } from "lucide-react"
 import { Card, CardContent, CardHeader, CardTitle, CardFooter } from "@/components/ui/card"
@@ -265,12 +264,6 @@ export function ArchiveManager({ tasks }: { tasks: MaintenanceTask[] }) {
                 <span className="text-primary font-bold">Table Selection Analytics</span>
               </div>
             </div>
-          </div>
-          <div className="flex items-center gap-2">
-            <Button variant="outline" className="h-9 text-xs font-bold rounded-lg px-4 bg-white">
-              <Play className="h-3.5 w-3.5 mr-2" />
-              Test Execution
-            </Button>
           </div>
         </div>
 
