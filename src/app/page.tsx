@@ -10,6 +10,7 @@ import { MaintenancePlanner } from "@/components/maintenance-planner"
 import { TableManager } from "@/components/table-manager"
 import { PerformanceMonitor } from "@/components/performance-monitor"
 import { ArchiveManager } from "@/components/archive-manager"
+import { ReportsManager } from "@/components/reports-manager"
 import { Separator } from "@/components/ui/separator"
 import { Button } from "@/components/ui/button"
 import { Bell, Search } from "lucide-react"
@@ -213,6 +214,8 @@ export default function SQLSentinelApp() {
         return <MaintenancePlanner tasks={tasks} onUpdateTask={handleUpdateTask} onDeleteTask={handleDeleteTask} />
       case "archive":
         return <ArchiveManager tasks={tasks} onUpdateTask={handleUpdateTask} onViewChange={setCurrentView} />
+      case "export":
+        return <ReportsManager activeDb={activeDbName} />
       default:
         return (
           <div className="flex flex-col items-center justify-center h-[60vh] text-center p-12">
