@@ -47,98 +47,110 @@ export type DatabaseInstance = {
   isActive: boolean
 }
 
+const DEFAULT_DATABASES: DatabaseInstance[] = [
+  {
+    name: "WebPortalDB",
+    server: "SQLSRV-PROD-01 · port 1433",
+    status: "Warning",
+    statusVariant: "warning",
+    metrics: [
+      { label: "Size", value: "842 GB" },
+      { label: "Tables", value: "34" },
+      { label: "Avg frag", value: "24.3%", color: "text-amber-600" },
+      { label: "Cache hit", value: "91.4%", color: "text-emerald-600" },
+      { label: "Deadlocks", value: "7", color: "text-rose-600" },
+      { label: "Slow queries", value: "243", color: "text-rose-600" },
+    ],
+    footer: "3 tables above 30% fragmentation · 1 redundant table detected",
+    isActive: true
+  },
+  {
+    name: "ReportingDB",
+    server: "SQLSRV-PROD-01 · port 1433",
+    status: "Critical",
+    statusVariant: "critical",
+    metrics: [
+      { label: "Size", value: "210 GB" },
+      { label: "Tables", value: "34" },
+      { label: "Avg frag", value: "41%", color: "text-rose-600" },
+      { label: "Cache hit", value: "78%", color: "text-rose-600" },
+      { label: "Deadlocks", value: "2", color: "text-slate-900" },
+      { label: "Slow queries", value: "189", color: "text-rose-600" },
+    ],
+    footer: "5 tables critical · cache hit below 80% threshold",
+    isActive: false
+  }
+]
+
+const DEFAULT_TASKS: MaintenanceTask[] = [
+  {
+    id: "task-1",
+    name: "Q4 Data Cleanup",
+    type: "Archiving",
+    server: "SQLSRV-PROD-01",
+    database: "WebPortalDB",
+    tables: ["WEB_FILE_UPLOAD_2009", "WEB_FILE_BYTES_2009"],
+    createdAt: "2024-03-10T14:30:00Z",
+    status: 'pending'
+  },
+  {
+    id: "task-2",
+    name: "Monthly Index Tuning",
+    type: "Index Rebuild",
+    server: "SQLSRV-PROD-01",
+    database: "WebPortalDB",
+    tables: ["WEB_AUTH_DETAILS", "WEB_AUTH_NOTES"],
+    createdAt: "2024-03-08T09:15:00Z",
+    status: 'pending'
+  },
+  {
+    id: "task-3",
+    name: "Daily Stats Refresh",
+    type: "Update Stats",
+    server: "SQLSRV-PROD-01",
+    database: "WebPortalDB",
+    tables: ["USERS", "USER_PROVIDERS"],
+    createdAt: "2024-03-01T08:00:00Z",
+    status: 'scheduled',
+    schedule: {
+      frequency: 'Daily',
+      startDate: '2024-03-01',
+      endDate: '2024-12-31'
+    }
+  }
+]
+
 export default function SQLSentinelApp() {
   const [currentView, setCurrentView] = React.useState("overview")
-  const [databases, setDatabases] = React.useState<DatabaseInstance[]>([
-    {
-      name: "WebPortalDB",
-      server: "SQLSRV-PROD-01 · port 1433",
-      status: "Warning",
-      statusVariant: "warning",
-      metrics: [
-        { label: "Size", value: "842 GB" },
-        { label: "Tables", value: "34" },
-        { label: "Avg frag", value: "24.3%", color: "text-amber-600" },
-        { label: "Cache hit", value: "91.4%", color: "text-emerald-600" },
-        { label: "Deadlocks", value: "7", color: "text-rose-600" },
-        { label: "Slow queries", value: "243", color: "text-rose-600" },
-      ],
-      footer: "3 tables above 30% fragmentation · 1 redundant table detected",
-      isActive: true
-    },
-    {
-      name: "ReportingDB",
-      server: "SQLSRV-PROD-01 · port 1433",
-      status: "Critical",
-      statusVariant: "critical",
-      metrics: [
-        { label: "Size", value: "210 GB" },
-        { label: "Tables", value: "34" },
-        { label: "Avg frag", value: "41%", color: "text-rose-600" },
-        { label: "Cache hit", value: "78%", color: "text-rose-600" },
-        { label: "Deadlocks", value: "2", color: "text-slate-900" },
-        { label: "Slow queries", value: "189", color: "text-rose-600" },
-      ],
-      footer: "5 tables critical · cache hit below 80% threshold",
-      isActive: false
-    }
-  ])
-  
-  const [tasks, setTasks] = React.useState<MaintenanceTask[]>([
-    {
-      id: "task-1",
-      name: "Q4 Data Cleanup",
-      type: "Archiving",
-      server: "SQLSRV-PROD-01",
-      database: "WebPortalDB",
-      tables: ["WEB_FILE_UPLOAD_2009", "WEB_FILE_BYTES_2009"],
-      createdAt: "2024-03-10T14:30:00Z",
-      status: 'pending'
-    },
-    {
-      id: "task-2",
-      name: "Monthly Index Tuning",
-      type: "Index Rebuild",
-      server: "SQLSRV-PROD-01",
-      database: "WebPortalDB",
-      tables: ["WEB_AUTH_DETAILS", "WEB_AUTH_NOTES"],
-      createdAt: "2024-03-08T09:15:00Z",
-      status: 'pending'
-    },
-    {
-      id: "task-3",
-      name: "Daily Stats Refresh",
-      type: "Update Stats",
-      server: "SQLSRV-PROD-01",
-      database: "WebPortalDB",
-      tables: ["USERS", "USER_PROVIDERS"],
-      createdAt: "2024-03-01T08:00:00Z",
-      status: 'scheduled',
-      schedule: {
-        frequency: 'Daily',
-        startDate: '2024-03-01',
-        endDate: '2024-12-31'
-      }
-    },
-    {
-      id: "task-4",
-      name: "Legacy Audit Archive",
-      type: "Archiving",
-      server: "SQLSRV-PROD-01",
-      database: "WebPortalDB",
-      tables: ["WEB_AUDIT_TRAIL"],
-      createdAt: "2024-03-05T10:00:00Z",
-      status: 'scheduled',
-      schedule: {
-        frequency: 'Weekly',
-        dayOfWeek: 'Sunday',
-        startDate: '2024-03-05',
-        endDate: '2024-06-05'
-      }
-    }
-  ])
-
   const [activeDbName, setActiveDbName] = React.useState("WebPortalDB")
+  const [databases, setDatabases] = React.useState<DatabaseInstance[]>(DEFAULT_DATABASES)
+  const [tasks, setTasks] = React.useState<MaintenanceTask[]>(DEFAULT_TASKS)
+  const [isMounted, setIsMounted] = React.useState(false)
+
+  // Load state from localStorage on mount
+  React.useEffect(() => {
+    const savedView = localStorage.getItem("sql_sentinel_currentView")
+    const savedDb = localStorage.getItem("sql_sentinel_activeDbName")
+    const savedDatabases = localStorage.getItem("sql_sentinel_databases")
+    const savedTasks = localStorage.getItem("sql_sentinel_tasks")
+
+    if (savedView) setCurrentView(savedView)
+    if (savedDb) setActiveDbName(savedDb)
+    if (savedDatabases) setDatabases(JSON.parse(savedDatabases))
+    if (savedTasks) setTasks(JSON.parse(savedTasks))
+    
+    setIsMounted(true)
+  }, [])
+
+  // Save state to localStorage on changes
+  React.useEffect(() => {
+    if (isMounted) {
+      localStorage.setItem("sql_sentinel_currentView", currentView)
+      localStorage.setItem("sql_sentinel_activeDbName", activeDbName)
+      localStorage.setItem("sql_sentinel_databases", JSON.stringify(databases))
+      localStorage.setItem("sql_sentinel_tasks", JSON.stringify(tasks))
+    }
+  }, [currentView, activeDbName, databases, tasks, isMounted])
 
   const handleAddDatabase = (dbName: string, serverName: string, tableCount: number) => {
     const newDb: DatabaseInstance = {
@@ -211,6 +223,9 @@ export default function SQLSentinelApp() {
         )
     }
   }
+
+  // Prevent flash of unstyled content or default state before localStorage loads
+  if (!isMounted) return null
 
   return (
     <SidebarProvider>
