@@ -1,3 +1,4 @@
+
 "use client"
 
 import * as React from "react"
@@ -41,12 +42,21 @@ const MOCK_REDUNDANCIES: Record<string, RedundantTable[]> = {
     { name: "temp_orders_old", reason: "Naming issue", lastAccessed: "Never", size: "840 MB", status: "pending" },
     { name: "logs_archive_test", reason: "Zero reads", lastAccessed: "210 days ago", size: "14.5 GB", status: "pending" },
     { name: "customer_profiles_v2", reason: "Duplicate schema", lastAccessed: "12 days ago", size: "420 MB", status: "pending" },
+    { name: "audit_trail_tmp_01", reason: "Naming issue", lastAccessed: "Never", size: "3.2 GB", status: "pending" },
   ],
   "ReportingDB": [
     { name: "sales_2022_final", reason: "Zero reads", lastAccessed: "380 days ago", size: "45 GB", status: "pending" },
     { name: "temp_results_backup", reason: "Naming issue", lastAccessed: "Never", size: "2.1 GB", status: "pending" },
+    { name: "legacy_reports_v1", reason: "Zero reads", lastAccessed: "1 year ago", size: "12.4 GB", status: "pending" },
   ]
 }
+
+const DEFAULT_REDUNDANCIES: RedundantTable[] = [
+  { name: "staging_data_temp_copy", reason: "Naming issue", lastAccessed: "89 days ago", size: "2.4 GB", status: "pending" },
+  { name: "old_audit_logs_archive", reason: "Zero reads", lastAccessed: "Never", size: "18.2 GB", status: "pending" },
+  { name: "legacy_metadata_v2", reason: "Duplicate schema", lastAccessed: "210 days ago", size: "540 MB", status: "pending" },
+  { name: "temp_transaction_log", reason: "Naming issue", lastAccessed: "Never", size: "4.1 GB", status: "pending" },
+]
 
 export function RedundancyScanner({ activeDb = "WebPortalDB" }: { activeDb?: string }) {
   const [isScanning, setIsScanning] = React.useState(false)
@@ -57,12 +67,14 @@ export function RedundancyScanner({ activeDb = "WebPortalDB" }: { activeDb?: str
     setIsScanning(true)
     // Simulate scan delay
     setTimeout(() => {
-      setScanResults(MOCK_REDUNDANCIES[activeDb] || [])
+      // Provide dummy data even if the DB is unknown
+      const results = MOCK_REDUNDANCIES[activeDb] || DEFAULT_REDUNDANCIES
+      setScanResults(results)
       setIsScanning(false)
       setHasScanned(true)
       toast({
         title: "Scan Complete",
-        description: `Identified ${MOCK_REDUNDANCIES[activeDb]?.length || 0} potentially redundant tables in ${activeDb}.`,
+        description: `Identified ${results.length} potentially redundant tables in ${activeDb}.`,
       })
     }, 1500)
   }
@@ -126,8 +138,8 @@ export function RedundancyScanner({ activeDb = "WebPortalDB" }: { activeDb?: str
         </Card>
       ) : isScanning ? (
         <div className="space-y-4">
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            {[1, 2, 3].map(i => (
+          <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+            {[1, 2, 3, 4].map(i => (
               <Card key={i} className="animate-pulse h-24 bg-white border-none shadow-sm" />
             ))}
           </div>
