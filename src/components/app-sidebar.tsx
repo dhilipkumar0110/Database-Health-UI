@@ -1,3 +1,4 @@
+
 "use client"
 
 import * as React from "react"
@@ -54,6 +55,26 @@ export function AppSidebar({
       <SidebarContent className="px-2">
         <SidebarGroup>
           <SidebarGroupLabel className="px-4 py-2 text-[10px] font-bold uppercase tracking-widest text-slate-400">
+            Overview
+          </SidebarGroupLabel>
+          <SidebarMenu>
+            <SidebarMenuItem>
+              <SidebarMenuButton 
+                isActive={currentView === "overview"}
+                onClick={() => onViewChange("overview")}
+                className={`px-4 py-6 hover:bg-slate-50 transition-colors ${currentView === "overview" ? "bg-[#E6F4EA] text-[#1E8E3E] font-bold" : "text-slate-600"}`}
+              >
+                <LayoutGrid className="h-5 w-5" />
+                <span className="text-sm font-semibold">All Databases</span>
+              </SidebarMenuButton>
+            </SidebarMenuItem>
+          </SidebarMenu>
+        </SidebarGroup>
+
+        <div className="border-t border-slate-100 mx-4 my-2" />
+
+        <SidebarGroup>
+          <SidebarGroupLabel className="px-4 py-2 text-[10px] font-bold uppercase tracking-widest text-slate-400">
             Active Database
           </SidebarGroupLabel>
           <div className="px-4 pb-4">
@@ -73,26 +94,6 @@ export function AppSidebar({
               </SelectContent>
             </Select>
           </div>
-        </SidebarGroup>
-
-        <div className="border-t border-slate-100 mx-4 my-2" />
-
-        <SidebarGroup>
-          <SidebarGroupLabel className="px-4 py-2 text-[10px] font-bold uppercase tracking-widest text-slate-400">
-            Overview
-          </SidebarGroupLabel>
-          <SidebarMenu>
-            <SidebarMenuItem>
-              <SidebarMenuButton 
-                isActive={currentView === "overview"}
-                onClick={() => onViewChange("overview")}
-                className={`px-4 py-6 hover:bg-slate-50 transition-colors ${currentView === "overview" ? "bg-[#E6F4EA] text-[#1E8E3E] font-bold" : "text-slate-600"}`}
-              >
-                <LayoutGrid className="h-5 w-5" />
-                <span className="text-sm font-semibold">All Databases</span>
-              </SidebarMenuButton>
-            </SidebarMenuItem>
-          </SidebarMenu>
         </SidebarGroup>
 
         <SidebarGroup>
