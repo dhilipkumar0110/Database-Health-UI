@@ -90,22 +90,6 @@ export function ArchiveManager({ tasks }: { tasks: MaintenanceTask[] }) {
     setQueryRows(queryRows.map(row => row.id === id ? { ...row, [field]: value } : row))
   }
 
-  // Generate SQL Preview
-  const generatedSql = React.useMemo(() => {
-    if (!selectedTable) return ""
-    let sql = `SELECT * FROM ${selectedTable}\nWHERE `
-    
-    queryRows.forEach((row, index) => {
-      const condition = `${row.column} ${row.operator} ${row.value || '?'}`
-      sql += condition
-      if (index < queryRows.length - 1) {
-        sql += `\n${row.logic} `
-      }
-    })
-    
-    return sql
-  }, [selectedTable, queryRows])
-
   if (view === 'query-builder') {
     return (
       <div className="space-y-6 animate-in fade-in slide-in-from-right-4 duration-500 pb-12">
@@ -246,18 +230,23 @@ export function ArchiveManager({ tasks }: { tasks: MaintenanceTask[] }) {
                 <Code className="h-5 w-5 text-primary" />
                 <h3 className="font-bold text-slate-900">Query Preview</h3>
               </div>
-              <div className="relative rounded-2xl bg-[#0F172A] p-6 font-mono text-sm leading-relaxed overflow-hidden">
+              <div className="relative rounded-2xl bg-[#0F172A] p-6 font-mono text-sm leading-relaxed overflow-hidden min-h-[160px]">
                 <div className="absolute left-0 top-0 bottom-0 w-1 bg-blue-500" />
-                <pre className="text-slate-300">
-                  <span className="text-blue-400">SELECT</span> * <span className="text-blue-400">FROM</span> <span className="text-emerald-400">{selectedTable}</span>{"\n"}
-                  <span className="text-blue-400">WHERE</span> {queryRows.map((row, idx) => (
-                    <React.Fragment key={row.id}>
-                      <span className="text-emerald-400">{row.column}</span> {row.operator} <span className="text-amber-400">'{row.value || '?'}'</span>
-                      {idx < queryRows.length - 1 && (
-                        <>{"\n"}<span className="text-blue-400">{row.logic}</span> </>
-                      )}
-                    </React.Fragment>
-                  ))}
+                <pre className="text-slate-300 whitespace-pre-wrap break-all">
+                  <span className="text-blue-400 uppercase">SELECT</span> * <span className="text-blue-400 uppercase">FROM</span> <span className="text-emerald-400">{selectedTable}</span>{"\n"}
+                  {queryRows.length > 0 && (
+                    <>
+                      <span className="text-blue-400 uppercase">WHERE</span>{" "}
+                      {queryRows.map((row, idx) => (
+                        <React.Fragment key={row.id}>
+                          {idx > 0 && (
+                            <>{"\n"}<span className="text-blue-400 uppercase">{row.logic}</span> </>
+                          )}
+                          <span className="text-emerald-400">{row.column}</span> {row.operator} <span className="text-amber-400">'{row.value || '?'}'</span>
+                        </React.Fragment>
+                      ))}
+                    </>
+                  )}
                 </pre>
               </div>
             </Card>
