@@ -136,6 +136,7 @@ export function TableManager({
   const [search, setSearch] = React.useState("")
   const [statusFilter, setStatusFilter] = React.useState("all")
   const [selectedTables, setSelectedTables] = React.useState<string[]>([])
+  const [isScanning, setIsScanning] = React.useState(false)
   
   // View State
   const [viewMode, setViewMode] = React.useState<'list' | 'details'>('list')
@@ -171,6 +172,17 @@ export function TableManager({
     setSelectedTables(prev => 
       prev.includes(name) ? prev.filter(n => n !== name) : [...prev, name]
     )
+  }
+
+  const handleRunScan = () => {
+    setIsScanning(true)
+    setTimeout(() => {
+      setIsScanning(false)
+      toast({
+        title: "Data Refreshed",
+        description: `Statistics for ${activeDb} have been updated successfully.`,
+      })
+    }, 2000)
   }
 
   const handleExport = () => {
@@ -255,8 +267,21 @@ export function TableManager({
           <div className="text-xs text-slate-400">
             Last scan: today 08:42 AM
           </div>
-          <Button variant="outline" size="sm" className="h-8 text-xs border-slate-300 rounded-full px-4 bg-white">
-            Run Scan
+          <Button 
+            variant="outline" 
+            size="sm" 
+            className="h-8 text-xs border-slate-300 rounded-full px-4 bg-white"
+            onClick={handleRunScan}
+            disabled={isScanning}
+          >
+            {isScanning ? (
+              <>
+                <RefreshCw className="h-3 w-3 mr-1.5 animate-spin" />
+                Scanning...
+              </>
+            ) : (
+              "Run Scan"
+            )}
           </Button>
         </div>
       </div>
