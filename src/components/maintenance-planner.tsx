@@ -1,4 +1,3 @@
-
 "use client"
 
 import * as React from "react"
@@ -59,6 +58,7 @@ export function MaintenancePlanner({
   const [isCreateModalOpen, setIsCreateModalOpen] = React.useState(false)
   const [isEditModalOpen, setIsEditModalOpen] = React.useState(false)
   const [selectedTaskId, setSelectedTaskId] = React.useState<string>("")
+  const [editableTaskName, setEditableTaskName] = React.useState("")
   const [scheduleForm, setScheduleForm] = React.useState<ScheduleConfig>({
     frequency: 'Daily',
     dayOfWeek: 'Monday',
@@ -74,21 +74,24 @@ export function MaintenancePlanner({
     if (selectedTaskId) {
       const task = tasks.find(t => t.id === selectedTaskId)
       onUpdateTask(selectedTaskId, {
+        name: isEditModalOpen ? editableTaskName : task?.name,
         status: 'scheduled',
         schedule: scheduleForm
       })
       setIsCreateModalOpen(false)
       setIsEditModalOpen(false)
       setSelectedTaskId("")
+      setEditableTaskName("")
       toast({
         title: isEditModalOpen ? "Schedule Updated" : "Schedule Created",
-        description: `"${task?.name}" is now active.`
+        description: `"${isEditModalOpen ? editableTaskName : task?.name}" is now active.`
       })
     }
   }
 
   const openEditModal = (task: MaintenanceTask) => {
     setSelectedTaskId(task.id)
+    setEditableTaskName(task.name)
     if (task.schedule) {
       setScheduleForm(task.schedule)
     }
@@ -103,6 +106,7 @@ export function MaintenancePlanner({
       startDate: new Date().toISOString().split('T')[0],
       endDate: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString().split('T')[0]
     })
+    setEditableTaskName("")
   }
 
   return (
@@ -350,6 +354,16 @@ export function MaintenancePlanner({
             </DialogDescription>
           </DialogHeader>
           <div className="grid gap-6 py-4">
+            <div className="space-y-2">
+              <Label className="text-sm font-semibold">Task Name</Label>
+              <Input 
+                value={editableTaskName}
+                onChange={(e) => setEditableTaskName(e.target.value)}
+                className="h-11 border-slate-200 font-bold"
+                placeholder="Enter task name"
+              />
+            </div>
+
             <div className="space-y-2">
               <Label className="text-sm font-semibold">Frequency</Label>
               <Select 
