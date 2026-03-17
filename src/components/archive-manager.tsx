@@ -17,7 +17,8 @@ import {
   Plus,
   Trash2,
   CheckCircle2,
-  Play
+  Play,
+  Code
 } from "lucide-react"
 import { Card, CardContent, CardHeader, CardTitle, CardFooter } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
@@ -43,6 +44,14 @@ import {
 
 type ViewState = 'list' | 'task-details' | 'query-builder'
 
+type QueryRow = {
+  id: string
+  column: string
+  operator: string
+  value: string
+  logic: string
+}
+
 export function ArchiveManager({ tasks }: { tasks: MaintenanceTask[] }) {
   const [view, setView] = React.useState<ViewState>('list')
   const [selectedTask, setSelectedTask] = React.useState<MaintenanceTask | null>(null)
@@ -50,8 +59,8 @@ export function ArchiveManager({ tasks }: { tasks: MaintenanceTask[] }) {
   const [search, setSearch] = React.useState("")
 
   // Query Builder State
-  const [queryRows, setQueryRows] = React.useState([
-    { id: '1', column: 'created_at', operator: '<=', value: 'DATEADD(year, -5, GETDATE())', logic: 'AND' }
+  const [queryRows, setQueryRows] = React.useState<QueryRow[]>([
+    { id: '1', column: 'created_at', operator: '<=', value: "DATEADD(year, -5, GETDATE())", logic: 'AND' }
   ])
 
   const handleTaskClick = (task: MaintenanceTask) => {
@@ -70,12 +79,32 @@ export function ArchiveManager({ tasks }: { tasks: MaintenanceTask[] }) {
   }
 
   const addQueryRow = () => {
-    setQueryRows([...queryRows, { id: Date.now().toString(), column: '', operator: '=', value: '', logic: 'AND' }])
+    setQueryRows([...queryRows, { id: Date.now().toString(), column: 'created_at', operator: '=', value: '', logic: 'AND' }])
   }
 
   const removeQueryRow = (id: string) => {
     setQueryRows(queryRows.filter(row => row.id !== id))
   }
+
+  const updateRow = (id: string, field: keyof QueryRow, value: string) => {
+    setQueryRows(queryRows.map(row => row.id === id ? { ...row, [field]: value } : row))
+  }
+
+  // Generate SQL Preview
+  const generatedSql = React.useMemo(() => {
+    if (!selectedTable) return ""
+    let sql = `SELECT * FROM ${selectedTable}\nWHERE `
+    
+    queryRows.forEach((row, index) => {
+      const condition = `${row.column} ${row.operator} ${row.value || '?'}`
+      sql += condition
+      if (index < queryRows.length - 1) {
+        sql += `\n${row.logic} `
+      }
+    })
+    
+    return sql
+  }, [selectedTable, queryRows])
 
   if (view === 'query-builder') {
     return (
@@ -107,106 +136,145 @@ export function ArchiveManager({ tasks }: { tasks: MaintenanceTask[] }) {
           </div>
         </div>
 
-        <Card className="bg-white border-none shadow-sm rounded-3xl overflow-hidden">
-          <CardHeader className="p-8 border-b border-slate-50">
-            <CardTitle className="text-lg font-bold">Selection Criteria</CardTitle>
-            <p className="text-sm text-slate-400">Define the WHERE clause for the archival extraction process.</p>
-          </CardHeader>
-          <CardContent className="p-8 space-y-4">
-            <div className="grid grid-cols-12 gap-4 mb-2">
-              <div className="col-span-3 text-[10px] font-bold text-slate-400 uppercase">Column Name</div>
-              <div className="col-span-2 text-[10px] font-bold text-slate-400 uppercase">Operator</div>
-              <div className="col-span-4 text-[10px] font-bold text-slate-400 uppercase">Criteria Value</div>
-              <div className="col-span-2 text-[10px] font-bold text-slate-400 uppercase">Logic</div>
-              <div className="col-span-1 text-[10px] font-bold text-slate-400 uppercase text-right">Action</div>
-            </div>
-
-            {queryRows.map((row) => (
-              <div key={row.id} className="grid grid-cols-12 gap-4 items-center animate-in fade-in slide-in-from-top-2">
-                <div className="col-span-3">
-                  <Select defaultValue={row.column}>
-                    <SelectTrigger className="h-11 border-slate-200 rounded-xl bg-slate-50/50">
-                      <SelectValue placeholder="Column" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="created_at">created_at</SelectItem>
-                      <SelectItem value="status">status</SelectItem>
-                      <SelectItem value="id">id</SelectItem>
-                      <SelectItem value="transaction_type">transaction_type</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-                <div className="col-span-2">
-                  <Select defaultValue={row.operator}>
-                    <SelectTrigger className="h-11 border-slate-200 rounded-xl bg-slate-50/50">
-                      <SelectValue placeholder="Op" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="=">=</SelectItem>
-                      <SelectItem value="!=">!=</SelectItem>
-                      <SelectItem value="<">{'<'}</SelectItem>
-                      <SelectItem value="<=">{'<='}</SelectItem>
-                      <SelectItem value=">">{'>'}</SelectItem>
-                      <SelectItem value=">=">{'>='}</SelectItem>
-                      <SelectItem value="LIKE">LIKE</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-                <div className="col-span-4">
-                  <Input 
-                    placeholder="Value (e.g. 'Active' or Date)" 
-                    defaultValue={row.value}
-                    className="h-11 border-slate-200 rounded-xl bg-slate-50/50"
-                  />
-                </div>
-                <div className="col-span-2">
-                  <Select defaultValue={row.logic}>
-                    <SelectTrigger className="h-11 border-slate-200 rounded-xl bg-slate-50/50">
-                      <SelectValue placeholder="Logic" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="AND">AND</SelectItem>
-                      <SelectItem value="OR">OR</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-                <div className="col-span-1 text-right">
-                  <Button 
-                    variant="ghost" 
-                    size="icon" 
-                    onClick={() => removeQueryRow(row.id)}
-                    className="h-10 w-10 text-rose-400 hover:text-rose-600 hover:bg-rose-50 rounded-xl"
-                  >
-                    <Trash2 className="h-4 w-4" />
-                  </Button>
-                </div>
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
+          <Card className="lg:col-span-8 bg-white border-none shadow-sm rounded-3xl overflow-hidden">
+            <CardHeader className="p-8 border-b border-slate-50">
+              <CardTitle className="text-lg font-bold">Selection Criteria</CardTitle>
+              <p className="text-sm text-slate-400">Define the WHERE clause for the archival extraction process.</p>
+            </CardHeader>
+            <CardContent className="p-8 space-y-4">
+              <div className="grid grid-cols-12 gap-4 mb-2">
+                <div className="col-span-3 text-[10px] font-bold text-slate-400 uppercase">Column Name</div>
+                <div className="col-span-2 text-[10px] font-bold text-slate-400 uppercase">Operator</div>
+                <div className="col-span-4 text-[10px] font-bold text-slate-400 uppercase">Criteria Value</div>
+                <div className="col-span-2 text-[10px] font-bold text-slate-400 uppercase">Logic</div>
+                <div className="col-span-1 text-[10px] font-bold text-slate-400 uppercase text-right">Action</div>
               </div>
-            ))}
 
-            <Button 
-              variant="outline" 
-              onClick={addQueryRow}
-              className="mt-4 border-dashed border-2 border-slate-200 text-slate-400 hover:text-primary hover:border-primary hover:bg-slate-50 w-full h-12 rounded-xl font-bold"
-            >
-              <Plus className="h-4 w-4 mr-2" />
-              Add Condition
-            </Button>
-          </CardContent>
-          <CardFooter className="p-8 bg-slate-50 flex items-center justify-between border-t border-slate-100">
-            <div className="flex items-center gap-2 text-xs font-medium text-slate-500">
-              <Activity className="h-4 w-4 text-emerald-500" />
-              Estimated 12% reduction in target table size.
-            </div>
-            <div className="flex items-center gap-3">
-              <Button variant="outline" className="h-11 px-8 rounded-xl font-bold bg-white" onClick={() => setView('task-details')}>
-                Cancel
+              {queryRows.map((row) => (
+                <div key={row.id} className="grid grid-cols-12 gap-4 items-center animate-in fade-in slide-in-from-top-2">
+                  <div className="col-span-3">
+                    <Select value={row.column} onValueChange={(v) => updateRow(row.id, 'column', v)}>
+                      <SelectTrigger className="h-11 border-slate-200 rounded-xl bg-slate-50/50">
+                        <SelectValue placeholder="Column" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="created_at">created_at</SelectItem>
+                        <SelectItem value="status">status</SelectItem>
+                        <SelectItem value="id">id</SelectItem>
+                        <SelectItem value="transaction_type">transaction_type</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <div className="col-span-2">
+                    <Select value={row.operator} onValueChange={(v) => updateRow(row.id, 'operator', v)}>
+                      <SelectTrigger className="h-11 border-slate-200 rounded-xl bg-slate-50/50">
+                        <SelectValue placeholder="Op" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="=">=</SelectItem>
+                        <SelectItem value="!=">!=</SelectItem>
+                        <SelectItem value="<">{'<'}</SelectItem>
+                        <SelectItem value="<=">{'<='}</SelectItem>
+                        <SelectItem value=">">{'>'}</SelectItem>
+                        <SelectItem value=">=">{'>='}</SelectItem>
+                        <SelectItem value="LIKE">LIKE</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <div className="col-span-4">
+                    <Input 
+                      placeholder="Value (e.g. 'Active' or Date)" 
+                      value={row.value}
+                      onChange={(e) => updateRow(row.id, 'value', e.target.value)}
+                      className="h-11 border-slate-200 rounded-xl bg-slate-50/50"
+                    />
+                  </div>
+                  <div className="col-span-2">
+                    <Select value={row.logic} onValueChange={(v) => updateRow(row.id, 'logic', v)}>
+                      <SelectTrigger className="h-11 border-slate-200 rounded-xl bg-slate-50/50">
+                        <SelectValue placeholder="Logic" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="AND">AND</SelectItem>
+                        <SelectItem value="OR">OR</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <div className="col-span-1 text-right">
+                    <Button 
+                      variant="ghost" 
+                      size="icon" 
+                      onClick={() => removeQueryRow(row.id)}
+                      className="h-10 w-10 text-rose-400 hover:text-rose-600 hover:bg-rose-50 rounded-xl"
+                    >
+                      <Trash2 className="h-4 w-4" />
+                    </Button>
+                  </div>
+                </div>
+              ))}
+
+              <Button 
+                variant="outline" 
+                onClick={addQueryRow}
+                className="mt-4 border-dashed border-2 border-slate-200 text-slate-400 hover:text-primary hover:border-primary hover:bg-slate-50 w-full h-12 rounded-xl font-bold"
+              >
+                <Plus className="h-4 w-4 mr-2" />
+                Add Condition
               </Button>
-              <Button className="h-11 px-10 rounded-xl font-bold bg-primary text-white shadow-lg hover:shadow-primary/20 transition-all">
-                Save & Validate Configuration
-              </Button>
+            </CardContent>
+            <CardFooter className="p-8 bg-slate-50 flex items-center justify-between border-t border-slate-100">
+              <div className="flex items-center gap-2 text-xs font-medium text-slate-500">
+                <Activity className="h-4 w-4 text-emerald-500" />
+                Estimated 12% reduction in target table size.
+              </div>
+              <div className="flex items-center gap-3">
+                <Button variant="outline" className="h-11 px-8 rounded-xl font-bold bg-white" onClick={() => setView('task-details')}>
+                  Cancel
+                </Button>
+                <Button className="h-11 px-10 rounded-xl font-bold bg-primary text-white shadow-lg hover:shadow-primary/20 transition-all">
+                  Save & Validate Configuration
+                </Button>
+              </div>
+            </CardFooter>
+          </Card>
+
+          {/* SQL Preview Card */}
+          <div className="lg:col-span-4 space-y-6">
+            <Card className="bg-white border-none shadow-sm rounded-3xl overflow-hidden p-8">
+              <div className="flex items-center gap-2 mb-6">
+                <Code className="h-5 w-5 text-primary" />
+                <h3 className="font-bold text-slate-900">Query Preview</h3>
+              </div>
+              <div className="relative rounded-2xl bg-[#0F172A] p-6 font-mono text-sm leading-relaxed overflow-hidden">
+                <div className="absolute left-0 top-0 bottom-0 w-1 bg-blue-500" />
+                <pre className="text-slate-300">
+                  <span className="text-blue-400">SELECT</span> * <span className="text-blue-400">FROM</span> <span className="text-emerald-400">{selectedTable}</span>{"\n"}
+                  <span className="text-blue-400">WHERE</span> {queryRows.map((row, idx) => (
+                    <React.Fragment key={row.id}>
+                      <span className="text-emerald-400">{row.column}</span> {row.operator} <span className="text-amber-400">'{row.value || '?'}'</span>
+                      {idx < queryRows.length - 1 && (
+                        <>{"\n"}<span className="text-blue-400">{row.logic}</span> </>
+                      )}
+                    </React.Fragment>
+                  ))}
+                </pre>
+              </div>
+            </Card>
+
+            <div className="p-6 bg-blue-50/50 rounded-2xl border border-blue-100 flex gap-4">
+              <div className="h-10 w-10 rounded-full bg-blue-100 flex items-center justify-center shrink-0">
+                <Zap className="h-5 w-5 text-blue-600" />
+              </div>
+              <div className="space-y-1">
+                <h4 className="text-xs font-bold text-blue-900 uppercase tracking-tight">Validation Insight</h4>
+                <p className="text-[10px] text-blue-800/80 leading-relaxed font-medium">
+                  Query validated against server metadata. Predicate uses indexed columns, ensuring O(log N) performance for data extraction.
+                </p>
+              </div>
             </div>
-          </CardFooter>
-        </Card>
+          </div>
+        </div>
       </div>
     )
   }
