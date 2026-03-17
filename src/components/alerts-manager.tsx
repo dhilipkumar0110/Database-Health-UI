@@ -78,7 +78,7 @@ export function AlertsManager({ activeDb }: { activeDb: string }) {
         <div className="flex flex-col gap-1">
           <h1 className="text-2xl font-bold text-slate-900 flex items-center gap-3">
             <Bell className="h-7 w-7 text-primary" />
-            Alerts & Notification Rules
+            Alerts & Notifications
           </h1>
           <p className="text-sm text-slate-400 font-medium">Configure thresholds and automated triggers for {activeDb}.</p>
         </div>

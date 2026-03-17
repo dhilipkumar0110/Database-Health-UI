@@ -184,7 +184,7 @@ export function AppSidebar({
                 className="px-4 py-3 text-slate-500 hover:text-slate-900"
               >
                 <ListFilter className="h-4 w-4" />
-                <span className="text-sm font-medium">Alerts & Rules</span>
+                <span className="text-sm font-medium">Alerts</span>
               </SidebarMenuButton>
             </SidebarMenuItem>
           </SidebarMenu>
