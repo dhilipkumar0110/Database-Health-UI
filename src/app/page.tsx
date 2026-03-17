@@ -16,14 +16,12 @@ import { Bell, Search } from "lucide-react"
 import { Input } from "@/components/ui/input"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 
-export type DatabaseInstance = {
-  name: string
-  server: string
-  status: string
-  statusVariant: "warning" | "critical" | "healthy"
-  metrics: { label: string; value: string; color?: string }[]
-  footer: string
-  isActive: boolean
+export type ScheduleConfig = {
+  frequency: 'Daily' | 'Weekly' | 'Monthly'
+  dayOfWeek?: string
+  dayOfMonth?: number
+  startDate: string
+  endDate: string
 }
 
 export type MaintenanceTask = {
@@ -34,6 +32,18 @@ export type MaintenanceTask = {
   database: string
   tables: string[]
   createdAt: string
+  status?: 'pending' | 'scheduled'
+  schedule?: ScheduleConfig
+}
+
+export type DatabaseInstance = {
+  name: string
+  server: string
+  status: string
+  statusVariant: "warning" | "critical" | "healthy"
+  metrics: { label: string; value: string; color?: string }[]
+  footer: string
+  isActive: boolean
 }
 
 export default function SQLSentinelApp() {
@@ -81,7 +91,8 @@ export default function SQLSentinelApp() {
       server: "SQLSRV-PROD-01",
       database: "WebPortalDB",
       tables: ["WEB_FILE_UPLOAD_2009", "WEB_FILE_BYTES_2009"],
-      createdAt: "2024-03-10T14:30:00Z"
+      createdAt: "2024-03-10T14:30:00Z",
+      status: 'pending'
     },
     {
       id: "task-2",
@@ -90,7 +101,8 @@ export default function SQLSentinelApp() {
       server: "SQLSRV-PROD-01",
       database: "WebPortalDB",
       tables: ["WEB_AUTH_DETAILS", "WEB_AUTH_NOTES"],
-      createdAt: "2024-03-08T09:15:00Z"
+      createdAt: "2024-03-08T09:15:00Z",
+      status: 'pending'
     }
   ])
 
@@ -121,10 +133,15 @@ export default function SQLSentinelApp() {
     const newTask: MaintenanceTask = {
       ...task,
       id: `task-${Date.now()}`,
-      createdAt: new Date().toISOString()
+      createdAt: new Date().toISOString(),
+      status: 'pending'
     }
     setTasks(prev => [newTask, ...prev])
     setCurrentView("archive")
+  }
+
+  const handleUpdateTask = (taskId: string, updates: Partial<MaintenanceTask>) => {
+    setTasks(prev => prev.map(t => t.id === taskId ? { ...t, ...updates } : t))
   }
 
   const renderContent = () => {
@@ -141,9 +158,9 @@ export default function SQLSentinelApp() {
       case "redundancy":
         return <RedundancyScanner activeDb={activeDbName} />
       case "maintenance":
-        return <MaintenancePlanner />
+        return <MaintenancePlanner tasks={tasks} onUpdateTask={handleUpdateTask} />
       case "archive":
-        return <ArchiveManager tasks={tasks} />
+        return <ArchiveManager tasks={tasks} onUpdateTask={handleUpdateTask} />
       default:
         return (
           <div className="flex flex-col items-center justify-center h-[60vh] text-center p-12">

@@ -1,3 +1,4 @@
+
 "use client"
 
 import * as React from "react"
@@ -17,13 +18,15 @@ import {
   Plus,
   Trash2,
   CheckCircle2,
-  Code
+  Code,
+  Clock,
+  Calendar
 } from "lucide-react"
 import { Card, CardContent, CardHeader, CardTitle, CardFooter } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { Input } from "@/components/ui/input"
-import { MaintenanceTask } from "@/app/page"
+import { MaintenanceTask, ScheduleConfig } from "@/app/page"
 import { cn } from "@/lib/utils"
 import { 
   Table, 
@@ -40,6 +43,16 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select"
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogFooter,
+  DialogDescription,
+} from "@/components/ui/dialog"
+import { Label } from "@/components/ui/label"
+import { toast } from "@/hooks/use-toast"
 
 type ViewState = 'list' | 'task-details' | 'query-builder'
 
@@ -51,11 +64,20 @@ type QueryRow = {
   logic: string
 }
 
-export function ArchiveManager({ tasks }: { tasks: MaintenanceTask[] }) {
+export function ArchiveManager({ tasks, onUpdateTask }: { tasks: MaintenanceTask[], onUpdateTask: (id: string, updates: Partial<MaintenanceTask>) => void }) {
   const [view, setView] = React.useState<ViewState>('list')
   const [selectedTask, setSelectedTask] = React.useState<MaintenanceTask | null>(null)
   const [selectedTable, setSelectedTable] = React.useState<string | null>(null)
   const [search, setSearch] = React.useState("")
+
+  // Schedule Modal State
+  const [isScheduleModalOpen, setIsScheduleModalOpen] = React.useState(false)
+  const [taskToSchedule, setTaskToSchedule] = React.useState<MaintenanceTask | null>(null)
+  const [scheduleForm, setScheduleForm] = React.useState<ScheduleConfig>({
+    frequency: 'Daily',
+    startDate: new Date().toISOString().split('T')[0],
+    endDate: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString().split('T')[0]
+  })
 
   // Query Builder State
   const [queryRows, setQueryRows] = React.useState<QueryRow[]>([
@@ -87,6 +109,26 @@ export function ArchiveManager({ tasks }: { tasks: MaintenanceTask[] }) {
 
   const updateRow = (id: string, field: keyof QueryRow, value: string) => {
     setQueryRows(queryRows.map(row => row.id === id ? { ...row, [field]: value } : row))
+  }
+
+  const openScheduleDialog = (e: React.MouseEvent, task: MaintenanceTask) => {
+    e.stopPropagation()
+    setTaskToSchedule(task)
+    setIsScheduleModalOpen(true)
+  }
+
+  const handleFinalizeSchedule = () => {
+    if (taskToSchedule) {
+      onUpdateTask(taskToSchedule.id, {
+        status: 'scheduled',
+        schedule: scheduleForm
+      })
+      setIsScheduleModalOpen(false)
+      toast({
+        title: "Task Scheduled",
+        description: `"${taskToSchedule.name}" is now active in the Scheduler.`
+      })
+    }
   }
 
   if (view === 'query-builder') {
@@ -392,6 +434,9 @@ export function ArchiveManager({ tasks }: { tasks: MaintenanceTask[] }) {
                       >
                         {task.type}
                       </Badge>
+                      {task.status === 'scheduled' && (
+                        <Badge className="bg-emerald-50 text-emerald-600 border-none font-bold text-[8px] uppercase">Scheduled</Badge>
+                      )}
                       <span className="text-[10px] text-slate-400 font-medium">Created {new Date(task.createdAt).toLocaleDateString()}</span>
                     </div>
                   </div>
@@ -445,12 +490,10 @@ export function ArchiveManager({ tasks }: { tasks: MaintenanceTask[] }) {
                   Configure Query
                 </Button>
                 <Button 
-                  className="h-8 bg-white border border-slate-200 text-slate-700 text-[10px] font-bold rounded-lg px-4 hover:bg-slate-100 shadow-none"
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    // Schedule logic placeholder
-                  }}
+                  className="h-8 bg-white border border-slate-200 text-slate-700 text-[10px] font-bold rounded-lg px-4 hover:bg-slate-100 shadow-none gap-1.5"
+                  onClick={(e) => openScheduleDialog(e, task)}
                 >
+                  <Clock className="h-3 w-3" />
                   Schedule
                 </Button>
               </CardFooter>
@@ -458,6 +501,99 @@ export function ArchiveManager({ tasks }: { tasks: MaintenanceTask[] }) {
           ))}
         </div>
       )}
+
+      {/* Schedule Dialog */}
+      <Dialog open={isScheduleModalOpen} onOpenChange={setIsScheduleModalOpen}>
+        <DialogContent className="sm:max-w-[480px]">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <Calendar className="h-5 w-5 text-primary" />
+              Schedule Maintenance
+            </DialogTitle>
+            <DialogDescription>
+              Configure the execution frequency for "{taskToSchedule?.name}"
+            </DialogDescription>
+          </DialogHeader>
+          <div className="grid gap-6 py-4">
+            <div className="space-y-2">
+              <Label className="text-sm font-semibold">Frequency</Label>
+              <Select 
+                value={scheduleForm.frequency} 
+                onValueChange={(v: any) => setScheduleForm(prev => ({ ...prev, frequency: v }))}
+              >
+                <SelectTrigger className="h-11 border-slate-200">
+                  <SelectValue placeholder="Select frequency" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="Daily">Daily</SelectItem>
+                  <SelectItem value="Weekly">Weekly</SelectItem>
+                  <SelectItem value="Monthly">Monthly</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+
+            {scheduleForm.frequency === 'Weekly' && (
+              <div className="space-y-2 animate-in fade-in slide-in-from-top-2">
+                <Label className="text-sm font-semibold">Run on day</Label>
+                <Select 
+                  value={scheduleForm.dayOfWeek} 
+                  onValueChange={(v) => setScheduleForm(prev => ({ ...prev, dayOfWeek: v }))}
+                >
+                  <SelectTrigger className="h-11 border-slate-200">
+                    <SelectValue placeholder="Select day" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'].map(day => (
+                      <SelectItem key={day} value={day}>{day}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+            )}
+
+            {scheduleForm.frequency === 'Monthly' && (
+              <div className="space-y-2 animate-in fade-in slide-in-from-top-2">
+                <Label className="text-sm font-semibold">Run on date (1-31)</Label>
+                <Input 
+                  type="number" 
+                  min={1} 
+                  max={31} 
+                  value={scheduleForm.dayOfMonth}
+                  onChange={(e) => setScheduleForm(prev => ({ ...prev, dayOfMonth: parseInt(e.target.value) }))}
+                  className="h-11 border-slate-200"
+                />
+              </div>
+            )}
+
+            <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label className="text-sm font-semibold text-slate-500">Start Date</Label>
+                <Input 
+                  type="date" 
+                  value={scheduleForm.startDate}
+                  onChange={(e) => setScheduleForm(prev => ({ ...prev, startDate: e.target.value }))}
+                  className="h-11 border-slate-200"
+                />
+              </div>
+              <div className="space-y-2">
+                <Label className="text-sm font-semibold text-slate-500">End Date</Label>
+                <Input 
+                  type="date" 
+                  value={scheduleForm.endDate}
+                  onChange={(e) => setScheduleForm(prev => ({ ...prev, endDate: e.target.value }))}
+                  className="h-11 border-slate-200"
+                />
+              </div>
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setIsScheduleModalOpen(false)}>Cancel</Button>
+            <Button onClick={handleFinalizeSchedule} className="bg-primary hover:bg-primary/90 text-white font-bold">
+              Confirm Schedule
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   )
 }
