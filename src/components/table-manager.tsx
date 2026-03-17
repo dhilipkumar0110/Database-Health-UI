@@ -49,23 +49,72 @@ import {
 import { Label } from "@/components/ui/label"
 import { toast } from "@/hooks/use-toast"
 
-const MOCK_TABLES = [
-  { name: "invoices", schema: "sys.tables", status: "Critical", statusVariant: "critical", rowCount: "4.2M", size: "245 GB", fragmentation: 68, lastRead: "2h ago", deadlocks: 12, slowQ: 58 },
-  { name: "orders", schema: "sys.tables", status: "Critical", statusVariant: "critical", rowCount: "8.1M", size: "182 GB", fragmentation: 54, lastRead: "15m ago", deadlocks: 9, slowQ: 41 },
-  { name: "payments", schema: "sys.tables", status: "Critical", statusVariant: "critical", rowCount: "3.7M", size: "98 GB", fragmentation: 47, lastRead: "1h ago", deadlocks: 7, slowQ: 33 },
-  { name: "customers", schema: "sys.tables", status: "Warning", statusVariant: "warning", rowCount: "920K", size: "45 GB", fragmentation: 28, lastRead: "30m ago", deadlocks: 3, slowQ: 14 },
-  { name: "session_history", schema: "sys.tables", status: "Critical", statusVariant: "critical", rowCount: "22M", size: "310 GB", fragmentation: 61, lastRead: "5m ago", deadlocks: 17, slowQ: 97 },
-  { name: "audit_logs", schema: "sys.tables", status: "Warning", statusVariant: "warning", rowCount: "15M", size: "198 GB", fragmentation: 22, lastRead: "10m ago", deadlocks: 4, slowQ: 25 },
-  { name: "products", schema: "sys.tables", status: "Healthy", statusVariant: "healthy", rowCount: "48K", size: "3.2 GB", fragmentation: 4, lastRead: "20m ago", deadlocks: 0, slowQ: 2 },
+type TableData = {
+  name: string
+  schema: string
+  status: string
+  statusVariant: "critical" | "warning" | "healthy"
+  rowCount: string
+  size: string
+  fragmentation: number
+  lastRead: string
+  deadlocks: number
+  slowQ: number
+}
+
+const WEBPORTAL_TABLES: TableData[] = [
+  { name: "Auth_Consult_Notes", schema: "dbo", status: "Healthy", statusVariant: "healthy", rowCount: "609,251", size: "420 MB", fragmentation: 8, lastRead: "1h ago", deadlocks: 0, slowQ: 2 },
+  { name: "Claims_inquiry_Response", schema: "dbo", status: "Healthy", statusVariant: "healthy", rowCount: "44,738", size: "85 MB", fragmentation: 12, lastRead: "2h ago", deadlocks: 0, slowQ: 0 },
+  { name: "POST_DISMISSALS", schema: "dbo", status: "Warning", statusVariant: "warning", rowCount: "1,586,110", size: "2.1 GB", fragmentation: 24, lastRead: "30m ago", deadlocks: 2, slowQ: 14 },
+  { name: "PROV_CONSULT_NOTES", schema: "dbo", status: "Critical", statusVariant: "critical", rowCount: "5,570,747", size: "12.4 GB", fragmentation: 52, lastRead: "15m ago", deadlocks: 8, slowQ: 42 },
+  { name: "REQUEST_LOG", schema: "audit", status: "Healthy", statusVariant: "healthy", rowCount: "331,196", size: "180 MB", fragmentation: 5, lastRead: "5m ago", deadlocks: 0, slowQ: 1 },
+  { name: "REQUEST_LOG_FIELD", schema: "audit", status: "Warning", statusVariant: "warning", rowCount: "1,220,790", size: "840 MB", fragmentation: 31, lastRead: "10m ago", deadlocks: 1, slowQ: 8 },
+  { name: "USER_ATTESTATIONS", schema: "auth", status: "Healthy", statusVariant: "healthy", rowCount: "1,220,790", size: "520 MB", fragmentation: 14, lastRead: "4h ago", deadlocks: 0, slowQ: 3 },
+  { name: "USER_DBS", schema: "auth", status: "Healthy", statusVariant: "healthy", rowCount: "1,220,790", size: "310 MB", fragmentation: 18, lastRead: "6h ago", deadlocks: 0, slowQ: 0 },
+  { name: "USER_DEMO_ACCOUNTS", schema: "auth", status: "Healthy", statusVariant: "healthy", rowCount: "15", size: "64 KB", fragmentation: 0, lastRead: "12h ago", deadlocks: 0, slowQ: 0 },
+  { name: "USER_OTHER_ENTITIES", schema: "auth", status: "Healthy", statusVariant: "healthy", rowCount: "351,305", size: "115 MB", fragmentation: 9, lastRead: "1h ago", deadlocks: 0, slowQ: 2 },
+  { name: "USER_PROVIDERS", schema: "auth", status: "Critical", statusVariant: "critical", rowCount: "9,098,052", size: "8.2 GB", fragmentation: 48, lastRead: "2m ago", deadlocks: 12, slowQ: 55 },
+  { name: "USER_PROVIDERS_REQUESTED_2014", schema: "archive", status: "Warning", statusVariant: "warning", rowCount: "16,225,558", size: "14.1 GB", fragmentation: 32, lastRead: "Never", deadlocks: 0, slowQ: 0 },
+  { name: "USERS", schema: "auth", status: "Healthy", statusVariant: "healthy", rowCount: "154,494", size: "45 MB", fragmentation: 4, lastRead: "1m ago", deadlocks: 0, slowQ: 1 },
+  { name: "USERS_REQUESTED_2014", schema: "archive", status: "Healthy", statusVariant: "healthy", rowCount: "154,637", size: "28 MB", fragmentation: 12, lastRead: "Never", deadlocks: 0, slowQ: 0 },
+  { name: "WEB_ALERT_2011", schema: "archive", status: "Warning", statusVariant: "warning", rowCount: "2,159,684", size: "1.8 GB", fragmentation: 22, lastRead: "Never", deadlocks: 0, slowQ: 0 },
+  { name: "WEB_ALERT_MESSAGE_2011", schema: "archive", status: "Warning", statusVariant: "warning", rowCount: "2,119,059", size: "4.5 GB", fragmentation: 28, lastRead: "Never", deadlocks: 0, slowQ: 0 },
+  { name: "WEB_ALERT_RESPONSE_2011", schema: "archive", status: "Warning", statusVariant: "warning", rowCount: "1,489,728", size: "1.2 GB", fragmentation: 25, lastRead: "Never", deadlocks: 0, slowQ: 0 },
+  { name: "WEB_AUDIT_TRAIL", schema: "audit", status: "Critical", statusVariant: "critical", rowCount: "58,548,194", size: "142 GB", fragmentation: 62, lastRead: "Now", deadlocks: 24, slowQ: 182 },
+  { name: "WEB_AUDIT_TRAIL_API", schema: "audit", status: "Healthy", statusVariant: "healthy", rowCount: "111", size: "128 KB", fragmentation: 0, lastRead: "10m ago", deadlocks: 0, slowQ: 0 },
+  { name: "WEB_AUTH_ADJUSTS", schema: "auth", status: "Healthy", statusVariant: "healthy", rowCount: "0", size: "0 KB", fragmentation: 0, lastRead: "Never", deadlocks: 0, slowQ: 0 },
+  { name: "WEB_AUTH_CHANGES", schema: "auth", status: "Critical", statusVariant: "critical", rowCount: "14,886,733", size: "18.4 GB", fragmentation: 55, lastRead: "1m ago", deadlocks: 15, slowQ: 92 },
+  { name: "WEB_AUTH_DETAILS", schema: "auth", status: "Critical", statusVariant: "critical", rowCount: "22,069,814", size: "32.1 GB", fragmentation: 59, lastRead: "Now", deadlocks: 18, slowQ: 110 },
+  { name: "WEB_AUTH_DIAGS", schema: "auth", status: "Critical", statusVariant: "critical", rowCount: "31,330,066", size: "12.8 GB", fragmentation: 64, lastRead: "Now", deadlocks: 21, slowQ: 145 },
+  { name: "WEB_AUTH_MASTERS", schema: "auth", status: "Critical", statusVariant: "critical", rowCount: "19,278,092", size: "45.2 GB", fragmentation: 51, lastRead: "Now", deadlocks: 14, slowQ: 88 },
+  { name: "WEB_AUTH_MEMOFLDS", schema: "auth", status: "Healthy", statusVariant: "healthy", rowCount: "150,634", size: "840 MB", fragmentation: 12, lastRead: "30m ago", deadlocks: 0, slowQ: 4 },
+  { name: "WEB_AUTH_NOTES", schema: "auth", status: "Critical", statusVariant: "critical", rowCount: "31,693,191", size: "88.4 GB", fragmentation: 68, lastRead: "Now", deadlocks: 32, slowQ: 243 },
+  { name: "WEB_AUTH_RETRO_ATTESTATION", schema: "auth", status: "Healthy", statusVariant: "healthy", rowCount: "150,634", size: "110 MB", fragmentation: 8, lastRead: "1h ago", deadlocks: 0, slowQ: 1 },
+  { name: "WEB_AUTH_REVIEW_COMMENTS", schema: "auth", status: "Healthy", statusVariant: "healthy", rowCount: "186", size: "256 KB", fragmentation: 0, lastRead: "4h ago", deadlocks: 0, slowQ: 0 },
+  { name: "WEB_FILE_BYTES_2009", schema: "archive", status: "Healthy", statusVariant: "healthy", rowCount: "36,321", size: "4.2 GB", fragmentation: 5, lastRead: "Never", deadlocks: 0, slowQ: 0 },
+  { name: "WEB_FILE_UPLOAD_2009", schema: "archive", status: "Warning", statusVariant: "warning", rowCount: "6,554,727", size: "284 GB", fragmentation: 34, lastRead: "Never", deadlocks: 0, slowQ: 0 },
+  { name: "WEB_FILE_UPLOAD_COMPLETED", schema: "dbo", status: "Healthy", statusVariant: "healthy", rowCount: "182,235", size: "420 MB", fragmentation: 11, lastRead: "20m ago", deadlocks: 0, slowQ: 2 },
+  { name: "WEB_FILE_VIEW_2013", schema: "archive", status: "Healthy", statusVariant: "healthy", rowCount: "313", size: "12 MB", fragmentation: 0, lastRead: "Never", deadlocks: 0, slowQ: 0 },
+  { name: "WEB_FILES_FROM_EZ6_2014", schema: "archive", status: "Warning", statusVariant: "warning", rowCount: "9,648,647", size: "412 GB", fragmentation: 38, lastRead: "Never", deadlocks: 0, slowQ: 0 },
+  { name: "WEB_INQUIRY_2016", schema: "archive", status: "Healthy", statusVariant: "healthy", rowCount: "753,905", size: "1.4 GB", fragmentation: 15, lastRead: "Never", deadlocks: 0, slowQ: 0 },
 ]
 
-const SUMMARY_CARDS = [
-  { label: "Tables", value: "20", subtext: "4 need action", color: "text-slate-900" },
-  { label: "DB size", value: "842 GB", subtext: "+12% this month", color: "text-slate-900" },
-  { label: "Avg fragmentation", value: "24%", subtext: "6 tables > 30%", color: "text-amber-600", tag: "dm_db_index_physical_stats" },
-  { label: "Cache hit ratio", value: "91%", subtext: "Target > 95%", color: "text-amber-600", tag: "dm_os_performance_counters" },
-  { label: "Deadlocks (24h)", value: "7", subtext: "+3 vs yesterday", color: "text-rose-600", tag: "dm_exec_requests" },
-]
+const SUMMARY_STATS: Record<string, any[]> = {
+  "WebPortalDB": [
+    { label: "Tables", value: "34", subtext: "8 need action", color: "text-slate-900" },
+    { label: "DB size", value: "842 GB", subtext: "+12% this month", color: "text-slate-900" },
+    { label: "Avg fragmentation", value: "32%", subtext: "12 tables > 30%", color: "text-rose-600", tag: "dm_db_index_physical_stats" },
+    { label: "Cache hit ratio", value: "89%", subtext: "Target > 95%", color: "text-amber-600", tag: "dm_os_performance_counters" },
+    { label: "Deadlocks (24h)", value: "14", subtext: "+6 vs yesterday", color: "text-rose-600", tag: "dm_exec_requests" },
+  ],
+  "default": [
+    { label: "Tables", value: "20", subtext: "4 need action", color: "text-slate-900" },
+    { label: "DB size", value: "120 GB", subtext: "+2% this month", color: "text-slate-900" },
+    { label: "Avg fragmentation", value: "18%", subtext: "3 tables > 30%", color: "text-amber-600", tag: "dm_db_index_physical_stats" },
+    { label: "Cache hit ratio", value: "96%", subtext: "Target > 95%", color: "text-emerald-600", tag: "dm_os_performance_counters" },
+    { label: "Deadlocks (24h)", value: "2", subtext: "Stable", color: "text-slate-900", tag: "dm_exec_requests" },
+  ]
+}
 
 export function TableManager({ activeDb }: { activeDb: string }) {
   const [search, setSearch] = React.useState("")
@@ -76,13 +125,16 @@ export function TableManager({ activeDb }: { activeDb: string }) {
   const [groups, setGroups] = React.useState<{name: string, tables: string[]}[]>([])
   const [isExecuting, setIsExecuting] = React.useState(false)
 
+  const activeTables = activeDb === "WebPortalDB" ? WEBPORTAL_TABLES : WEBPORTAL_TABLES.slice(0, 7)
+  const activeStats = SUMMARY_STATS[activeDb] || SUMMARY_STATS["default"]
+
   const filteredTables = React.useMemo(() => {
-    return MOCK_TABLES.filter(table => {
+    return activeTables.filter(table => {
       const matchesSearch = table.name.toLowerCase().includes(search.toLowerCase())
       const matchesStatus = statusFilter === "all" || table.status.toLowerCase() === statusFilter.toLowerCase()
       return matchesSearch && matchesStatus
     })
-  }, [search, statusFilter])
+  }, [activeTables, search, statusFilter])
 
   const isAllSelected = filteredTables.length > 0 && selectedTables.length === filteredTables.length
 
@@ -142,7 +194,6 @@ export function TableManager({ activeDb }: { activeDb: string }) {
     setIsExecuting(true)
     const tableCount = selectedTables.length
     
-    // Simulate complex maintenance task
     setTimeout(() => {
       setIsExecuting(false)
       toast({
@@ -184,16 +235,16 @@ export function TableManager({ activeDb }: { activeDb: string }) {
         <div className="flex items-center gap-3">
           <div className="h-2 w-2 rounded-full bg-amber-500" />
           <div className="text-[11px] font-medium text-amber-900 flex items-center gap-4">
-            <span className="flex items-center gap-1"><strong className="font-bold">3 tables</strong> fragmentation {'>'}30%</span>
-            <span className="flex items-center gap-1"><strong className="font-bold">2 tables</strong> no access in 60+ days</span>
-            <span className="flex items-center gap-1"><strong className="font-bold">1 table</strong> matching _date pattern</span>
+            <span className="flex items-center gap-1"><strong className="font-bold">{activeDb === "WebPortalDB" ? "12 tables" : "3 tables"}</strong> fragmentation {'>'}30%</span>
+            <span className="flex items-center gap-1"><strong className="font-bold">{activeDb === "WebPortalDB" ? "8 tables" : "2 tables"}</strong> no access in 60+ days</span>
+            <span className="flex items-center gap-1"><strong className="font-bold">Pattern detection:</strong> Matches for _2011, _2014 archive patterns</span>
           </div>
         </div>
         <X className="h-4 w-4 text-amber-400 cursor-pointer hover:text-amber-600" />
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-5 gap-4">
-        {SUMMARY_CARDS.map((card, i) => (
+        {activeStats.map((card, i) => (
           <Card key={i} className="bg-white border-none shadow-sm rounded-xl">
             <CardContent className="p-4 space-y-1">
               <div className="flex flex-col">
@@ -287,15 +338,6 @@ export function TableManager({ activeDb }: { activeDb: string }) {
                 <RefreshCw className={cn("h-3 w-3 mr-1", isExecuting && "animate-spin")} />
                 Update Stats
               </Button>
-              <Button 
-                onClick={() => runBulkAction("Archive Flagging")}
-                disabled={isExecuting}
-                variant="outline" 
-                size="sm" 
-                className="h-8 text-xs rounded-full bg-white border-white text-[#1967D2] hover:bg-white hover:text-[#185ABC] shadow-sm font-semibold px-4 whitespace-nowrap"
-              >
-                Flag Archive
-              </Button>
             </div>
           </div>
         )}
@@ -376,7 +418,7 @@ export function TableManager({ activeDb }: { activeDb: string }) {
                           "font-bold text-[9px] px-2 py-0.5 rounded border-none shadow-none",
                           table.statusVariant === "critical" && "bg-rose-50 text-rose-500",
                           table.statusVariant === "warning" && "bg-amber-50 text-amber-600",
-                          table.statusVariant === "healthy" && "bg-emerald-50 text-emerald-500"
+                          table.statusVariant === "healthy" && "bg-emerald-50 text-emerald-600"
                         )}
                       >
                         {table.status}

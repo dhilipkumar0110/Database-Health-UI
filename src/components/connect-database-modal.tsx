@@ -45,15 +45,14 @@ type TableData = {
 }
 
 const MOCK_TABLES: TableData[] = [
-  { name: "Users", schema: "dbo", size: "124 MB", records: "12,500" },
-  { name: "Orders", schema: "sales", size: "1.2 GB", records: "450,200" },
-  { name: "OrderDetails", schema: "sales", size: "2.4 GB", records: "1,200,500" },
-  { name: "Products", schema: "inv", size: "45 MB", records: "8,400" },
-  { name: "Category", schema: "inv", size: "12 KB", records: "42" },
-  { name: "Logs", schema: "audit", size: "14.2 GB", records: "24,500,000" },
-  { name: "AuditTrail", schema: "audit", size: "8.1 GB", records: "12,200,000" },
-  { name: "Transactions", schema: "dbo", size: "5.4 GB", records: "8,900,000" },
-  { name: "CustomerProfiles", schema: "sales", size: "890 MB", records: "340,000" },
+  { name: "Auth_Consult_Notes", schema: "dbo", size: "420 MB", records: "609,251" },
+  { name: "Claims_inquiry_Response", schema: "dbo", size: "85 MB", records: "44,738" },
+  { name: "POST_DISMISSALS", schema: "dbo", size: "2.1 GB", records: "1,586,110" },
+  { name: "PROV_CONSULT_NOTES", schema: "dbo", size: "12.4 GB", records: "5,570,747" },
+  { name: "REQUEST_LOG", schema: "audit", size: "180 MB", records: "331,196" },
+  { name: "USERS", schema: "auth", size: "45 MB", records: "154,494" },
+  { name: "WEB_AUDIT_TRAIL", schema: "audit", size: "142 GB", records: "58,548,194" },
+  { name: "WEB_AUTH_DETAILS", schema: "auth", size: "32.1 GB", records: "22,069,814" },
 ]
 
 export function ConnectDatabaseModal({ isOpen, onClose, onComplete }: ConnectDatabaseModalProps) {
@@ -266,9 +265,9 @@ export function ConnectDatabaseModal({ isOpen, onClose, onComplete }: ConnectDat
                   <SelectValue placeholder="Select target database" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="portal">WebPortalDB</SelectItem>
-                  <SelectItem value="sales">Sales_DB</SelectItem>
-                  <SelectItem value="prod">Production_Main</SelectItem>
+                  <SelectItem value="WebPortalDB">WebPortalDB</SelectItem>
+                  <SelectItem value="ReportingDB">ReportingDB</SelectItem>
+                  <SelectItem value="SalesDB">SalesDB</SelectItem>
                 </SelectContent>
               </Select>
             </div>
