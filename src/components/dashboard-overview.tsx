@@ -84,15 +84,8 @@ export function DashboardOverview({
           <div className="text-xs text-slate-400">
             Last scan: today 08:42 AM
           </div>
-          <Button variant="outline" size="sm" className="h-8 text-xs border-slate-300 rounded-full px-4">
+          <Button variant="outline" size="sm" className="h-8 text-xs border-slate-300 rounded-full px-4 bg-white">
             Run Scan
-          </Button>
-          <Button 
-            onClick={() => setIsModalOpen(true)}
-            size="sm" 
-            className="h-8 bg-[#1E8E3E] hover:bg-[#1A7F37] gap-1.5 text-xs rounded-lg px-4"
-          >
-            + Connect DB
           </Button>
         </div>
       </div>
