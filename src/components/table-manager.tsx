@@ -136,9 +136,6 @@ export function TableManager({
   const [search, setSearch] = React.useState("")
   const [statusFilter, setStatusFilter] = React.useState("all")
   const [selectedTables, setSelectedTables] = React.useState<string[]>([])
-  const [isGroupModalOpen, setIsGroupModalOpen] = React.useState(false)
-  const [groupName, setGroupName] = React.useState("")
-  const [groups, setGroups] = React.useState<{name: string, tables: string[]}[]>([])
   
   // View State
   const [viewMode, setViewMode] = React.useState<'list' | 'details'>('list')
@@ -219,7 +216,7 @@ export function TableManager({
     setSelectedTables([])
     toast({
       title: "Maintenance Task Created",
-      description: `Task "${taskName}" has been added to the Archive Manager.`,
+      description: `Task "${taskName}" has been added to the Task Manager.`,
     })
   }
 
@@ -260,14 +257,6 @@ export function TableManager({
           </div>
           <Button variant="outline" size="sm" className="h-8 text-xs border-slate-300 rounded-full px-4 bg-white">
             Run Scan
-          </Button>
-          <Button 
-            onClick={() => setIsGroupModalOpen(true)}
-            size="sm" 
-            className="h-8 bg-[#1E8E3E] hover:bg-[#1A7F37] gap-1.5 text-xs rounded-lg px-4"
-          >
-            <Plus className="h-3 w-3" />
-            Add Table Group
           </Button>
         </div>
       </div>
@@ -414,7 +403,6 @@ export function TableManager({
             </TableHeader>
             <TableBody>
               {filteredTables.map((table, i) => {
-                const tableGroups = groups.filter(g => g.tables.includes(table.name))
                 return (
                   <TableRow 
                     key={i} 
@@ -433,15 +421,6 @@ export function TableManager({
                     <TableCell>
                       <div className="flex flex-col gap-1">
                         <span className="text-sm font-bold text-slate-800">{table.name}</span>
-                        {tableGroups.length > 0 && (
-                          <div className="flex flex-wrap gap-1">
-                            {tableGroups.map(g => (
-                              <Badge key={g.name} variant="outline" className="text-[8px] font-bold bg-slate-50 text-slate-400 h-4 border-slate-200">
-                                {g.name}
-                              </Badge>
-                            ))}
-                          </div>
-                        )}
                       </div>
                     </TableCell>
                     <TableCell>
@@ -566,64 +545,6 @@ export function TableManager({
               className="bg-primary hover:bg-primary/90 text-white font-bold"
             >
               Create Task
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
-
-      <Dialog open={isGroupModalOpen} onOpenChange={setIsGroupModalOpen}>
-        <DialogContent className="sm:max-w-[425px]">
-          <DialogHeader>
-            <DialogTitle className="flex items-center gap-2">
-              <Layers className="h-5 w-5 text-[#1E8E3E]" />
-              Create Table Group
-            </DialogTitle>
-            <DialogDescription>
-              Organize related tables into a group for easier monitoring and bulk management.
-            </DialogDescription>
-          </DialogHeader>
-          <div className="grid gap-4 py-4">
-            <div className="space-y-2">
-              <Label htmlFor="group-name" className="text-sm font-semibold">Group Name</Label>
-              <Input 
-                id="group-name" 
-                placeholder="e.g., Financial_Records, Archive_Candidates" 
-                value={groupName}
-                onChange={(e) => setGroupName(e.target.value)}
-                className="h-10 border-slate-200"
-              />
-            </div>
-            <div className="space-y-2">
-              <Label className="text-sm font-semibold">Selected Tables ({selectedTables.length})</Label>
-              <div className="max-h-[120px] overflow-y-auto p-3 bg-slate-50 rounded-lg border border-slate-200">
-                {selectedTables.length > 0 ? (
-                  <ul className="text-xs font-medium text-slate-600 space-y-1">
-                    {selectedTables.map(t => (
-                      <li key={t} className="flex items-center gap-2">
-                        <CheckCircle2 className="h-3 w-3 text-emerald-500" />
-                        {t}
-                      </li>
-                    ))}
-                  </ul>
-                ) : (
-                  <p className="text-xs text-slate-400 italic">No tables selected. Close this and select tables first.</p>
-                )}
-              </div>
-            </div>
-          </div>
-          <DialogFooter>
-            <Button variant="outline" onClick={() => setIsGroupModalOpen(false)}>Cancel</Button>
-            <Button 
-              onClick={() => {
-                setGroups(prev => [...prev, {name: groupName, tables: [...selectedTables]}]);
-                setIsGroupModalOpen(false);
-                setGroupName("");
-                setSelectedTables([]);
-              }} 
-              disabled={!groupName || selectedTables.length === 0}
-              className="bg-[#1E8E3E] hover:bg-[#1A7F37]"
-            >
-              Create Group
             </Button>
           </DialogFooter>
         </DialogContent>
