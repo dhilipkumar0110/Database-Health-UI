@@ -146,7 +146,7 @@ export function AppSidebar({
                 className="px-4 py-3 text-slate-500 hover:text-slate-900"
               >
                 <Archive className="h-4 w-4" />
-                <span className="text-sm font-medium">Archive Manager</span>
+                <span className="text-sm font-medium">Task Manager</span>
               </SidebarMenuButton>
             </SidebarMenuItem>
             <SidebarMenuItem>

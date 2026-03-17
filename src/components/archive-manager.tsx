@@ -1,4 +1,3 @@
-
 "use client"
 
 import * as React from "react"
@@ -138,7 +137,6 @@ export function ArchiveManager({
         title: "Task Scheduled",
         description: `"${taskToSchedule.name}" is now active in the Scheduler.`
       })
-      // Navigate to maintenance (Scheduler) view
       onViewChange("maintenance")
     }
   }
@@ -152,12 +150,12 @@ export function ArchiveManager({
               <ArrowLeft className="h-5 w-5" />
             </Button>
             <div>
-              <h1 className="text-2xl font-bold text-slate-900">Query Builder</h1>
+              <h1 className="text-2xl font-bold text-slate-900">Configure Criteria</h1>
               <div className="flex items-center gap-2 text-xs font-medium text-slate-400">
                 <TableIcon className="h-3 w-3" />
                 <span>{selectedTable}</span>
                 <ChevronRight className="h-3 w-3" />
-                <span className="text-primary font-bold">Configure Archiving Criteria</span>
+                <span className="text-primary font-bold">Archiving Settings</span>
               </div>
             </div>
           </div>
@@ -217,8 +215,8 @@ export function ArchiveManager({
                   </div>
                   <div className="col-span-4">
                     <Input 
-                      placeholder="Value (e.g. 'Active' or Date)" 
-                      value={row.value}
+                      placeholder="Value" 
+                      value={row.value || ""}
                       onChange={(e) => updateRow(row.id, 'value', e.target.value)}
                       className="h-11 border-slate-200 rounded-xl bg-slate-50/50"
                     />
@@ -262,18 +260,17 @@ export function ArchiveManager({
                   Cancel
                 </Button>
                 <Button className="h-11 px-10 rounded-xl font-bold bg-primary text-white shadow-lg hover:shadow-primary/20 transition-all">
-                  Save & Validate Configuration
+                  Save Configuration
                 </Button>
               </div>
             </CardFooter>
           </Card>
 
-          {/* SQL Preview Card */}
           <div className="lg:col-span-4 space-y-6">
             <Card className="bg-white border-none shadow-sm rounded-3xl overflow-hidden p-8">
               <div className="flex items-center gap-2 mb-6">
                 <Code className="h-5 w-5 text-primary" />
-                <h3 className="font-bold text-slate-900">Query Preview</h3>
+                <h3 className="font-bold text-slate-900">Preview</h3>
               </div>
               <div className="relative rounded-2xl bg-[#0F172A] p-6 font-mono text-sm leading-relaxed overflow-hidden min-h-[160px]">
                 <div className="absolute left-0 top-0 bottom-0 w-1 bg-blue-500" />
@@ -315,7 +312,7 @@ export function ArchiveManager({
                 <Database className="h-3 w-3" />
                 <span>{selectedTask.database}</span>
                 <ChevronRight className="h-3 w-3" />
-                <span className="text-primary font-bold">Table Selection Analytics</span>
+                <span className="text-primary font-bold">Configure Task Components</span>
               </div>
             </div>
           </div>
@@ -376,11 +373,12 @@ export function ArchiveManager({
                   </TableCell>
                   <TableCell className="px-8 text-right">
                     <Button 
+                      variant="link"
                       onClick={() => handleConfigureQuery(tableName)}
-                      className="h-10 px-6 bg-primary hover:bg-primary/90 text-white text-[11px] font-bold rounded-xl shadow-md transition-all gap-2"
+                      className="h-10 px-6 text-primary hover:no-underline text-[11px] font-bold rounded-xl gap-2"
                     >
                       <FileCode className="h-4 w-4" />
-                      Configure Query
+                      Configure
                     </Button>
                   </TableCell>
                 </TableRow>
@@ -401,7 +399,7 @@ export function ArchiveManager({
     <div className="space-y-6 animate-in fade-in duration-500">
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-3">
-          <h1 className="text-2xl font-bold text-slate-900">Archive & Task Manager</h1>
+          <h1 className="text-2xl font-bold text-slate-900">Task Manager</h1>
           <Badge className="bg-[#E6F4EA] text-[#1E8E3E] hover:bg-[#E6F4EA] border-none font-medium px-2 py-0.5 text-[10px]">
             {tasks.length} Active Tasks
           </Badge>
@@ -410,7 +408,7 @@ export function ArchiveManager({
           <div className="relative">
             <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-slate-400" />
             <Input 
-              placeholder="Search tasks or DBs..." 
+              placeholder="Search tasks..." 
               className="h-9 text-xs pl-8 w-64 bg-white border-slate-200 rounded-lg shadow-none"
               value={search}
               onChange={(e) => setSearch(e.target.value)}
@@ -422,9 +420,9 @@ export function ArchiveManager({
       {filteredTasks.length === 0 ? (
         <div className="py-20 flex flex-col items-center justify-center text-center bg-white border border-dashed rounded-3xl">
           <Archive className="h-12 w-12 text-slate-200 mb-4" />
-          <h3 className="text-lg font-bold text-slate-700">No maintenance tasks found</h3>
+          <h3 className="text-lg font-bold text-slate-700">No tasks found</h3>
           <p className="text-sm text-slate-400 max-w-sm">
-            Start by selecting tables in the Table Manager and flagging them for archive or index rebuilding.
+            Start by selecting tables in the Table Manager and defining maintenance tasks.
           </p>
         </div>
       ) : (
@@ -499,7 +497,7 @@ export function ArchiveManager({
                   }}
                 >
                   <FileCode className="h-3.5 w-3.5" />
-                  Configure Query
+                  Configure
                 </Button>
                 <Button 
                   className="h-8 bg-white border border-slate-200 text-slate-700 text-[10px] font-bold rounded-lg px-4 hover:bg-slate-100 shadow-none gap-1.5"
@@ -582,7 +580,7 @@ export function ArchiveManager({
                 <Label className="text-sm font-semibold text-slate-500">Start Date</Label>
                 <Input 
                   type="date" 
-                  value={scheduleForm.startDate}
+                  value={scheduleForm.startDate || ""}
                   onChange={(e) => setScheduleForm(prev => ({ ...prev, startDate: e.target.value }))}
                   className="h-11 border-slate-200"
                 />
@@ -591,7 +589,7 @@ export function ArchiveManager({
                 <Label className="text-sm font-semibold text-slate-500">End Date</Label>
                 <Input 
                   type="date" 
-                  value={scheduleForm.endDate}
+                  value={scheduleForm.endDate || ""}
                   onChange={(e) => setScheduleForm(prev => ({ ...prev, endDate: e.target.value }))}
                   className="h-11 border-slate-200"
                 />
