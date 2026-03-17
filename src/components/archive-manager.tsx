@@ -1,21 +1,13 @@
-
 "use client"
 
 import * as React from "react"
 import { 
   Archive, 
-  Zap, 
-  RefreshCw, 
-  Server, 
-  Database, 
-  Clock, 
-  Settings, 
   Search, 
   MoreVertical,
-  ChevronRight,
   FileCode,
-  Calendar,
-  AlertCircle
+  Server, 
+  Database
 } from "lucide-react"
 import { Card, CardContent, CardHeader, CardTitle, CardFooter } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
@@ -51,9 +43,6 @@ export function ArchiveManager({ tasks }: { tasks: MaintenanceTask[] }) {
               onChange={(e) => setSearch(e.target.value)}
             />
           </div>
-          <Button className="h-9 bg-primary text-white text-xs font-bold rounded-lg px-6 shadow-sm">
-            Create New Policy
-          </Button>
         </div>
       </div>
 
@@ -137,18 +126,6 @@ export function ArchiveManager({ tasks }: { tasks: MaintenanceTask[] }) {
           ))}
         </div>
       )}
-
-      <div className="mt-8 p-6 bg-[#E8F0FE] border border-[#D2E3FC] rounded-2xl flex items-start gap-4">
-        <div className="h-10 w-10 rounded-full bg-white flex items-center justify-center shrink-0 shadow-sm">
-          <AlertCircle className="h-5 w-5 text-primary" />
-        </div>
-        <div className="space-y-1">
-          <h4 className="text-sm font-bold text-slate-900 uppercase tracking-tight">Policy Management Insight</h4>
-          <p className="text-xs text-slate-600 leading-relaxed font-medium">
-            Tasks created here are stored as **maintenance blueprints**. You can configure specific T-SQL extraction queries for archiving or schedule these tasks to run during your next window in the **Scheduler** view.
-          </p>
-        </div>
-      </div>
     </div>
   )
 }
