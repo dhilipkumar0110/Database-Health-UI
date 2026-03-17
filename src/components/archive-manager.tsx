@@ -7,7 +7,17 @@ import {
   MoreVertical,
   FileCode,
   Server, 
-  Database
+  Database,
+  ArrowLeft,
+  ChevronRight,
+  ShieldAlert,
+  Activity,
+  Zap,
+  Table as TableIcon,
+  Plus,
+  Trash2,
+  CheckCircle2,
+  Play
 } from "lucide-react"
 import { Card, CardContent, CardHeader, CardTitle, CardFooter } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
@@ -15,9 +25,288 @@ import { Badge } from "@/components/ui/badge"
 import { Input } from "@/components/ui/input"
 import { MaintenanceTask } from "@/app/page"
 import { cn } from "@/lib/utils"
+import { 
+  Table, 
+  TableBody, 
+  TableCell, 
+  TableHead, 
+  TableHeader, 
+  TableRow 
+} from "@/components/ui/table"
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select"
+
+type ViewState = 'list' | 'task-details' | 'query-builder'
 
 export function ArchiveManager({ tasks }: { tasks: MaintenanceTask[] }) {
+  const [view, setView] = React.useState<ViewState>('list')
+  const [selectedTask, setSelectedTask] = React.useState<MaintenanceTask | null>(null)
+  const [selectedTable, setSelectedTable] = React.useState<string | null>(null)
   const [search, setSearch] = React.useState("")
+
+  // Query Builder State
+  const [queryRows, setQueryRows] = React.useState([
+    { id: '1', column: 'created_at', operator: '<=', value: 'DATEADD(year, -5, GETDATE())', logic: 'AND' }
+  ])
+
+  const handleTaskClick = (task: MaintenanceTask) => {
+    setSelectedTask(task)
+    setView('task-details')
+  }
+
+  const handleConfigureQuery = (tableName: string) => {
+    setSelectedTable(tableName)
+    setView('query-builder')
+  }
+
+  const handleBack = () => {
+    if (view === 'query-builder') setView('task-details')
+    else if (view === 'task-details') setView('list')
+  }
+
+  const addQueryRow = () => {
+    setQueryRows([...queryRows, { id: Date.now().toString(), column: '', operator: '=', value: '', logic: 'AND' }])
+  }
+
+  const removeQueryRow = (id: string) => {
+    setQueryRows(queryRows.filter(row => row.id !== id))
+  }
+
+  if (view === 'query-builder') {
+    return (
+      <div className="space-y-6 animate-in fade-in slide-in-from-right-4 duration-500 pb-12">
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-4">
+            <Button variant="ghost" size="icon" onClick={handleBack} className="rounded-full h-10 w-10">
+              <ArrowLeft className="h-5 w-5" />
+            </Button>
+            <div>
+              <h1 className="text-2xl font-bold text-slate-900">Query Builder</h1>
+              <div className="flex items-center gap-2 text-xs font-medium text-slate-400">
+                <TableIcon className="h-3 w-3" />
+                <span>{selectedTable}</span>
+                <ChevronRight className="h-3 w-3" />
+                <span className="text-primary font-bold">Configure Archiving Criteria</span>
+              </div>
+            </div>
+          </div>
+          <div className="flex items-center gap-4">
+            <Card className="bg-slate-50 border-none shadow-none px-4 py-2 flex flex-col items-center">
+              <span className="text-[10px] font-bold text-slate-400 uppercase tracking-tighter">Total Records</span>
+              <span className="text-lg font-bold text-slate-900">1,244,102</span>
+            </Card>
+            <Card className="bg-emerald-50 border-none shadow-none px-4 py-2 flex flex-col items-center">
+              <span className="text-[10px] font-bold text-emerald-600 uppercase tracking-tighter">Query Status</span>
+              <span className="text-lg font-bold text-emerald-700">Valid</span>
+            </Card>
+          </div>
+        </div>
+
+        <Card className="bg-white border-none shadow-sm rounded-3xl overflow-hidden">
+          <CardHeader className="p-8 border-b border-slate-50">
+            <CardTitle className="text-lg font-bold">Selection Criteria</CardTitle>
+            <p className="text-sm text-slate-400">Define the WHERE clause for the archival extraction process.</p>
+          </CardHeader>
+          <CardContent className="p-8 space-y-4">
+            <div className="grid grid-cols-12 gap-4 mb-2">
+              <div className="col-span-3 text-[10px] font-bold text-slate-400 uppercase">Column Name</div>
+              <div className="col-span-2 text-[10px] font-bold text-slate-400 uppercase">Operator</div>
+              <div className="col-span-4 text-[10px] font-bold text-slate-400 uppercase">Criteria Value</div>
+              <div className="col-span-2 text-[10px] font-bold text-slate-400 uppercase">Logic</div>
+              <div className="col-span-1 text-[10px] font-bold text-slate-400 uppercase text-right">Action</div>
+            </div>
+
+            {queryRows.map((row) => (
+              <div key={row.id} className="grid grid-cols-12 gap-4 items-center animate-in fade-in slide-in-from-top-2">
+                <div className="col-span-3">
+                  <Select defaultValue={row.column}>
+                    <SelectTrigger className="h-11 border-slate-200 rounded-xl bg-slate-50/50">
+                      <SelectValue placeholder="Column" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="created_at">created_at</SelectItem>
+                      <SelectItem value="status">status</SelectItem>
+                      <SelectItem value="id">id</SelectItem>
+                      <SelectItem value="transaction_type">transaction_type</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div className="col-span-2">
+                  <Select defaultValue={row.operator}>
+                    <SelectTrigger className="h-11 border-slate-200 rounded-xl bg-slate-50/50">
+                      <SelectValue placeholder="Op" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="=">=</SelectItem>
+                      <SelectItem value="!=">!=</SelectItem>
+                      <SelectItem value="<">{'<'}</SelectItem>
+                      <SelectItem value="<=">{'<='}</SelectItem>
+                      <SelectItem value=">">{'>'}</SelectItem>
+                      <SelectItem value=">=">{'>='}</SelectItem>
+                      <SelectItem value="LIKE">LIKE</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div className="col-span-4">
+                  <Input 
+                    placeholder="Value (e.g. 'Active' or Date)" 
+                    defaultValue={row.value}
+                    className="h-11 border-slate-200 rounded-xl bg-slate-50/50"
+                  />
+                </div>
+                <div className="col-span-2">
+                  <Select defaultValue={row.logic}>
+                    <SelectTrigger className="h-11 border-slate-200 rounded-xl bg-slate-50/50">
+                      <SelectValue placeholder="Logic" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="AND">AND</SelectItem>
+                      <SelectItem value="OR">OR</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div className="col-span-1 text-right">
+                  <Button 
+                    variant="ghost" 
+                    size="icon" 
+                    onClick={() => removeQueryRow(row.id)}
+                    className="h-10 w-10 text-rose-400 hover:text-rose-600 hover:bg-rose-50 rounded-xl"
+                  >
+                    <Trash2 className="h-4 w-4" />
+                  </Button>
+                </div>
+              </div>
+            ))}
+
+            <Button 
+              variant="outline" 
+              onClick={addQueryRow}
+              className="mt-4 border-dashed border-2 border-slate-200 text-slate-400 hover:text-primary hover:border-primary hover:bg-slate-50 w-full h-12 rounded-xl font-bold"
+            >
+              <Plus className="h-4 w-4 mr-2" />
+              Add Condition
+            </Button>
+          </CardContent>
+          <CardFooter className="p-8 bg-slate-50 flex items-center justify-between border-t border-slate-100">
+            <div className="flex items-center gap-2 text-xs font-medium text-slate-500">
+              <Activity className="h-4 w-4 text-emerald-500" />
+              Estimated 12% reduction in target table size.
+            </div>
+            <div className="flex items-center gap-3">
+              <Button variant="outline" className="h-11 px-8 rounded-xl font-bold bg-white" onClick={() => setView('task-details')}>
+                Cancel
+              </Button>
+              <Button className="h-11 px-10 rounded-xl font-bold bg-primary text-white shadow-lg hover:shadow-primary/20 transition-all">
+                Save & Validate Configuration
+              </Button>
+            </div>
+          </CardFooter>
+        </Card>
+      </div>
+    )
+  }
+
+  if (view === 'task-details' && selectedTask) {
+    return (
+      <div className="space-y-6 animate-in fade-in slide-in-from-right-4 duration-500">
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-4">
+            <Button variant="ghost" size="icon" onClick={handleBack} className="rounded-full h-10 w-10">
+              <ArrowLeft className="h-5 w-5" />
+            </Button>
+            <div>
+              <h1 className="text-2xl font-bold text-slate-900">{selectedTask.name}</h1>
+              <div className="flex items-center gap-2 text-xs font-medium text-slate-400">
+                <Database className="h-3 w-3" />
+                <span>{selectedTask.database}</span>
+                <ChevronRight className="h-3 w-3" />
+                <span className="text-primary font-bold">Table Selection Analytics</span>
+              </div>
+            </div>
+          </div>
+          <div className="flex items-center gap-2">
+            <Button variant="outline" className="h-9 text-xs font-bold rounded-lg px-4 bg-white">
+              <Play className="h-3.5 w-3.5 mr-2" />
+              Test Execution
+            </Button>
+          </div>
+        </div>
+
+        <Card className="bg-white border-none shadow-sm rounded-3xl overflow-hidden">
+          <Table>
+            <TableHeader className="bg-slate-50/50">
+              <TableRow className="hover:bg-transparent border-none">
+                <TableHead className="h-12 px-8 text-[10px] font-bold uppercase text-slate-400">Table Name</TableHead>
+                <TableHead className="h-12 text-[10px] font-bold uppercase text-slate-400">Missing Indexes</TableHead>
+                <TableHead className="h-12 text-[10px] font-bold uppercase text-slate-400">Deadlocks</TableHead>
+                <TableHead className="h-12 text-[10px] font-bold uppercase text-slate-400">Slow Queries</TableHead>
+                <TableHead className="h-12 text-[10px] font-bold uppercase text-slate-400">Table Size</TableHead>
+                <TableHead className="h-12 px-8 text-right text-[10px] font-bold uppercase text-slate-400">Action</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {selectedTask.tables.map((tableName) => (
+                <TableRow key={tableName} className="group hover:bg-slate-50/50 transition-colors border-b border-slate-50 last:border-0">
+                  <TableCell className="py-5 px-8">
+                    <div className="flex items-center gap-3">
+                      <div className="h-10 w-10 rounded-xl bg-slate-50 flex items-center justify-center text-primary border border-slate-100">
+                        <TableIcon className="h-5 w-5" />
+                      </div>
+                      <div className="flex flex-col">
+                        <span className="text-sm font-bold text-primary hover:underline cursor-pointer">{tableName}</span>
+                        <span className="text-[10px] font-bold text-slate-300 uppercase tracking-tighter">Click for analytics</span>
+                      </div>
+                    </div>
+                  </TableCell>
+                  <TableCell>
+                    {tableName.includes('UPLOAD') || tableName.includes('AUDIT') ? (
+                      <Badge className="bg-rose-50 text-rose-500 border-none font-bold text-[9px] px-2 py-0.5 rounded-full flex items-center gap-1 w-fit">
+                        <ShieldAlert className="h-3 w-3" />
+                        4 Issues
+                      </Badge>
+                    ) : (
+                      <span className="text-slate-300">—</span>
+                    )}
+                  </TableCell>
+                  <TableCell>
+                    <div className="flex items-center gap-2 text-slate-400 font-bold text-xs">
+                      <Activity className="h-3 w-3" />
+                      {Math.floor(Math.random() * 12) + 2}
+                    </div>
+                  </TableCell>
+                  <TableCell>
+                    <div className="flex items-center gap-2 text-amber-500 font-bold text-xs">
+                      <Zap className="h-3 w-3" />
+                      {Math.floor(Math.random() * 20) + 1}
+                    </div>
+                  </TableCell>
+                  <TableCell>
+                    <span className="text-xs font-bold text-slate-600">
+                      {tableName.includes('BYTES') || tableName.includes('UPLOAD') ? '45.0 GB' : '8.1 GB'}
+                    </span>
+                  </TableCell>
+                  <TableCell className="px-8 text-right">
+                    <Button 
+                      onClick={() => handleConfigureQuery(tableName)}
+                      className="h-10 px-6 bg-primary hover:bg-primary/90 text-white text-[11px] font-bold rounded-xl shadow-md transition-all gap-2"
+                    >
+                      <FileCode className="h-4 w-4" />
+                      Configure Query
+                    </Button>
+                  </TableCell>
+                </TableRow>
+              ))}
+            </TableBody>
+          </Table>
+        </Card>
+      </div>
+    )
+  }
 
   const filteredTasks = tasks.filter(t => 
     t.name.toLowerCase().includes(search.toLowerCase()) || 
@@ -57,7 +346,7 @@ export function ArchiveManager({ tasks }: { tasks: MaintenanceTask[] }) {
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {filteredTasks.map((task) => (
-            <Card key={task.id} className="bg-white border-none shadow-sm rounded-2xl overflow-hidden group hover:ring-2 hover:ring-primary/10 transition-all">
+            <Card key={task.id} className="bg-white border-none shadow-sm rounded-2xl overflow-hidden group hover:ring-2 hover:ring-primary/10 transition-all cursor-pointer" onClick={() => handleTaskClick(task)}>
               <CardHeader className="p-5 pb-3">
                 <div className="flex items-start justify-between">
                   <div className="space-y-1">
@@ -114,11 +403,24 @@ export function ArchiveManager({ tasks }: { tasks: MaintenanceTask[] }) {
                 </div>
               </CardContent>
               <CardFooter className="p-5 bg-slate-50/50 flex items-center justify-between border-t border-slate-50">
-                <Button variant="link" className="h-8 text-[10px] font-bold text-primary p-0 hover:no-underline gap-1.5 transition-all">
+                <Button 
+                  variant="link" 
+                  className="h-8 text-[10px] font-bold text-primary p-0 hover:no-underline gap-1.5 transition-all"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    handleTaskClick(task);
+                  }}
+                >
                   <FileCode className="h-3.5 w-3.5" />
                   Configure Query
                 </Button>
-                <Button className="h-8 bg-white border border-slate-200 text-slate-700 text-[10px] font-bold rounded-lg px-4 hover:bg-slate-100 shadow-none">
+                <Button 
+                  className="h-8 bg-white border border-slate-200 text-slate-700 text-[10px] font-bold rounded-lg px-4 hover:bg-slate-100 shadow-none"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    // Schedule logic placeholder
+                  }}
+                >
                   Schedule
                 </Button>
               </CardFooter>
