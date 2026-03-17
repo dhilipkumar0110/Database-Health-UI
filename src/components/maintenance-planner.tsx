@@ -1,31 +1,22 @@
-
 "use client"
 
 import * as React from "react"
 import { 
   CalendarDays, 
   Clock, 
-  Info, 
-  Check, 
   Plus, 
-  Loader2, 
-  Sparkles, 
-  AlertTriangle,
-  Calendar,
-  MoreVertical,
   Trash2,
   Table as TableIcon,
   Server,
   Database,
   RefreshCw,
-  Zap
+  Zap,
+  Calendar
 } from "lucide-react"
 import { Button } from "@/components/ui/button"
-import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from "@/components/ui/card"
-import { Textarea } from "@/components/ui/textarea"
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
 import { Badge } from "@/components/ui/badge"
-import { scheduleMaintenance, MaintenanceSchedulerOutput } from "@/ai/flows/ai-maintenance-scheduler"
 import { MaintenanceTask, ScheduleConfig } from "@/app/page"
 import { 
   Table, 
@@ -61,12 +52,6 @@ export function MaintenancePlanner({
   tasks: MaintenanceTask[], 
   onUpdateTask: (id: string, updates: Partial<MaintenanceTask>) => void 
 }) {
-  const [description, setDescription] = React.useState("Peak hours are 9 AM to 5 PM EST on weekdays. Weekends are generally low traffic except for Sunday nights when batch processing occurs.")
-  const [aiTasks, setAiTasks] = React.useState(["Full Backup", "Index Rebuild", "Data Archiving"])
-  const [newTaskInput, setNewTaskInput] = React.useState("")
-  const [isLoading, setIsLoading] = React.useState(false)
-  const [aiResults, setAiResults] = React.useState<MaintenanceSchedulerOutput | null>(null)
-
   // Manual Schedule Creation
   const [isCreateModalOpen, setIsCreateModalOpen] = React.useState(false)
   const [selectedTaskId, setSelectedTaskId] = React.useState<string>("")
@@ -80,33 +65,6 @@ export function MaintenancePlanner({
 
   const scheduledTasks = tasks.filter(t => t.status === 'scheduled')
   const pendingTasks = tasks.filter(t => t.status !== 'scheduled')
-
-  const handleAddTask = () => {
-    if (newTaskInput && !aiTasks.includes(newTaskInput)) {
-      setAiTasks([...aiTasks, newTaskInput])
-      setNewTaskInput("")
-    }
-  }
-
-  const handleRemoveTask = (task: string) => {
-    setAiTasks(aiTasks.filter(t => t !== task))
-  }
-
-  const handlePlan = async () => {
-    if (!description || aiTasks.length === 0) return
-    setIsLoading(true)
-    try {
-      const output = await scheduleMaintenance({
-        databaseUsageDescription: description,
-        maintenanceTasks: aiTasks
-      })
-      setAiResults(output)
-    } catch (error) {
-      console.error(error)
-    } finally {
-      setIsLoading(false)
-    }
-  }
 
   const handleFinalizeManualSchedule = () => {
     if (selectedTaskId) {
@@ -133,7 +91,7 @@ export function MaintenancePlanner({
             Maintenance Scheduler
           </h1>
           <p className="text-slate-400 font-medium">
-            Manage your automated maintenance plans and use AI to optimize windows.
+            Manage your automated maintenance plans for enterprise databases.
           </p>
         </div>
         <Button onClick={() => setIsCreateModalOpen(true)} className="bg-primary hover:bg-primary/90 text-white font-bold h-11 px-8 rounded-xl shadow-lg shadow-primary/10 transition-all gap-2">
@@ -229,122 +187,6 @@ export function MaintenancePlanner({
             </TableBody>
           </Table>
         </Card>
-      </section>
-
-      {/* AI Planner Section */}
-      <section className="space-y-6 pt-6 border-t border-slate-100">
-        <div className="flex items-center gap-2">
-          <Sparkles className="h-5 w-5 text-accent" />
-          <h2 className="text-lg font-bold text-slate-800">AI Window Optimization</h2>
-        </div>
-        
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
-          <div className="lg:col-span-4">
-            <Card className="bg-white border-none shadow-sm rounded-3xl p-8 sticky top-24">
-              <h3 className="text-base font-bold text-slate-800 mb-6">Traffic Context</h3>
-              <div className="space-y-6">
-                <div className="space-y-2">
-                  <label className="text-[10px] font-bold uppercase text-slate-400 tracking-wider">Usage Description</label>
-                  <Textarea 
-                    placeholder="Describe peak hours, low traffic windows, etc."
-                    className="min-h-[120px] bg-slate-50/50 border-slate-200 rounded-2xl text-sm"
-                    value={description}
-                    onChange={(e) => setDescription(e.target.value)}
-                  />
-                </div>
-                <div className="space-y-4">
-                  <label className="text-[10px] font-bold uppercase text-slate-400 tracking-wider">Tasks to analyze</label>
-                  <div className="flex gap-2">
-                    <Input 
-                      placeholder="e.g. Transaction Backup" 
-                      value={newTaskInput}
-                      onChange={(e) => setNewTaskInput(e.target.value)}
-                      onKeyDown={(e) => e.key === 'Enter' && handleAddTask()}
-                      className="bg-slate-50/50 border-slate-200 rounded-xl h-10"
-                    />
-                    <Button size="icon" variant="outline" onClick={handleAddTask} className="h-10 w-10 rounded-xl border-slate-200">
-                      <Plus className="h-4 w-4" />
-                    </Button>
-                  </div>
-                  <div className="flex flex-wrap gap-2">
-                    {aiTasks.map(task => (
-                      <Badge key={task} variant="secondary" className="px-3 py-1 bg-slate-50 text-slate-600 border-none font-medium flex items-center gap-2 rounded-lg">
-                        {task}
-                        <button onClick={() => handleRemoveTask(task)} className="hover:text-rose-500 opacity-50 hover:opacity-100 transition-opacity">×</button>
-                      </Badge>
-                    ))}
-                  </div>
-                </div>
-                <Button 
-                  onClick={handlePlan} 
-                  disabled={isLoading || !description || aiTasks.length === 0} 
-                  className="w-full h-12 bg-primary hover:bg-primary/90 text-white font-bold rounded-xl shadow-lg shadow-primary/10"
-                >
-                  {isLoading ? (
-                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                  ) : (
-                    <Sparkles className="mr-2 h-4 w-4" />
-                  )}
-                  Analyze Windows
-                </Button>
-              </div>
-            </Card>
-          </div>
-
-          <div className="lg:col-span-8">
-            {!aiResults && !isLoading && (
-              <div className="h-[400px] flex flex-col items-center justify-center text-center p-12 bg-slate-50/50 rounded-[2.5rem] border-2 border-dashed border-slate-200">
-                <Clock className="h-12 w-12 text-slate-200 mb-4" />
-                <h3 className="text-lg font-bold text-slate-700">Recommended Time Windows</h3>
-                <p className="text-sm text-slate-400 max-w-sm mt-1">
-                  AI will analyze your usage patterns and suggest the least disruptive windows for maintenance.
-                </p>
-              </div>
-            )}
-
-            {isLoading && (
-              <div className="space-y-4">
-                {[1, 2, 3].map(i => (
-                  <div key={i} className="h-32 bg-white border border-slate-100 rounded-3xl animate-pulse" />
-                ))}
-              </div>
-            )}
-
-            {aiResults && (
-              <div className="space-y-4">
-                {aiResults.scheduleRecommendations.map((rec, idx) => (
-                  <Card key={idx} className="bg-white border-none shadow-sm rounded-3xl overflow-hidden group hover:ring-2 hover:ring-primary/10 transition-all">
-                    <CardHeader className="p-8 pb-4">
-                      <div className="flex items-start justify-between">
-                        <div className="space-y-1">
-                          <CardTitle className="text-lg font-bold text-slate-900">{rec.task}</CardTitle>
-                          <div className="flex items-center gap-2 text-primary font-bold text-sm">
-                            <Clock className="h-4 w-4" />
-                            <span>{rec.optimalTimeWindow}</span>
-                          </div>
-                        </div>
-                        <Badge className="bg-primary/5 text-primary border-none font-bold text-[9px] uppercase px-3 py-1">AI Recommendation</Badge>
-                      </div>
-                    </CardHeader>
-                    <CardContent className="px-8 pb-8">
-                      <div className="bg-slate-50 rounded-2xl p-6 italic text-sm text-slate-600 border border-slate-100">
-                        <Info className="h-4 w-4 text-primary mb-2" />
-                        "{rec.reason}"
-                      </div>
-                    </CardContent>
-                  </Card>
-                ))}
-                
-                <div className="p-6 rounded-2xl border border-amber-100 bg-amber-50/50 flex gap-4">
-                  <AlertTriangle className="h-5 w-5 text-amber-500 shrink-0" />
-                  <p className="text-[11px] text-amber-900 font-medium leading-relaxed">
-                    <strong>Note:</strong> These AI-driven insights are generated based on the operational context provided. Always cross-reference with server-level resource usage monitors before finalizing high-load tasks.
-                  </p>
-                </div>
-              </div>
-            )}
-          </div>
-        </div>
       </section>
 
       {/* Manual Creation Dialog */}
