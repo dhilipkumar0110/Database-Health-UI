@@ -47,9 +47,8 @@ export function TableDetailsView({ table }: { table: TableData }) {
             </div>
             <div className="text-3xl font-bold text-slate-900">{table.size}</div>
           </div>
-          <div className="flex items-center gap-1.5 text-xs font-bold text-rose-500">
-            <TrendingUp className="h-3.5 w-3.5" />
-            <span>+15.2% vs Last Month</span>
+          <div className="text-[10px] font-bold text-slate-400 uppercase tracking-tight">
+            Snapshot as of current scan
           </div>
         </Card>
 
