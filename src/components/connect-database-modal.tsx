@@ -181,8 +181,12 @@ export function ConnectDatabaseModal({ isOpen, onClose, onComplete }: ConnectDat
   const handleFinalize = () => {
     if (onComplete) {
       onComplete(formData.dataSourceName, formData.serverName, selectedTables.length)
+      toast({
+        title: "Setup Complete",
+        description: `${formData.dataSourceName} has been successfully connected.`
+      })
     }
-    setCurrentStep(4)
+    onClose()
   }
 
   const SortIndicator = ({ column }: { column: keyof TableData }) => {
@@ -444,30 +448,12 @@ export function ConnectDatabaseModal({ isOpen, onClose, onComplete }: ConnectDat
             </div>
           </div>
         )
-      case 4:
-        return (
-          <div className="py-12 flex flex-col items-center justify-center text-center animate-in zoom-in-95 duration-500">
-            <div className="h-20 w-20 rounded-full bg-emerald-50 flex items-center justify-center mb-6">
-              <Check className="h-10 w-10 text-emerald-500 stroke-[3px]" />
-            </div>
-            <h3 className="text-2xl font-bold text-slate-800 mb-2">Setup Complete!</h3>
-            <p className="text-slate-500 max-w-xs mx-auto mb-8">
-              {formData.dataSourceName} is connected. {selectedTables.length} tables are now under active surveillance.
-            </p>
-            <Button 
-              onClick={onClose}
-              className="w-full h-12 bg-emerald-500 hover:bg-emerald-600 text-white font-bold rounded-xl"
-            >
-              Go to Dashboard
-            </Button>
-          </div>
-        )
       default:
         return null
     }
   }
 
-  const stepIcons = [TableIcon, Search, Settings, CheckCircle2]
+  const stepIcons = [TableIcon, Search, Settings]
 
   return (
     <Dialog open={isOpen} onOpenChange={(open) => !open && onClose()}>
@@ -475,10 +461,7 @@ export function ConnectDatabaseModal({ isOpen, onClose, onComplete }: ConnectDat
         <DialogHeader className="px-8 py-6 border-b flex flex-row items-center justify-between bg-white">
           <div className="space-y-1">
             <DialogTitle className="text-xl font-bold text-[#4A6076]">
-              {currentStep === 4 
-                ? "Finished" 
-                : `New Data Source — Step ${currentStep}${currentStep === 3 ? " (Optional)" : ""}`
-              }
+              {`New Data Source — Step ${currentStep}${currentStep === 3 ? " (Optional)" : ""}`}
             </DialogTitle>
             <div className="flex items-center gap-1.5 pt-1">
               {stepIcons.map((_, idx) => (
@@ -506,28 +489,26 @@ export function ConnectDatabaseModal({ isOpen, onClose, onComplete }: ConnectDat
           {renderStep()}
         </div>
 
-        {currentStep < 4 && (
-          <DialogFooter className="px-8 py-6 border-t bg-[#F8F9FA] flex sm:justify-between gap-4">
-            <Button 
-              variant="outline" 
-              onClick={currentStep === 1 ? onClose : () => setCurrentStep(prev => prev - 1)}
-              className="flex-1 h-12 border-slate-300 bg-white text-slate-600 font-bold rounded-xl hover:bg-slate-50 transition-all shadow-sm"
-            >
-              {currentStep === 1 ? "Cancel" : "Back"}
-            </Button>
-            <Button 
-              disabled={(currentStep === 1 && (!isStep1Valid || !isTested)) || (currentStep === 2 && selectedTables.length === 0)}
-              onClick={currentStep === 3 ? handleFinalize : () => setCurrentStep(prev => prev + 1)}
-              className={`flex-1 h-12 font-bold rounded-xl transition-all shadow-sm ${
-                ((currentStep === 1 && isStep1Valid && isTested) || (currentStep === 2 && selectedTables.length > 0) || currentStep === 3)
-                  ? "bg-primary hover:bg-primary/90 text-white" 
-                  : "bg-slate-200 text-slate-400 cursor-not-allowed"
-              }`}
-            >
-              {currentStep === 1 ? "Connect DB" : currentStep === 3 ? "Finalize" : "Next Step"}
-            </Button>
-          </DialogFooter>
-        )}
+        <DialogFooter className="px-8 py-6 border-t bg-[#F8F9FA] flex sm:justify-between gap-4">
+          <Button 
+            variant="outline" 
+            onClick={currentStep === 1 ? onClose : () => setCurrentStep(prev => prev - 1)}
+            className="flex-1 h-12 border-slate-300 bg-white text-slate-600 font-bold rounded-xl hover:bg-slate-50 transition-all shadow-sm"
+          >
+            {currentStep === 1 ? "Cancel" : "Back"}
+          </Button>
+          <Button 
+            disabled={(currentStep === 1 && (!isStep1Valid || !isTested)) || (currentStep === 2 && selectedTables.length === 0)}
+            onClick={currentStep === 3 ? handleFinalize : () => setCurrentStep(prev => prev + 1)}
+            className={`flex-1 h-12 font-bold rounded-xl transition-all shadow-sm ${
+              ((currentStep === 1 && isStep1Valid && isTested) || (currentStep === 2 && selectedTables.length > 0) || currentStep === 3)
+                ? "bg-primary hover:bg-primary/90 text-white" 
+                : "bg-slate-200 text-slate-400 cursor-not-allowed"
+            }`}
+          >
+            {currentStep === 1 ? "Connect DB" : currentStep === 3 ? "Finalize" : "Next Step"}
+          </Button>
+        </DialogFooter>
       </DialogContent>
     </Dialog>
   )
