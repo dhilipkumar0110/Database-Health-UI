@@ -4,7 +4,6 @@
 import * as React from "react"
 import { 
   Bell, 
-  Plus, 
   Settings, 
   RefreshCw
 } from "lucide-react"
@@ -92,10 +91,6 @@ export function AlertsManager({ activeDb }: { activeDb: string }) {
           >
             <RefreshCw className={cn("h-4 w-4", isRefreshing && "animate-spin")} />
             Sync Metrics
-          </Button>
-          <Button className="h-10 bg-primary text-white font-bold rounded-xl px-6 shadow-lg shadow-primary/10">
-            <Plus className="h-4 w-4 mr-2" />
-            Add Custom Rule
           </Button>
         </div>
       </div>
