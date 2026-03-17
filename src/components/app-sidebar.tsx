@@ -109,7 +109,6 @@ export function AppSidebar({
               >
                 <Table className="h-4 w-4" />
                 <span className="text-sm font-medium flex-1">Table Manager</span>
-                <Badge variant="secondary" className="bg-rose-50 text-rose-400 border-none font-bold text-[10px] px-1.5 py-0">4</Badge>
               </SidebarMenuButton>
             </SidebarMenuItem>
             <SidebarMenuItem>
