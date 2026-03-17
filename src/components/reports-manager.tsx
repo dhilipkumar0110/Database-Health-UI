@@ -8,8 +8,8 @@ import {
   ChevronRight, 
   Search,
   Filter,
-  BarChart3,
-  PieChart,
+  BarChart3, 
+  PieChart, 
   LineChart,
   Table as TableIcon,
   CheckCircle2,
@@ -17,7 +17,8 @@ import {
   AlertTriangle,
   Zap,
   TrendingUp,
-  Database
+  Database,
+  RefreshCw
 } from "lucide-react"
 import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
