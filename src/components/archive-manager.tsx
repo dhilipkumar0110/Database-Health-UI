@@ -114,12 +114,12 @@ export function ArchiveManager({ tasks }: { tasks: MaintenanceTask[] }) {
                 </div>
               </CardContent>
               <CardFooter className="p-5 bg-slate-50/50 flex items-center justify-between border-t border-slate-50">
-                <Button variant="ghost" className="h-8 text-[10px] font-bold text-slate-500 px-0 hover:bg-transparent hover:text-primary gap-1.5">
+                <Button variant="link" className="h-8 text-[10px] font-bold text-primary p-0 hover:no-underline gap-1.5 transition-all">
                   <FileCode className="h-3.5 w-3.5" />
                   Configure Query
                 </Button>
                 <Button className="h-8 bg-white border border-slate-200 text-slate-700 text-[10px] font-bold rounded-lg px-4 hover:bg-slate-100 shadow-none">
-                  Run Now
+                  Schedule
                 </Button>
               </CardFooter>
             </Card>
