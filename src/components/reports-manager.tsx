@@ -39,7 +39,7 @@ import {
   TableHeader, 
   TableRow 
 } from "@/components/ui/table"
-import { toast } from "@/hooks/use-toast"
+import { useToast } from "@/hooks/use-toast"
 import { cn } from "@/lib/utils"
 
 const REPORT_TYPES = [
@@ -87,6 +87,7 @@ const MOCK_QUERY_STATS = [
 export function ReportsManager({ activeDb }: { activeDb: string }) {
   const [selectedReport, setSelectedReport] = React.useState(REPORT_TYPES[0].id)
   const [isGenerating, setIsGenerating] = React.useState(false)
+  const { toast } = useToast()
 
   const handleGenerate = () => {
     setIsGenerating(true)
@@ -109,9 +110,8 @@ export function ReportsManager({ activeDb }: { activeDb: string }) {
     // Simulate a download delay
     setTimeout(() => {
       toast({
-        variant: "default",
         title: "Download Ready",
-        description: `Your ${format} document is ready.`,
+        description: `Your ${format} document for "${reportTitle}" is ready.`,
       })
     }, 1500)
   }
@@ -399,11 +399,21 @@ export function ReportsManager({ activeDb }: { activeDb: string }) {
                 </CardDescription>
               </div>
               <div className="flex items-center gap-2">
-                <Button variant="outline" size="sm" onClick={() => handleDownload('PDF')} className="h-9 px-4 rounded-xl font-bold bg-white text-slate-600 gap-2 border-slate-200 shadow-none">
+                <Button 
+                  variant="outline" 
+                  size="sm" 
+                  onClick={() => handleDownload('PDF')} 
+                  className="h-9 px-4 rounded-xl font-bold bg-white text-slate-600 gap-2 border-slate-200 shadow-none"
+                >
                   <Download className="h-3.5 w-3.5" />
                   PDF
                 </Button>
-                <Button variant="outline" size="sm" onClick={() => handleDownload('CSV')} className="h-9 px-4 rounded-xl font-bold bg-white text-slate-600 gap-2 border-slate-200 shadow-none">
+                <Button 
+                  variant="outline" 
+                  size="sm" 
+                  onClick={() => handleDownload('CSV')} 
+                  className="h-9 px-4 rounded-xl font-bold bg-white text-slate-600 gap-2 border-slate-200 shadow-none"
+                >
                   <TableIcon className="h-3.5 w-3.5" />
                   CSV
                 </Button>
