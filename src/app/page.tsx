@@ -28,7 +28,7 @@ export default function SQLSentinelApp() {
   const [currentView, setCurrentView] = React.useState("overview")
   const [databases, setDatabases] = React.useState<DatabaseInstance[]>([
     {
-      name: "PortalDB",
+      name: "WebPortalDB",
       server: "SQLSRV-PROD-01 · port 1433",
       status: "Warning",
       statusVariant: "warning",
@@ -60,7 +60,7 @@ export default function SQLSentinelApp() {
       isActive: false
     }
   ])
-  const [activeDbName, setActiveDbName] = React.useState("PortalDB")
+  const [activeDbName, setActiveDbName] = React.useState("WebPortalDB")
 
   const handleAddDatabase = (dbName: string, serverName: string, tableCount: number) => {
     const newDb: DatabaseInstance = {
@@ -92,7 +92,7 @@ export default function SQLSentinelApp() {
       case "performance":
         return <PerformanceMonitor activeDb={activeDbName} />
       case "redundancy":
-        return <RedundancyScanner />
+        return <RedundancyScanner activeDb={activeDbName} />
       case "maintenance":
         return <MaintenancePlanner />
       default:

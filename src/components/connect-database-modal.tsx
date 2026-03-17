@@ -1,7 +1,7 @@
 "use client"
 
 import * as React from "react"
-import { X, Loader2, CheckCircle2, ChevronRight, Search, Table as TableIcon, Settings, Check, ArrowUpDown, ChevronUp, ChevronDown } from "lucide-react"
+import { X, Loader2, CheckCircle2, Search, Table as TableIcon, Settings, Check, ArrowUpDown, ChevronUp, ChevronDown } from "lucide-react"
 import {
   Dialog,
   DialogContent,
@@ -30,7 +30,6 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table"
-import { cn } from "@/lib/utils"
 
 interface ConnectDatabaseModalProps {
   isOpen: boolean
@@ -267,7 +266,7 @@ export function ConnectDatabaseModal({ isOpen, onClose, onComplete }: ConnectDat
                   <SelectValue placeholder="Select target database" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="portal">PortalDB</SelectItem>
+                  <SelectItem value="portal">WebPortalDB</SelectItem>
                   <SelectItem value="sales">Sales_DB</SelectItem>
                   <SelectItem value="prod">Production_Main</SelectItem>
                 </SelectContent>

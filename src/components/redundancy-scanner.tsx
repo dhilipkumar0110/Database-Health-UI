@@ -5,20 +5,16 @@ import {
   ShieldAlert, 
   Search, 
   Database, 
-  Sparkles, 
-  Loader2, 
-  CheckCircle2, 
-  ChevronRight, 
+  RefreshCw, 
   Trash2, 
   Archive, 
   ShieldCheck,
-  Filter,
-  RefreshCw,
   AlertTriangle,
-  Info
+  Info,
+  CheckCircle2
 } from "lucide-react"
 import { Button } from "@/components/ui/button"
-import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from "@/components/ui/card"
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import {
   Table,
@@ -40,7 +36,7 @@ type RedundantTable = {
 }
 
 const MOCK_REDUNDANCIES: Record<string, RedundantTable[]> = {
-  "PortalDB": [
+  "WebPortalDB": [
     { name: "users_backup_2023", reason: "Naming issue", lastAccessed: "142 days ago", size: "1.2 GB", status: "pending" },
     { name: "temp_orders_old", reason: "Naming issue", lastAccessed: "Never", size: "840 MB", status: "pending" },
     { name: "logs_archive_test", reason: "Zero reads", lastAccessed: "210 days ago", size: "14.5 GB", status: "pending" },
@@ -52,7 +48,7 @@ const MOCK_REDUNDANCIES: Record<string, RedundantTable[]> = {
   ]
 }
 
-export function RedundancyScanner({ activeDb = "PortalDB" }: { activeDb?: string }) {
+export function RedundancyScanner({ activeDb = "WebPortalDB" }: { activeDb?: string }) {
   const [isScanning, setIsScanning] = React.useState(false)
   const [scanResults, setScanResults] = React.useState<RedundantTable[]>([])
   const [hasScanned, setHasScanned] = React.useState(false)
