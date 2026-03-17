@@ -1,3 +1,4 @@
+
 "use client"
 
 import * as React from "react"
@@ -8,6 +9,7 @@ import { RedundancyScanner } from "@/components/redundancy-scanner"
 import { MaintenancePlanner } from "@/components/maintenance-planner"
 import { TableManager } from "@/components/table-manager"
 import { PerformanceMonitor } from "@/components/performance-monitor"
+import { ArchiveManager } from "@/components/archive-manager"
 import { Separator } from "@/components/ui/separator"
 import { Button } from "@/components/ui/button"
 import { Bell, Search } from "lucide-react"
@@ -24,6 +26,16 @@ export type DatabaseInstance = {
   isActive: boolean
 }
 
+export type MaintenanceTask = {
+  id: string
+  name: string
+  type: 'Archiving' | 'Index Rebuild' | 'Update Stats'
+  server: string
+  database: string
+  tables: string[]
+  createdAt: string
+}
+
 export default function SQLSentinelApp() {
   const [currentView, setCurrentView] = React.useState("overview")
   const [databases, setDatabases] = React.useState<DatabaseInstance[]>([
@@ -34,7 +46,7 @@ export default function SQLSentinelApp() {
       statusVariant: "warning",
       metrics: [
         { label: "Size", value: "842 GB" },
-        { label: "Tables", value: "20" },
+        { label: "Tables", value: "34" },
         { label: "Avg frag", value: "24.3%", color: "text-amber-600" },
         { label: "Cache hit", value: "91.4%", color: "text-emerald-600" },
         { label: "Deadlocks", value: "7", color: "text-rose-600" },
@@ -60,6 +72,28 @@ export default function SQLSentinelApp() {
       isActive: false
     }
   ])
+  
+  const [tasks, setTasks] = React.useState<MaintenanceTask[]>([
+    {
+      id: "task-1",
+      name: "Q4 Data Cleanup",
+      type: "Archiving",
+      server: "SQLSRV-PROD-01",
+      database: "WebPortalDB",
+      tables: ["WEB_FILE_UPLOAD_2009", "WEB_FILE_BYTES_2009"],
+      createdAt: "2024-03-10T14:30:00Z"
+    },
+    {
+      id: "task-2",
+      name: "Monthly Index Tuning",
+      type: "Index Rebuild",
+      server: "SQLSRV-PROD-01",
+      database: "WebPortalDB",
+      tables: ["WEB_AUTH_DETAILS", "WEB_AUTH_NOTES"],
+      createdAt: "2024-03-08T09:15:00Z"
+    }
+  ])
+
   const [activeDbName, setActiveDbName] = React.useState("WebPortalDB")
 
   const handleAddDatabase = (dbName: string, serverName: string, tableCount: number) => {
@@ -83,18 +117,33 @@ export default function SQLSentinelApp() {
     setActiveDbName(newDb.name)
   }
 
+  const handleCreateTask = (task: Omit<MaintenanceTask, 'id' | 'createdAt'>) => {
+    const newTask: MaintenanceTask = {
+      ...task,
+      id: `task-${Date.now()}`,
+      createdAt: new Date().toISOString()
+    }
+    setTasks(prev => [newTask, ...prev])
+    setCurrentView("archive")
+  }
+
   const renderContent = () => {
+    const activeDb = databases.find(db => db.name === activeDbName)
+    const serverName = activeDb?.server.split(' · ')[0] || "Unknown Server"
+
     switch (currentView) {
       case "overview":
         return <DashboardOverview databases={databases} onAddDatabase={handleAddDatabase} />
       case "table-manager":
-        return <TableManager activeDb={activeDbName} />
+        return <TableManager activeDb={activeDbName} serverName={serverName} onCreateTask={handleCreateTask} />
       case "performance":
         return <PerformanceMonitor activeDb={activeDbName} />
       case "redundancy":
         return <RedundancyScanner activeDb={activeDbName} />
       case "maintenance":
         return <MaintenancePlanner />
+      case "archive":
+        return <ArchiveManager tasks={tasks} />
       default:
         return (
           <div className="flex flex-col items-center justify-center h-[60vh] text-center p-12">

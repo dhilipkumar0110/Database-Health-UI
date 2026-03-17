@@ -1,3 +1,4 @@
+
 "use client"
 
 import * as React from "react"
@@ -15,7 +16,10 @@ import {
   RefreshCw,
   Zap,
   Play,
-  Archive
+  Archive,
+  Database,
+  Server as ServerIcon,
+  Clock
 } from "lucide-react"
 import { Card, CardContent } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
@@ -49,6 +53,7 @@ import {
 } from "@/components/ui/dialog"
 import { Label } from "@/components/ui/label"
 import { toast } from "@/hooks/use-toast"
+import { ScrollArea } from "@/components/ui/scroll-area"
 
 type TableData = {
   name: string
@@ -117,14 +122,26 @@ const SUMMARY_STATS: Record<string, any[]> = {
   ]
 }
 
-export function TableManager({ activeDb }: { activeDb: string }) {
+export function TableManager({ 
+  activeDb, 
+  serverName, 
+  onCreateTask 
+}: { 
+  activeDb: string, 
+  serverName: string,
+  onCreateTask: (task: any) => void 
+}) {
   const [search, setSearch] = React.useState("")
   const [statusFilter, setStatusFilter] = React.useState("all")
   const [selectedTables, setSelectedTables] = React.useState<string[]>([])
   const [isGroupModalOpen, setIsGroupModalOpen] = React.useState(false)
   const [groupName, setGroupName] = React.useState("")
   const [groups, setGroups] = React.useState<{name: string, tables: string[]}[]>([])
-  const [isExecuting, setIsExecuting] = React.useState(false)
+  
+  // Task Creation Dialog State
+  const [isTaskModalOpen, setIsTaskModalOpen] = React.useState(false)
+  const [currentTaskType, setCurrentTaskType] = React.useState<any>(null)
+  const [taskName, setTaskName] = React.useState("")
 
   const activeTables = activeDb === "WebPortalDB" ? WEBPORTAL_TABLES : WEBPORTAL_TABLES.slice(0, 7)
   const activeStats = SUMMARY_STATS[activeDb] || SUMMARY_STATS["default"]
@@ -178,31 +195,26 @@ export function TableManager({ activeDb }: { activeDb: string }) {
     document.body.removeChild(link)
   }
 
-  const handleCreateGroup = () => {
-    if (!groupName) return
-    const newGroup = { name: groupName, tables: [...selectedTables] }
-    setGroups(prev => [...prev, newGroup])
-    setGroupName("")
-    setIsGroupModalOpen(false)
-    toast({
-      title: "Table Group Created",
-      description: `Successfully added ${selectedTables.length} tables to "${groupName}".`,
-    })
-    setSelectedTables([])
+  const openTaskCreation = (type: 'Archiving' | 'Index Rebuild' | 'Update Stats') => {
+    setCurrentTaskType(type)
+    setTaskName(`${type} - ${new Date().toLocaleDateString()}`)
+    setIsTaskModalOpen(true)
   }
 
-  const runBulkAction = (action: string) => {
-    setIsExecuting(true)
-    const tableCount = selectedTables.length
-    
-    setTimeout(() => {
-      setIsExecuting(false)
-      toast({
-        title: `${action} Complete`,
-        description: `Successfully processed ${tableCount} tables in ${activeDb}. Operation complete.`,
-      })
-      setSelectedTables([])
-    }, 2000)
+  const handleFinalizeTask = () => {
+    onCreateTask({
+      name: taskName,
+      type: currentTaskType,
+      server: serverName,
+      database: activeDb,
+      tables: [...selectedTables]
+    })
+    setIsTaskModalOpen(false)
+    setSelectedTables([])
+    toast({
+      title: "Maintenance Task Created",
+      description: `Task "${taskName}" has been added to the Archive Manager.`,
+    })
   }
 
   return (
@@ -263,12 +275,6 @@ export function TableManager({ activeDb }: { activeDb: string }) {
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-4">
             <h2 className="text-sm font-bold text-slate-900">All tables — {activeDb}</h2>
-            {groups.length > 0 && (
-              <div className="flex items-center gap-2">
-                <Layers className="h-3 w-3 text-slate-400" />
-                <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">{groups.length} Groups Active</span>
-              </div>
-            )}
           </div>
           <div className="flex items-center gap-2">
             <div className="relative">
@@ -310,38 +316,25 @@ export function TableManager({ activeDb }: { activeDb: string }) {
             </span>
             <div className="flex items-center gap-2 overflow-x-auto no-scrollbar">
               <Button 
-                onClick={() => setIsGroupModalOpen(true)}
-                disabled={isExecuting}
+                onClick={() => openTaskCreation('Index Rebuild')}
                 variant="outline" 
                 size="sm" 
                 className="h-8 text-xs rounded-full bg-white border-white text-[#1967D2] hover:bg-white hover:text-[#185ABC] shadow-sm font-semibold px-4 whitespace-nowrap"
               >
-                <Plus className="h-3 w-3 mr-1" />
-                Create Group
-              </Button>
-              <Button 
-                onClick={() => runBulkAction("Index Rebuild")}
-                disabled={isExecuting}
-                variant="outline" 
-                size="sm" 
-                className="h-8 text-xs rounded-full bg-white border-white text-[#1967D2] hover:bg-white hover:text-[#185ABC] shadow-sm font-semibold px-4 whitespace-nowrap"
-              >
-                {isExecuting ? <RefreshCw className="h-3 w-3 animate-spin mr-1" /> : <Zap className="h-3 w-3 mr-1" />}
+                <Zap className="h-3 w-3 mr-1" />
                 Rebuild Indexes
               </Button>
               <Button 
-                onClick={() => runBulkAction("Stats Update")}
-                disabled={isExecuting}
+                onClick={() => openTaskCreation('Update Stats')}
                 variant="outline" 
                 size="sm" 
                 className="h-8 text-xs rounded-full bg-white border-white text-[#1967D2] hover:bg-white hover:text-[#185ABC] shadow-sm font-semibold px-4 whitespace-nowrap"
               >
-                <RefreshCw className={cn("h-3 w-3 mr-1", isExecuting && "animate-spin")} />
+                <RefreshCw className="h-3 w-3 mr-1" />
                 Update Stats
               </Button>
               <Button 
-                onClick={() => runBulkAction("Flag Archive")}
-                disabled={isExecuting}
+                onClick={() => openTaskCreation('Archiving')}
                 variant="outline" 
                 size="sm" 
                 className="h-8 text-xs rounded-full bg-white border-white text-[#1967D2] hover:bg-white hover:text-[#185ABC] shadow-sm font-semibold px-4 whitespace-nowrap"
@@ -467,17 +460,83 @@ export function TableManager({ activeDb }: { activeDb: string }) {
                   </TableRow>
                 )
               })}
-              {filteredTables.length === 0 && (
-                <TableRow>
-                  <TableCell colSpan={10} className="h-32 text-center text-slate-400 font-medium">
-                    No tables found matching your search.
-                  </TableCell>
-                </TableRow>
-              )}
             </TableBody>
           </Table>
         </div>
       </div>
+
+      {/* Task Creation Modal */}
+      <Dialog open={isTaskModalOpen} onOpenChange={setIsTaskModalOpen}>
+        <DialogContent className="sm:max-w-[500px]">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              {currentTaskType === 'Archiving' && <Archive className="h-5 w-5 text-amber-500" />}
+              {currentTaskType === 'Index Rebuild' && <Zap className="h-5 w-5 text-blue-500" />}
+              {currentTaskType === 'Update Stats' && <RefreshCw className="h-5 w-5 text-emerald-500" />}
+              Create Maintenance Task
+            </DialogTitle>
+            <DialogDescription>
+              Set up a {currentTaskType?.toLowerCase()} operation for the selected tables.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="grid gap-6 py-4">
+            <div className="space-y-2">
+              <Label htmlFor="task-name" className="text-sm font-semibold">Task Name</Label>
+              <Input 
+                id="task-name" 
+                value={taskName}
+                onChange={(e) => setTaskName(e.target.value)}
+                placeholder="e.g., Weekly Index Tuning" 
+                className="h-11 border-slate-200"
+              />
+            </div>
+            
+            <div className="space-y-3">
+              <Label className="text-sm font-semibold">Affected Tables Preview ({selectedTables.length})</Label>
+              <div className="border rounded-xl bg-slate-50 p-1">
+                <ScrollArea className="h-[180px]">
+                  <div className="p-3 space-y-2">
+                    {selectedTables.map(t => (
+                      <div key={t} className="flex items-center gap-2 p-2 bg-white rounded-lg border border-slate-100 shadow-sm">
+                        <TableIcon className="h-3.5 w-3.5 text-slate-400" />
+                        <span className="text-xs font-medium text-slate-700">{t}</span>
+                      </div>
+                    ))}
+                  </div>
+                </ScrollArea>
+              </div>
+            </div>
+
+            <div className="p-4 rounded-xl border bg-[#F8FAFC] flex gap-3">
+              <div className="space-y-1 flex-1">
+                <div className="flex items-center gap-2 text-[10px] font-bold text-slate-400 uppercase tracking-wider">
+                  Target Context
+                </div>
+                <div className="flex items-center gap-4 pt-1">
+                  <div className="flex items-center gap-1.5">
+                    <ServerIcon className="h-3 w-3 text-slate-400" />
+                    <span className="text-xs font-bold text-slate-700">{serverName}</span>
+                  </div>
+                  <div className="flex items-center gap-1.5">
+                    <Database className="h-3 w-3 text-slate-400" />
+                    <span className="text-xs font-bold text-slate-700">{activeDb}</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setIsTaskModalOpen(false)}>Cancel</Button>
+            <Button 
+              onClick={handleFinalizeTask}
+              disabled={!taskName}
+              className="bg-primary hover:bg-primary/90 text-white font-bold"
+            >
+              Create Task
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
 
       <Dialog open={isGroupModalOpen} onOpenChange={setIsGroupModalOpen}>
         <DialogContent className="sm:max-w-[425px]">
@@ -522,7 +581,12 @@ export function TableManager({ activeDb }: { activeDb: string }) {
           <DialogFooter>
             <Button variant="outline" onClick={() => setIsGroupModalOpen(false)}>Cancel</Button>
             <Button 
-              onClick={handleCreateGroup} 
+              onClick={() => {
+                setGroups(prev => [...prev, {name: groupName, tables: [...selectedTables]}]);
+                setIsGroupModalOpen(false);
+                setGroupName("");
+                setSelectedTables([]);
+              }} 
               disabled={!groupName || selectedTables.length === 0}
               className="bg-[#1E8E3E] hover:bg-[#1A7F37]"
             >
