@@ -25,33 +25,6 @@ import { cn } from "@/lib/utils"
 import { ConnectDatabaseModal } from "@/components/connect-database-modal"
 import { DatabaseInstance } from "@/app/page"
 
-const INITIAL_STATS = [
-  {
-    title: "Total databases",
-    value: "3",
-    subtext: "1 critical",
-    subtextColor: "text-rose-600"
-  },
-  {
-    title: "Total size",
-    value: "2.4 TB",
-    subtext: "Across all DBs",
-    subtextColor: "text-slate-400"
-  },
-  {
-    title: "Tables monitored",
-    value: "112",
-    subtext: "9 need action",
-    subtextColor: "text-amber-600"
-  },
-  {
-    title: "Active deadlocks",
-    value: "7",
-    subtext: "Across 2 DBs",
-    subtextColor: "text-rose-600"
-  }
-]
-
 export function DashboardOverview({ 
   databases, 
   onAddDatabase 
@@ -60,6 +33,43 @@ export function DashboardOverview({
   onAddDatabase: (db: string, server: string, count: number) => void 
 }) {
   const [isModalOpen, setIsModalOpen] = React.useState(false)
+
+  // Calculate dynamic stats
+  const totalDatabases = databases.length
+  const criticalCount = databases.filter(db => db.statusVariant === "critical").length
+  const warningCount = databases.filter(db => db.statusVariant === "warning").length
+  
+  const totalTables = databases.reduce((acc, db) => {
+    const tableMetric = db.metrics.find(m => m.label === "Tables")
+    return acc + (tableMetric ? parseInt(tableMetric.value) : 0)
+  }, 0)
+
+  const stats = [
+    {
+      title: "Total databases",
+      value: totalDatabases.toString(),
+      subtext: `${criticalCount} critical`,
+      subtextColor: criticalCount > 0 ? "text-rose-600" : "text-slate-400"
+    },
+    {
+      title: "Total size",
+      value: "1.05 TB",
+      subtext: "Across all DBs",
+      subtextColor: "text-slate-400"
+    },
+    {
+      title: "Tables monitored",
+      value: totalTables.toString(),
+      subtext: `${warningCount + criticalCount} need action`,
+      subtextColor: (warningCount + criticalCount) > 0 ? "text-amber-600" : "text-emerald-600"
+    },
+    {
+      title: "Active deadlocks",
+      value: "9",
+      subtext: "Across active DBs",
+      subtextColor: "text-rose-600"
+    }
+  ]
 
   return (
     <div className="space-y-6 animate-in fade-in duration-500">
@@ -88,7 +98,7 @@ export function DashboardOverview({
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-        {INITIAL_STATS.map((stat, i) => (
+        {stats.map((stat, i) => (
           <Card key={i} className="bg-[#F1F3ED] border-none shadow-none rounded-xl">
             <CardContent className="p-4">
               <div className="text-[10px] font-bold text-slate-400 uppercase tracking-tight mb-1">{stat.title}</div>
