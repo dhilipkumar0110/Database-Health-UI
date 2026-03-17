@@ -160,7 +160,7 @@ export default function SQLSentinelApp() {
       case "maintenance":
         return <MaintenancePlanner tasks={tasks} onUpdateTask={handleUpdateTask} />
       case "archive":
-        return <ArchiveManager tasks={tasks} onUpdateTask={handleUpdateTask} />
+        return <ArchiveManager tasks={tasks} onUpdateTask={handleUpdateTask} onViewChange={setCurrentView} />
       default:
         return (
           <div className="flex flex-col items-center justify-center h-[60vh] text-center p-12">

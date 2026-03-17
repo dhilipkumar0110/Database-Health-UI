@@ -64,7 +64,15 @@ type QueryRow = {
   logic: string
 }
 
-export function ArchiveManager({ tasks, onUpdateTask }: { tasks: MaintenanceTask[], onUpdateTask: (id: string, updates: Partial<MaintenanceTask>) => void }) {
+export function ArchiveManager({ 
+  tasks, 
+  onUpdateTask,
+  onViewChange
+}: { 
+  tasks: MaintenanceTask[], 
+  onUpdateTask: (id: string, updates: Partial<MaintenanceTask>) => void,
+  onViewChange: (view: string) => void
+}) {
   const [view, setView] = React.useState<ViewState>('list')
   const [selectedTask, setSelectedTask] = React.useState<MaintenanceTask | null>(null)
   const [selectedTable, setSelectedTable] = React.useState<string | null>(null)
@@ -75,6 +83,8 @@ export function ArchiveManager({ tasks, onUpdateTask }: { tasks: MaintenanceTask
   const [taskToSchedule, setTaskToSchedule] = React.useState<MaintenanceTask | null>(null)
   const [scheduleForm, setScheduleForm] = React.useState<ScheduleConfig>({
     frequency: 'Daily',
+    dayOfWeek: 'Monday',
+    dayOfMonth: 1,
     startDate: new Date().toISOString().split('T')[0],
     endDate: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString().split('T')[0]
   })
@@ -128,6 +138,8 @@ export function ArchiveManager({ tasks, onUpdateTask }: { tasks: MaintenanceTask
         title: "Task Scheduled",
         description: `"${taskToSchedule.name}" is now active in the Scheduler.`
       })
+      // Navigate to maintenance (Scheduler) view
+      onViewChange("maintenance")
     }
   }
 
@@ -536,7 +548,7 @@ export function ArchiveManager({ tasks, onUpdateTask }: { tasks: MaintenanceTask
               <div className="space-y-2 animate-in fade-in slide-in-from-top-2">
                 <Label className="text-sm font-semibold">Run on day</Label>
                 <Select 
-                  value={scheduleForm.dayOfWeek} 
+                  value={scheduleForm.dayOfWeek || "Monday"} 
                   onValueChange={(v) => setScheduleForm(prev => ({ ...prev, dayOfWeek: v }))}
                 >
                   <SelectTrigger className="h-11 border-slate-200">
@@ -558,8 +570,8 @@ export function ArchiveManager({ tasks, onUpdateTask }: { tasks: MaintenanceTask
                   type="number" 
                   min={1} 
                   max={31} 
-                  value={scheduleForm.dayOfMonth}
-                  onChange={(e) => setScheduleForm(prev => ({ ...prev, dayOfMonth: parseInt(e.target.value) }))}
+                  value={scheduleForm.dayOfMonth || 1}
+                  onChange={(e) => setScheduleForm(prev => ({ ...prev, dayOfMonth: parseInt(e.target.value) || 1 }))}
                   className="h-11 border-slate-200"
                 />
               </div>

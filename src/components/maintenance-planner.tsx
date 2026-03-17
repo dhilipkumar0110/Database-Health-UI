@@ -16,7 +16,9 @@ import {
   Trash2,
   Table as TableIcon,
   Server,
-  Database
+  Database,
+  RefreshCw,
+  Zap
 } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from "@/components/ui/card"
@@ -50,6 +52,7 @@ import {
   SelectValue,
 } from "@/components/ui/select"
 import { toast } from "@/hooks/use-toast"
+import { cn } from "@/lib/utils"
 
 export function MaintenancePlanner({ 
   tasks, 
@@ -69,6 +72,8 @@ export function MaintenancePlanner({
   const [selectedTaskId, setSelectedTaskId] = React.useState<string>("")
   const [manualScheduleForm, setManualScheduleForm] = React.useState<ScheduleConfig>({
     frequency: 'Daily',
+    dayOfWeek: 'Monday',
+    dayOfMonth: 1,
     startDate: new Date().toISOString().split('T')[0],
     endDate: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString().split('T')[0]
   })
@@ -390,7 +395,7 @@ export function MaintenancePlanner({
               <div className="space-y-2 animate-in fade-in slide-in-from-top-2">
                 <Label className="text-sm font-semibold">Run on day</Label>
                 <Select 
-                  value={manualScheduleForm.dayOfWeek} 
+                  value={manualScheduleForm.dayOfWeek || "Monday"} 
                   onValueChange={(v) => setManualScheduleForm(prev => ({ ...prev, dayOfWeek: v }))}
                 >
                   <SelectTrigger className="h-11 border-slate-200">
@@ -412,8 +417,8 @@ export function MaintenancePlanner({
                   type="number" 
                   min={1} 
                   max={31} 
-                  value={manualScheduleForm.dayOfMonth}
-                  onChange={(e) => setManualScheduleForm(prev => ({ ...prev, dayOfMonth: parseInt(e.target.value) }))}
+                  value={manualScheduleForm.dayOfMonth || 1}
+                  onChange={(e) => setManualScheduleForm(prev => ({ ...prev, dayOfMonth: parseInt(e.target.value) || 1 }))}
                   className="h-11 border-slate-200"
                 />
               </div>
