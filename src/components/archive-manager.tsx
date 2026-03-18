@@ -86,7 +86,7 @@ export function ArchiveManager({
   const [selectedTask, setSelectedTask] = React.useState<MaintenanceTask | null>(null)
   const [selectedTable, setSelectedTable] = React.useState<string | null>(null)
   const [search, setSearch] = React.useState("")
-  const [activeTab, setActiveTab] = React.useState("all")
+  const [activeTab, setActiveTab] = React.useState("Archiving")
 
   // Schedule Modal State
   const [isScheduleModalOpen, setIsScheduleModalOpen] = React.useState(false)
@@ -404,7 +404,7 @@ export function ArchiveManager({
   const filteredTasks = tasks.filter(t => {
     const matchesSearch = t.name.toLowerCase().includes(search.toLowerCase()) || 
                           t.database.toLowerCase().includes(search.toLowerCase())
-    const matchesTab = activeTab === "all" || t.type === activeTab
+    const matchesTab = t.type === activeTab
     return matchesSearch && matchesTab
   })
 
@@ -430,12 +430,8 @@ export function ArchiveManager({
         </div>
       </div>
 
-      <Tabs defaultValue="all" value={activeTab} onValueChange={setActiveTab} className="w-full">
+      <Tabs defaultValue="Archiving" value={activeTab} onValueChange={setActiveTab} className="w-full">
         <TabsList className="bg-slate-100/80 p-1 h-12 rounded-xl mb-6">
-          <TabsTrigger value="all" className="rounded-lg px-6 font-bold text-xs gap-2 data-[state=active]:bg-white data-[state=active]:shadow-sm">
-            <LayoutGrid className="h-3.5 w-3.5" />
-            All Tasks
-          </TabsTrigger>
           <TabsTrigger value="Archiving" className="rounded-lg px-6 font-bold text-xs gap-2 data-[state=active]:bg-white data-[state=active]:shadow-sm">
             <Archive className="h-3.5 w-3.5 text-amber-500" />
             Archiving
@@ -460,9 +456,7 @@ export function ArchiveManager({
               <Archive className="h-12 w-12 text-slate-200 mb-4" />
               <h3 className="text-lg font-bold text-slate-700">No tasks found</h3>
               <p className="text-sm text-slate-400 max-w-sm">
-                {activeTab === 'all' 
-                  ? "Start by selecting tables in the Table Manager and defining maintenance tasks."
-                  : `There are currently no ${activeTab} tasks defined.`}
+                There are currently no {activeTab} tasks defined.
               </p>
             </div>
           ) : (
