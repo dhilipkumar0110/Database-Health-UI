@@ -1,3 +1,4 @@
+
 "use client"
 
 import * as React from "react"
@@ -12,7 +13,8 @@ import {
   RefreshCw,
   Zap,
   Calendar,
-  Edit2
+  Edit2,
+  Search
 } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
@@ -163,10 +165,12 @@ export function MaintenancePlanner({
                           "h-10 w-10 rounded-xl flex items-center justify-center border",
                           task.type === 'Archiving' ? "bg-amber-50 text-amber-500 border-amber-100" :
                           task.type === 'Index Rebuild' ? "bg-blue-50 text-blue-500 border-blue-100" :
+                          task.type === 'Scanning' ? "bg-purple-50 text-purple-500 border-purple-100" :
                           "bg-emerald-50 text-emerald-500 border-emerald-100"
                         )}>
                           {task.type === 'Archiving' ? <TableIcon className="h-5 w-5" /> : 
                            task.type === 'Index Rebuild' ? <Zap className="h-5 w-5" /> : 
+                           task.type === 'Scanning' ? <Search className="h-5 w-5" /> :
                            <RefreshCw className="h-5 w-5" />}
                         </div>
                         <div className="flex flex-col">

@@ -30,7 +30,7 @@ export type ScheduleConfig = {
 export type MaintenanceTask = {
   id: string
   name: string
-  type: 'Archiving' | 'Index Rebuild' | 'Update Stats'
+  type: 'Archiving' | 'Index Rebuild' | 'Update Stats' | 'Scanning'
   server: string
   database: string
   tables: string[]

@@ -1,25 +1,27 @@
+
 "use client"
 
 import * as React from "react"
 import { 
   Archive, 
   Search, 
-  MoreVertical,
-  FileCode,
+  MoreVertical, 
+  FileCode, 
   Server, 
-  Database,
-  ArrowLeft,
-  ChevronRight,
-  ShieldAlert,
-  Activity,
-  Zap,
-  Table as TableIcon,
-  Plus,
-  Trash2,
-  CheckCircle2,
-  Code,
-  Clock,
-  Calendar
+  Database, 
+  ArrowLeft, 
+  ChevronRight, 
+  ShieldAlert, 
+  Activity, 
+  Zap, 
+  Table as TableIcon, 
+  Plus, 
+  Trash2, 
+  CheckCircle2, 
+  Code, 
+  Clock, 
+  Calendar,
+  Search as SearchIcon
 } from "lucide-react"
 import { Card, CardContent, CardHeader, CardTitle, CardFooter } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
@@ -441,7 +443,8 @@ export function ArchiveManager({
                             "font-bold text-[8px] px-1.5 py-0 rounded border-none uppercase tracking-tighter",
                             task.type === "Archiving" && "bg-amber-50 text-amber-600",
                             task.type === "Index Rebuild" && "bg-blue-50 text-blue-600",
-                            task.type === "Update Stats" && "bg-emerald-50 text-emerald-600"
+                            task.type === "Update Stats" && "bg-emerald-50 text-emerald-600",
+                            task.type === "Scanning" && "bg-purple-50 text-purple-600"
                           )}
                         >
                           {task.type}
@@ -506,8 +509,8 @@ export function ArchiveManager({
                     handleTaskClick(task);
                   }}
                 >
-                  <FileCode className="h-3.5 w-3.5" />
-                  Configure
+                  {task.type === "Scanning" ? <SearchIcon className="h-3.5 w-3.5" /> : <FileCode className="h-3.5 w-3.5" />}
+                  {task.type === "Scanning" ? "View Audit" : "Configure"}
                 </Button>
                 <Button 
                   className="h-8 bg-white border border-slate-200 text-slate-700 text-[10px] font-bold rounded-lg px-4 hover:bg-slate-100 shadow-none gap-1.5"

@@ -20,7 +20,8 @@ import {
   Database,
   Server as ServerIcon,
   Clock,
-  ArrowLeft
+  ArrowLeft,
+  Search as SearchIcon
 } from "lucide-react"
 import { Card, CardContent } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
@@ -136,7 +137,6 @@ export function TableManager({
   const [search, setSearch] = React.useState("")
   const [statusFilter, setStatusFilter] = React.useState("all")
   const [selectedTables, setSelectedTables] = React.useState<string[]>([])
-  const [isScanning, setIsScanning] = React.useState(false)
   
   // View State
   const [viewMode, setViewMode] = React.useState<'list' | 'details'>('list')
@@ -174,17 +174,6 @@ export function TableManager({
     )
   }
 
-  const handleRunScan = () => {
-    setIsScanning(true)
-    setTimeout(() => {
-      setIsScanning(false)
-      toast({
-        title: "Data Refreshed",
-        description: `Statistics for ${activeDb} have been updated successfully.`,
-      })
-    }, 2000)
-  }
-
   const handleExport = () => {
     const headers = ["Table Name", "Schema", "Status", "Row Count", "Size", "Fragmentation (%)", "Last Read", "Deadlocks", "Slow Q"]
     const rows = filteredTables.map(t => [
@@ -210,7 +199,7 @@ export function TableManager({
     document.body.removeChild(link)
   }
 
-  const openTaskCreation = (type: 'Archiving' | 'Index Rebuild' | 'Update Stats') => {
+  const openTaskCreation = (type: 'Archiving' | 'Index Rebuild' | 'Update Stats' | 'Scanning') => {
     setCurrentTaskType(type)
     setTaskName(`${type} - ${new Date().toLocaleDateString()}`)
     setIsTaskModalOpen(true)
@@ -227,7 +216,7 @@ export function TableManager({
     setIsTaskModalOpen(false)
     setSelectedTables([])
     toast({
-      title: "Maintenance Task Created",
+      title: `${currentTaskType} Task Created`,
       description: `Task "${taskName}" has been added to the Task Manager.`,
     })
   }
@@ -372,17 +361,10 @@ export function TableManager({
                 variant="outline" 
                 size="sm" 
                 className="h-8 text-xs border-[#1967D2] rounded-full px-6 bg-white text-[#1967D2] hover:bg-[#E8F0FE] font-bold shadow-sm"
-                onClick={handleRunScan}
-                disabled={isScanning}
+                onClick={() => openTaskCreation('Scanning')}
               >
-                {isScanning ? (
-                  <>
-                    <RefreshCw className="h-3 w-3 mr-1.5 animate-spin" />
-                    Scanning...
-                  </>
-                ) : (
-                  "Run Scan"
-                )}
+                <SearchIcon className="h-3 w-3 mr-1.5" />
+                Run Scan
               </Button>
             </div>
           </div>
@@ -510,7 +492,8 @@ export function TableManager({
               {currentTaskType === 'Archiving' && <Archive className="h-5 w-5 text-amber-500" />}
               {currentTaskType === 'Index Rebuild' && <Zap className="h-5 w-5 text-blue-500" />}
               {currentTaskType === 'Update Stats' && <RefreshCw className="h-5 w-5 text-emerald-500" />}
-              Create Maintenance Task
+              {currentTaskType === 'Scanning' && <SearchIcon className="h-5 w-5 text-purple-500" />}
+              Create {currentTaskType} Task
             </DialogTitle>
             <DialogDescription>
               Set up a {currentTaskType?.toLowerCase()} operation for the selected tables.
@@ -523,7 +506,7 @@ export function TableManager({
                 id="task-name" 
                 value={taskName}
                 onChange={(e) => setTaskName(e.target.value)}
-                placeholder="e.g., Weekly Index Tuning" 
+                placeholder="e.g., Weekly Audit Scan" 
                 className="h-11 border-slate-200"
               />
             </div>
@@ -569,7 +552,7 @@ export function TableManager({
               disabled={!taskName}
               className="bg-primary hover:bg-primary/90 text-white font-bold"
             >
-              Create Task
+              Finalize Task
             </Button>
           </DialogFooter>
         </DialogContent>
