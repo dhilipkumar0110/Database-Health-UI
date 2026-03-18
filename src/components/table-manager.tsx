@@ -230,7 +230,7 @@ export function TableManager({
               <span className="text-xs font-medium text-amber-900 italic">Matches for _2011, _2014 archive patterns</span>
             </div>
           </div>
-          <X className="h-4 w-4 text-amber-400 cursor-pointer hover:text-amber-600" />
+          <X className="h-4 w-4 text-amber-400 cursor-pointer hover:text-amber-600" onClick={() => {}} />
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-5 gap-4">
@@ -288,24 +288,27 @@ export function TableManager({
         </div>
 
         {selectedTables.length > 0 && (
-          <div className="flex items-center gap-3 p-3 px-6 bg-[#E8F0FE] border border-[#D2E3FC] rounded-2xl animate-in slide-in-from-top-2 shadow-sm">
-            <span className="text-sm font-bold text-[#1967D2] mr-4 whitespace-nowrap flex items-center gap-2">
-              <div className="h-2 w-2 rounded-full bg-[#1967D2] animate-pulse" />
-              {selectedTables.length} selected
-            </span>
-            <Button 
-              onClick={openTaskCreation} 
-              className="h-10 px-6 rounded-xl bg-[#1967D2] hover:bg-[#185ABC] text-white font-bold shadow-md gap-2"
-            >
-              <Plus className="h-4 w-4" />
-              Create Maintenance Task
-            </Button>
+          <div className="flex items-center justify-between p-3 px-6 bg-[#E8F0FE] border border-[#D2E3FC] rounded-2xl animate-in slide-in-from-top-2 shadow-sm">
+            <div className="flex items-center gap-3">
+              <span className="text-sm font-bold text-[#1967D2] mr-4 whitespace-nowrap flex items-center gap-2">
+                <div className="h-2 w-2 rounded-full bg-[#1967D2] animate-pulse" />
+                {selectedTables.length} selected
+              </span>
+              <Button 
+                onClick={openTaskCreation} 
+                className="h-10 px-6 rounded-xl bg-[#1967D2] hover:bg-[#185ABC] text-white font-bold shadow-md gap-2"
+              >
+                <Plus className="h-4 w-4" />
+                Create Task
+              </Button>
+            </div>
             <Button 
               variant="ghost" 
+              size="icon"
               onClick={() => setSelectedTables([])}
-              className="h-10 px-4 rounded-xl text-slate-500 hover:bg-white/50 font-bold"
+              className="h-8 w-8 rounded-full text-slate-500 hover:bg-white/50"
             >
-              Cancel
+              <X className="h-4 w-4" />
             </Button>
           </div>
         )}
