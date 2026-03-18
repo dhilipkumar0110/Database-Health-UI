@@ -277,7 +277,13 @@ export default function SQLSentinelApp() {
       case "performance":
         return <PerformanceMonitor activeDb={activeDbName} />
       case "redundancy":
-        return <RedundancyScanner activeDb={activeDbName} />
+        return (
+          <RedundancyScanner 
+            activeDb={activeDbName} 
+            serverName={serverName}
+            onCreateTask={handleCreateTask} 
+          />
+        )
       case "maintenance":
         return <MaintenancePlanner tasks={tasks} onUpdateTask={handleUpdateTask} onDeleteTask={handleDeleteTask} />
       case "archive":

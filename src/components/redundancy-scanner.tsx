@@ -12,7 +12,9 @@ import {
   ShieldCheck,
   AlertTriangle,
   Info,
-  CheckCircle2
+  CheckCircle2,
+  X,
+  Table as TableIcon
 } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
@@ -25,6 +27,18 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table"
+import { 
+  Dialog, 
+  DialogContent, 
+  DialogHeader, 
+  DialogTitle, 
+  DialogFooter,
+  DialogDescription
+} from "@/components/ui/dialog"
+import { Checkbox } from "@/components/ui/checkbox"
+import { Input } from "@/components/ui/input"
+import { Label } from "@/components/ui/label"
+import { ScrollArea } from "@/components/ui/scroll-area"
 import { cn } from "@/lib/utils"
 import { toast } from "@/hooks/use-toast"
 
@@ -58,16 +72,28 @@ const DEFAULT_REDUNDANCIES: RedundantTable[] = [
   { name: "temp_transaction_log", reason: "Naming issue", lastAccessed: "Never", size: "4.1 GB", status: "pending" },
 ]
 
-export function RedundancyScanner({ activeDb = "WebPortalDB" }: { activeDb?: string }) {
+export function RedundancyScanner({ 
+  activeDb = "WebPortalDB", 
+  serverName = "SQLSRV-PROD-01",
+  onCreateTask 
+}: { 
+  activeDb?: string, 
+  serverName?: string,
+  onCreateTask: (task: any) => void 
+}) {
   const [isScanning, setIsScanning] = React.useState(false)
   const [scanResults, setScanResults] = React.useState<RedundantTable[]>([])
   const [hasScanned, setHasScanned] = React.useState(false)
+  
+  const [selectedTables, setSelectedTables] = React.useState<string[]>([])
+  const [isTaskModalOpen, setIsTaskModalOpen] = React.useState(false)
+  const [taskName, setTaskName] = React.useState("")
+  const [currentActionType, setCurrentActionType] = React.useState<"Safe" | "Archive" | "Drop">("Safe")
 
   const handleRunScan = () => {
     setIsScanning(true)
-    // Simulate scan delay
+    setSelectedTables([])
     setTimeout(() => {
-      // Provide dummy data even if the DB is unknown
       const results = MOCK_REDUNDANCIES[activeDb] || DEFAULT_REDUNDANCIES
       setScanResults(results)
       setIsScanning(false)
@@ -79,11 +105,41 @@ export function RedundancyScanner({ activeDb = "WebPortalDB" }: { activeDb?: str
     }, 1500)
   }
 
-  const handleAction = (tableName: string, action: string) => {
-    setScanResults(prev => prev.map(t => t.name === tableName ? { ...t, status: 'safe' } : t))
+  const isAllSelected = scanResults.length > 0 && selectedTables.length === scanResults.length
+
+  const handleToggleAll = () => {
+    if (isAllSelected) setSelectedTables([])
+    else setSelectedTables(scanResults.map(t => t.name))
+  }
+
+  const handleToggleOne = (name: string) => {
+    setSelectedTables(prev => prev.includes(name) ? prev.filter(n => n !== name) : [...prev, name])
+  }
+
+  const openTaskCreation = (type: "Safe" | "Archive" | "Drop") => {
+    setCurrentActionType(type)
+    setTaskName(`${type} Task - ${new Date().toLocaleDateString()}`)
+    setIsTaskModalOpen(true)
+  }
+
+  const handleFinalizeTask = () => {
+    // Map actions
+    const type = currentActionType === "Archive" ? "Archiving" : "Multi-Task"
+    
+    onCreateTask({
+      name: taskName,
+      type: type,
+      actions: currentActionType === "Archive" ? ["Archiving"] : ["Scanning"],
+      server: serverName,
+      database: activeDb,
+      tables: [...selectedTables]
+    })
+    
+    setIsTaskModalOpen(false)
+    setSelectedTables([])
     toast({
-      title: "Action Recorded",
-      description: `${tableName} has been marked as ${action}.`,
+      title: "Task Created",
+      description: `Task for ${selectedTables.length} tables added to the Task Manager.`,
     })
   }
 
@@ -93,7 +149,7 @@ export function RedundancyScanner({ activeDb = "WebPortalDB" }: { activeDb?: str
   }, 0).toFixed(1)
 
   return (
-    <div className="space-y-6 animate-in fade-in duration-500 pb-12">
+    <div className="space-y-6 animate-in fade-in duration-500 pb-20">
       {/* Header */}
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-3">
@@ -183,6 +239,49 @@ export function RedundancyScanner({ activeDb = "WebPortalDB" }: { activeDb?: str
             </Card>
           </div>
 
+          {/* Selection Bar */}
+          {selectedTables.length > 0 && (
+            <div className="flex items-center justify-between p-3 px-6 bg-[#E8F0FE] border border-[#D2E3FC] rounded-2xl animate-in slide-in-from-top-2 shadow-sm">
+              <div className="flex items-center gap-3">
+                <span className="text-sm font-bold text-[#1967D2] mr-4 whitespace-nowrap flex items-center gap-2">
+                  <div className="h-2 w-2 rounded-full bg-[#1967D2] animate-pulse" />
+                  {selectedTables.length} selected
+                </span>
+                <div className="flex items-center gap-2">
+                  <Button 
+                    onClick={() => openTaskCreation("Safe")} 
+                    className="h-10 px-6 rounded-full bg-white hover:bg-emerald-50 text-emerald-600 border border-emerald-100 font-bold shadow-sm gap-2"
+                  >
+                    <ShieldCheck className="h-4 w-4" />
+                    Mark Safe
+                  </Button>
+                  <Button 
+                    onClick={() => openTaskCreation("Archive")} 
+                    className="h-10 px-6 rounded-full bg-white hover:bg-amber-50 text-amber-600 border border-amber-100 font-bold shadow-sm gap-2"
+                  >
+                    <Archive className="h-4 w-4" />
+                    Mark for Archive
+                  </Button>
+                  <Button 
+                    onClick={() => openTaskCreation("Drop")} 
+                    className="h-10 px-6 rounded-full bg-white hover:bg-rose-50 text-rose-600 border border-rose-100 font-bold shadow-sm gap-2"
+                  >
+                    <Trash2 className="h-4 w-4" />
+                    Flag to Drop
+                  </Button>
+                </div>
+              </div>
+              <Button 
+                variant="ghost" 
+                size="icon"
+                onClick={() => setSelectedTables([])}
+                className="h-8 w-8 rounded-full text-slate-500 hover:bg-white/50"
+              >
+                <X className="h-4 w-4" />
+              </Button>
+            </div>
+          )}
+
           {/* Results Table */}
           <Card className="bg-white border-none shadow-sm rounded-2xl overflow-hidden">
             <CardHeader className="p-6 pb-2 border-b border-slate-50 flex flex-row items-center justify-between space-y-0">
@@ -190,31 +289,29 @@ export function RedundancyScanner({ activeDb = "WebPortalDB" }: { activeDb?: str
                 <CardTitle className="text-sm font-bold text-slate-900">Redundancy findings</CardTitle>
                 <CardDescription className="text-[10px] font-bold text-slate-400 uppercase mt-0.5">Identified via sys.dm_db_index_usage_stats & naming conventions</CardDescription>
               </div>
-              <div className="flex items-center gap-2">
-                <Button variant="outline" size="sm" className="h-8 text-[10px] font-bold text-slate-600 border-slate-200 rounded-lg">
-                  Export Findings
-                </Button>
-                <Button className="h-8 bg-rose-500 hover:bg-rose-600 text-white text-[10px] font-bold rounded-lg px-4">
-                  Bulk Archive All
-                </Button>
-              </div>
             </CardHeader>
             <CardContent className="p-0">
               <Table>
                 <TableHeader className="bg-slate-50/50">
                   <TableRow className="hover:bg-transparent border-none">
-                    <TableHead className="h-10 text-[9px] font-bold uppercase text-slate-400 px-6">Table Name</TableHead>
+                    <TableHead className="w-12 text-center">
+                      <Checkbox checked={isAllSelected} onCheckedChange={handleToggleAll} className="h-4 w-4" />
+                    </TableHead>
+                    <TableHead className="h-10 text-[9px] font-bold uppercase text-slate-400">Table Name</TableHead>
                     <TableHead className="h-10 text-[9px] font-bold uppercase text-slate-400">Reason</TableHead>
                     <TableHead className="h-10 text-[9px] font-bold uppercase text-slate-400">Size</TableHead>
                     <TableHead className="h-10 text-[9px] font-bold uppercase text-slate-400">Last Accessed</TableHead>
-                    <TableHead className="h-10 text-[9px] font-bold uppercase text-slate-400 text-right px-6">Actions</TableHead>
+                    <TableHead className="h-10 text-[9px] font-bold uppercase text-slate-400 text-right px-6">Status</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
                   {scanResults.length > 0 ? (
                     scanResults.map((table, i) => (
-                      <TableRow key={i} className="group hover:bg-slate-50/50 transition-colors border-b border-slate-50 last:border-0">
-                        <TableCell className="py-3 px-6">
+                      <TableRow key={i} className={cn("group hover:bg-slate-50/50 transition-colors border-b border-slate-50 last:border-0", selectedTables.includes(table.name) && "bg-slate-50/80")}>
+                        <TableCell className="text-center">
+                          <Checkbox checked={selectedTables.includes(table.name)} onCheckedChange={() => handleToggleOne(table.name)} className="h-4 w-4" />
+                        </TableCell>
+                        <TableCell className="py-3">
                           <div className="flex items-center gap-2">
                             <span className="text-xs font-bold text-slate-800">{table.name}</span>
                             {table.lastAccessed === "Never" && (
@@ -246,41 +343,13 @@ export function RedundancyScanner({ activeDb = "WebPortalDB" }: { activeDb?: str
                           </span>
                         </TableCell>
                         <TableCell className="py-3 text-right px-6">
-                          <div className="flex items-center justify-end gap-1">
-                            <Button 
-                              variant="outline" 
-                              size="sm" 
-                              onClick={() => handleAction(table.name, 'safe')}
-                              className="h-7 w-7 p-0 text-emerald-600 border-slate-200 rounded-lg hover:bg-emerald-50 hover:border-emerald-200"
-                              title="Mark Safe"
-                            >
-                              <ShieldCheck className="h-3.5 w-3.5" />
-                            </Button>
-                            <Button 
-                              variant="outline" 
-                              size="sm" 
-                              onClick={() => handleAction(table.name, 'archived')}
-                              className="h-7 w-7 p-0 text-amber-600 border-slate-200 rounded-lg hover:bg-amber-50 hover:border-amber-200"
-                              title="Mark for Archive"
-                            >
-                              <Archive className="h-3.5 w-3.5" />
-                            </Button>
-                            <Button 
-                              variant="outline" 
-                              size="sm" 
-                              onClick={() => handleAction(table.name, 'dropped')}
-                              className="h-7 w-7 p-0 text-rose-600 border-slate-200 rounded-lg hover:bg-rose-50 hover:border-rose-200"
-                              title="Flag to Drop"
-                            >
-                              <Trash2 className="h-3.5 w-3.5" />
-                            </Button>
-                          </div>
+                           <Badge variant="outline" className="text-[8px] font-bold text-slate-400 border-slate-200">Pending</Badge>
                         </TableCell>
                       </TableRow>
                     ))
                   ) : (
                     <TableRow>
-                      <TableCell colSpan={5} className="py-12 text-center text-slate-400 font-medium">
+                      <TableCell colSpan={6} className="py-12 text-center text-slate-400 font-medium">
                         <CheckCircle2 className="h-8 w-8 text-emerald-500 mx-auto mb-2 opacity-50" />
                         No redundancies identified in {activeDb}.
                       </TableCell>
@@ -318,6 +387,65 @@ export function RedundancyScanner({ activeDb = "WebPortalDB" }: { activeDb?: str
           </div>
         </>
       )}
+
+      {/* Task Creation Dialog */}
+      <Dialog open={isTaskModalOpen} onOpenChange={setIsTaskModalOpen}>
+        <DialogContent className="sm:max-w-[550px] rounded-[2rem]">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2 text-xl font-bold">
+              {currentActionType === "Safe" ? <ShieldCheck className="h-6 w-6 text-emerald-500" /> : 
+               currentActionType === "Archive" ? <Archive className="h-6 w-6 text-amber-500" /> : 
+               <Trash2 className="h-6 w-6 text-rose-500" />}
+              Create {currentActionType} Task
+            </DialogTitle>
+            <DialogDescription className="text-sm font-medium">
+              You are about to create a maintenance task for {selectedTables.length} selected table(s).
+            </DialogDescription>
+          </DialogHeader>
+          <div className="grid gap-6 py-4">
+            <div className="space-y-2">
+              <Label htmlFor="redundancy-task-name" className="text-sm font-bold text-slate-700">Task Name</Label>
+              <Input 
+                id="redundancy-task-name" 
+                value={taskName} 
+                onChange={(e) => setTaskName(e.target.value)} 
+                className="h-11 border-slate-200 rounded-xl" 
+              />
+            </div>
+
+            <div className="space-y-3">
+              <Label className="text-sm font-bold text-slate-700">Selected Tables ({selectedTables.length})</Label>
+              <div className="border rounded-2xl bg-slate-50/50 p-1 border-slate-100 overflow-hidden">
+                <ScrollArea className="h-[140px]">
+                  <div className="p-3 grid grid-cols-2 gap-2">
+                    {selectedTables.map(t => (
+                      <div key={t} className="flex items-center gap-2 p-2 bg-white rounded-xl border border-slate-100 shadow-sm">
+                        <TableIcon className="h-3.5 w-3.5 text-slate-400" />
+                        <span className="text-[11px] font-bold text-slate-700 truncate">{t}</span>
+                      </div>
+                    ))}
+                  </div>
+                </ScrollArea>
+              </div>
+            </div>
+          </div>
+          <DialogFooter className="bg-slate-50/50 p-6 -mx-6 -mb-6 border-t rounded-b-[2rem]">
+            <Button variant="outline" onClick={() => setIsTaskModalOpen(false)} className="rounded-xl font-bold h-11 px-8">Cancel</Button>
+            <Button 
+              onClick={handleFinalizeTask} 
+              disabled={!taskName} 
+              className={cn(
+                "font-bold h-11 px-10 rounded-xl shadow-lg text-white",
+                currentActionType === "Safe" ? "bg-emerald-600 hover:bg-emerald-700 shadow-emerald-100" :
+                currentActionType === "Archive" ? "bg-amber-600 hover:bg-amber-700 shadow-amber-100" :
+                "bg-rose-600 hover:bg-rose-700 shadow-rose-100"
+              )}
+            >
+              Confirm & Create Task
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   )
 }
