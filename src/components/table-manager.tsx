@@ -233,8 +233,13 @@ export function TableManager({
           <Button variant="ghost" size="icon" onClick={() => setViewMode('list')} className="rounded-full">
             <ArrowLeft className="h-5 w-5" />
           </Button>
-          <div>
-            <h1 className="text-2xl font-bold text-slate-900">{selectedTableForDetails.name}</h1>
+          <div className="flex flex-col">
+            <div className="flex items-center gap-3">
+              <h1 className="text-2xl font-bold text-slate-900">{selectedTableForDetails.name}</h1>
+              <Badge variant="outline" className="bg-slate-50 border-slate-200 text-slate-400 text-[9px] font-bold uppercase tracking-tight py-0 h-5">
+                Last Scan: today 08:42 AM
+              </Badge>
+            </div>
             <p className="text-sm text-slate-400 font-medium">Detailed Analytics & Health Insights</p>
           </div>
         </div>
