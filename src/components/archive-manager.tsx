@@ -196,6 +196,7 @@ export function ArchiveManager({
               {queryRows.map((row) => (
                 <div key={row.id} className="grid grid-cols-12 gap-4 items-center animate-in fade-in slide-in-from-top-2">
                   <div className="col-span-3">
+                    <span className="sr-only">Column Name</span>
                     <Select value={row.column} onValueChange={(v) => updateRow(row.id, 'column', v)}>
                       <SelectTrigger className="h-11 border-slate-200 rounded-xl bg-slate-50/50">
                         <SelectValue placeholder="Column" />
@@ -209,6 +210,7 @@ export function ArchiveManager({
                     </Select>
                   </div>
                   <div className="col-span-2">
+                    <span className="sr-only">Operator</span>
                     <Select value={row.operator} onValueChange={(v) => updateRow(row.id, 'operator', v)}>
                       <SelectTrigger className="h-11 border-slate-200 rounded-xl bg-slate-50/50">
                         <SelectValue placeholder="Op" />
@@ -225,6 +227,7 @@ export function ArchiveManager({
                     </Select>
                   </div>
                   <div className="col-span-4">
+                    <span className="sr-only">Criteria Value</span>
                     <Input 
                       placeholder="Value" 
                       value={row.value || ""}
@@ -233,6 +236,7 @@ export function ArchiveManager({
                     />
                   </div>
                   <div className="col-span-2">
+                    <span className="sr-only">Logic</span>
                     <Select value={row.logic} onValueChange={(v) => updateRow(row.id, 'logic', v)}>
                       <SelectTrigger className="h-11 border-slate-200 rounded-xl bg-slate-50/50">
                         <SelectValue placeholder="Logic" />
@@ -431,7 +435,7 @@ export function ArchiveManager({
       </div>
 
       <Tabs defaultValue="Archiving" value={activeTab} onValueChange={setActiveTab} className="w-full">
-        <TabsList className="bg-slate-100/80 p-1 h-12 rounded-xl mb-6 flex overflow-x-auto no-scrollbar">
+        <TabsList className="bg-slate-100/80 p-1 h-12 rounded-xl mb-6 flex justify-start w-full overflow-x-auto no-scrollbar">
           <TabsTrigger value="Archiving" className="rounded-lg px-6 font-bold text-xs gap-2 data-[state=active]:bg-white data-[state=active]:shadow-sm">
             <Archive className="h-3.5 w-3.5 text-amber-500" />
             Archiving
