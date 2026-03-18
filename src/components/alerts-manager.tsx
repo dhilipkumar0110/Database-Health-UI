@@ -4,7 +4,8 @@
 import * as React from "react"
 import { 
   Bell, 
-  RefreshCw
+  RefreshCw,
+  Database
 } from "lucide-react"
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
@@ -45,10 +46,15 @@ export function AlertsManager({ activeDb }: { activeDb: string }) {
     <div className="space-y-8 animate-in fade-in duration-500 pb-20">
       <div className="flex items-center justify-between">
         <div className="flex flex-col gap-1">
-          <h1 className="text-2xl font-bold text-slate-900 flex items-center gap-3">
-            <Bell className="h-7 w-7 text-primary" />
-            Alerts & Notifications
-          </h1>
+          <div className="flex items-center gap-3">
+            <h1 className="text-2xl font-bold text-slate-900 flex items-center gap-3">
+              <Bell className="h-7 w-7 text-primary" />
+              Alerts & Notifications
+            </h1>
+            <Badge className="bg-[#E6F4EA] text-[#1E8E3E] hover:bg-[#E6F4EA] border-none font-medium px-2 py-0.5 text-[10px]">
+              {activeDb}
+            </Badge>
+          </div>
           <p className="text-sm text-slate-400 font-medium">Monitoring events and automated triggers for {activeDb}.</p>
         </div>
         <div className="flex items-center gap-3">
@@ -81,6 +87,7 @@ export function AlertsManager({ activeDb }: { activeDb: string }) {
               <TableHeader className="bg-slate-50/50">
                 <TableRow className="hover:bg-transparent">
                   <TableHead className="h-12 px-8 text-[10px] font-bold uppercase text-slate-400">Rule</TableHead>
+                  <TableHead className="h-12 text-[10px] font-bold uppercase text-slate-400">Database</TableHead>
                   <TableHead className="h-12 text-[10px] font-bold uppercase text-slate-400">Target</TableHead>
                   <TableHead className="h-12 text-[10px] font-bold uppercase text-slate-400">Value</TableHead>
                   <TableHead className="h-12 text-[10px] font-bold uppercase text-slate-400">Time</TableHead>
@@ -98,6 +105,12 @@ export function AlertsManager({ activeDb }: { activeDb: string }) {
                           alert.severity === 'Critical' ? "bg-rose-500" : "bg-amber-500"
                         )} />
                         <span className="text-xs font-bold text-slate-700">{alert.rule}</span>
+                      </div>
+                    </TableCell>
+                    <TableCell>
+                      <div className="flex items-center gap-1.5 text-xs font-bold text-slate-500">
+                        <Database className="h-3 w-3 text-slate-300" />
+                        {activeDb}
                       </div>
                     </TableCell>
                     <TableCell className="text-xs font-medium text-slate-500">{alert.target}</TableCell>
