@@ -598,7 +598,7 @@ export function ArchiveManager({
           ) : (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
               {filteredTasks.map((task) => (
-                <Card key={task.id} className="bg-white border-none shadow-sm rounded-2xl overflow-hidden group hover:ring-2 hover:ring-primary/10 transition-all cursor-pointer" onClick={() => handleTaskClick(task)}>
+                <Card key={task.id} className="bg-white border-none shadow-sm rounded-2xl overflow-hidden group hover:ring-2 hover:ring-primary/10 transition-all">
                   <CardHeader className="p-5 pb-3">
                     <div className="flex items-start justify-between">
                       <div className="space-y-2">
@@ -636,11 +636,14 @@ export function ArchiveManager({
                           </Button>
                         </DropdownMenuTrigger>
                         <DropdownMenuContent align="end">
-                          <DropdownMenuItem onClick={() => handleViewExecution(task)}>
+                          <DropdownMenuItem onClick={(e) => {
+                            e.stopPropagation();
+                            handleViewExecution(task);
+                          }}>
                             <Play className="h-3.5 w-3.5 mr-2" />
                             View Execution
                           </DropdownMenuItem>
-                          <DropdownMenuItem className="text-rose-600">
+                          <DropdownMenuItem className="text-rose-600" onClick={(e) => e.stopPropagation()}>
                             <Trash2 className="h-3.5 w-3.5 mr-2" />
                             Delete Task
                           </DropdownMenuItem>
