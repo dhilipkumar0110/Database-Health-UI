@@ -47,29 +47,28 @@ type RedundantTable = {
   reason: "Naming issue" | "Zero reads" | "Duplicate schema"
   lastAccessed: string
   size: string
-  status: "pending" | "safe" | "archived" | "dropped"
 }
 
 const MOCK_REDUNDANCIES: Record<string, RedundantTable[]> = {
   "WebPortalDB": [
-    { name: "users_backup_2023", reason: "Naming issue", lastAccessed: "142 days ago", size: "1.2 GB", status: "pending" },
-    { name: "temp_orders_old", reason: "Naming issue", lastAccessed: "Never", size: "840 MB", status: "pending" },
-    { name: "logs_archive_test", reason: "Zero reads", lastAccessed: "210 days ago", size: "14.5 GB", status: "pending" },
-    { name: "customer_profiles_v2", reason: "Duplicate schema", lastAccessed: "12 days ago", size: "420 MB", status: "pending" },
-    { name: "audit_trail_tmp_01", reason: "Naming issue", lastAccessed: "Never", size: "3.2 GB", status: "pending" },
+    { name: "users_backup_2023", reason: "Naming issue", lastAccessed: "142 days ago", size: "1.2 GB" },
+    { name: "temp_orders_old", reason: "Naming issue", lastAccessed: "Never", size: "840 MB" },
+    { name: "logs_archive_test", reason: "Zero reads", lastAccessed: "210 days ago", size: "14.5 GB" },
+    { name: "customer_profiles_v2", reason: "Duplicate schema", lastAccessed: "12 days ago", size: "420 MB" },
+    { name: "audit_trail_tmp_01", reason: "Naming issue", lastAccessed: "Never", size: "3.2 GB" },
   ],
   "ReportingDB": [
-    { name: "sales_2022_final", reason: "Zero reads", lastAccessed: "380 days ago", size: "45 GB", status: "pending" },
-    { name: "temp_results_backup", reason: "Naming issue", lastAccessed: "Never", size: "2.1 GB", status: "pending" },
-    { name: "legacy_reports_v1", reason: "Zero reads", lastAccessed: "1 year ago", size: "12.4 GB", status: "pending" },
+    { name: "sales_2022_final", reason: "Zero reads", lastAccessed: "380 days ago", size: "45 GB" },
+    { name: "temp_results_backup", reason: "Naming issue", lastAccessed: "Never", size: "2.1 GB" },
+    { name: "legacy_reports_v1", reason: "Zero reads", lastAccessed: "1 year ago", size: "12.4 GB" },
   ]
 }
 
 const DEFAULT_REDUNDANCIES: RedundantTable[] = [
-  { name: "staging_data_temp_copy", reason: "Naming issue", lastAccessed: "89 days ago", size: "2.4 GB", status: "pending" },
-  { name: "old_audit_logs_archive", reason: "Zero reads", lastAccessed: "Never", size: "18.2 GB", status: "pending" },
-  { name: "legacy_metadata_v2", reason: "Duplicate schema", lastAccessed: "210 days ago", size: "540 MB", status: "pending" },
-  { name: "temp_transaction_log", reason: "Naming issue", lastAccessed: "Never", size: "4.1 GB", status: "pending" },
+  { name: "staging_data_temp_copy", reason: "Naming issue", lastAccessed: "89 days ago", size: "2.4 GB" },
+  { name: "old_audit_logs_archive", reason: "Zero reads", lastAccessed: "Never", size: "18.2 GB" },
+  { name: "legacy_metadata_v2", reason: "Duplicate schema", lastAccessed: "210 days ago", size: "540 MB" },
+  { name: "temp_transaction_log", reason: "Naming issue", lastAccessed: "Never", size: "4.1 GB" },
 ]
 
 export function RedundancyScanner({ 
@@ -82,13 +81,19 @@ export function RedundancyScanner({
   onCreateTask: (task: any) => void 
 }) {
   const [isScanning, setIsScanning] = React.useState(false)
-  const [scanResults, setScanResults] = React.useState<RedundantTable[]>([])
-  const [hasScanned, setHasScanned] = React.useState(false)
+  const [hasScanned, setHasScanned] = React.useState(true)
+  const [scanResults, setScanResults] = React.useState<RedundantTable[]>(MOCK_REDUNDANCIES[activeDb] || DEFAULT_REDUNDANCIES)
   
   const [selectedTables, setSelectedTables] = React.useState<string[]>([])
   const [isTaskModalOpen, setIsTaskModalOpen] = React.useState(false)
   const [taskName, setTaskName] = React.useState("")
   const [currentActionType, setCurrentActionType] = React.useState<"Safe" | "Archive" | "Drop">("Safe")
+
+  // Update results when active database changes
+  React.useEffect(() => {
+    setScanResults(MOCK_REDUNDANCIES[activeDb] || DEFAULT_REDUNDANCIES)
+    setSelectedTables([])
+  }, [activeDb])
 
   const handleRunScan = () => {
     setIsScanning(true)
@@ -166,33 +171,12 @@ export function RedundancyScanner({
             className="h-9 bg-[#1E8E3E] hover:bg-[#1A7F37] text-white text-xs font-bold rounded-lg px-6 shadow-sm gap-2"
           >
             {isScanning ? <RefreshCw className="h-3.5 w-3.5 animate-spin" /> : <Search className="h-3.5 w-3.5" />}
-            {hasScanned ? "Rescan Database" : "Initiate Full Scan"}
+            Rescan Database
           </Button>
         </div>
       </div>
 
-      {!hasScanned && !isScanning ? (
-        <Card className="border-dashed border-2 bg-slate-50/50 py-20">
-          <CardContent className="flex flex-col items-center justify-center text-center space-y-4">
-            <div className="h-16 w-16 rounded-full bg-white shadow-sm flex items-center justify-center">
-              <Database className="h-8 w-8 text-slate-200" />
-            </div>
-            <div className="space-y-1">
-              <h3 className="text-lg font-bold text-slate-700">Ready to Analyze {activeDb}</h3>
-              <p className="text-sm text-slate-400 max-w-sm mx-auto">
-                Our AI engine will scan for tables matching redundancy patterns, zero-read metrics, and duplicate schemas to help you reclaim storage.
-              </p>
-            </div>
-            <Button 
-              onClick={handleRunScan}
-              variant="outline" 
-              className="mt-4 border-slate-200 hover:bg-white rounded-xl font-bold text-slate-600"
-            >
-              Start Identification Scan
-            </Button>
-          </CardContent>
-        </Card>
-      ) : isScanning ? (
+      {isScanning ? (
         <div className="space-y-4">
           <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
             {[1, 2, 3, 4].map(i => (
@@ -300,8 +284,7 @@ export function RedundancyScanner({
                     <TableHead className="h-10 text-[9px] font-bold uppercase text-slate-400">Table Name</TableHead>
                     <TableHead className="h-10 text-[9px] font-bold uppercase text-slate-400">Reason</TableHead>
                     <TableHead className="h-10 text-[9px] font-bold uppercase text-slate-400">Size</TableHead>
-                    <TableHead className="h-10 text-[9px] font-bold uppercase text-slate-400">Last Accessed</TableHead>
-                    <TableHead className="h-10 text-[9px] font-bold uppercase text-slate-400 text-right px-6">Status</TableHead>
+                    <TableHead className="h-10 text-[9px] font-bold uppercase text-slate-400 px-6">Last Accessed</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
@@ -334,7 +317,7 @@ export function RedundancyScanner({
                         <TableCell className="py-3 text-xs font-bold text-slate-600">
                           {table.size}
                         </TableCell>
-                        <TableCell className="py-3">
+                        <TableCell className="py-3 px-6">
                           <span className={cn(
                             "text-[10px] font-bold",
                             table.lastAccessed === "Never" ? "text-rose-500" : "text-slate-400"
@@ -342,14 +325,11 @@ export function RedundancyScanner({
                             {table.lastAccessed}
                           </span>
                         </TableCell>
-                        <TableCell className="py-3 text-right px-6">
-                           <Badge variant="outline" className="text-[8px] font-bold text-slate-400 border-slate-200">Pending</Badge>
-                        </TableCell>
                       </TableRow>
                     ))
                   ) : (
                     <TableRow>
-                      <TableCell colSpan={6} className="py-12 text-center text-slate-400 font-medium">
+                      <TableCell colSpan={5} className="py-12 text-center text-slate-400 font-medium">
                         <CheckCircle2 className="h-8 w-8 text-emerald-500 mx-auto mb-2 opacity-50" />
                         No redundancies identified in {activeDb}.
                       </TableCell>
