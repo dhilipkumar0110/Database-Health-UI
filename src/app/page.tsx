@@ -357,7 +357,7 @@ export default function SQLSentinelApp() {
         </main>
         
         <footer className="py-6 px-8 text-center text-[10px] font-bold text-slate-400 uppercase tracking-[0.2em] bg-background">
-          &copy; 2024 SQL Sentinel Health Management • developed by keysoftware Team
+          &copy; 2024 MPM Database Health • developed by keysoftware Team
         </footer>
       </SidebarInset>
     </SidebarProvider>
