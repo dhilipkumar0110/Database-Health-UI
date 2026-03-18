@@ -21,7 +21,9 @@ import {
   Code, 
   Clock, 
   Calendar,
-  Search as SearchIcon
+  Search as SearchIcon,
+  RefreshCw,
+  LayoutGrid
 } from "lucide-react"
 import { Card, CardContent, CardHeader, CardTitle, CardFooter } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
@@ -52,6 +54,12 @@ import {
   DialogFooter,
   DialogDescription,
 } from "@/components/ui/dialog"
+import {
+  Tabs,
+  TabsContent,
+  TabsList,
+  TabsTrigger,
+} from "@/components/ui/tabs"
 import { Label } from "@/components/ui/label"
 import { toast } from "@/hooks/use-toast"
 
@@ -78,6 +86,7 @@ export function ArchiveManager({
   const [selectedTask, setSelectedTask] = React.useState<MaintenanceTask | null>(null)
   const [selectedTable, setSelectedTable] = React.useState<string | null>(null)
   const [search, setSearch] = React.useState("")
+  const [activeTab, setActiveTab] = React.useState("all")
 
   // Schedule Modal State
   const [isScheduleModalOpen, setIsScheduleModalOpen] = React.useState(false)
@@ -392,13 +401,15 @@ export function ArchiveManager({
     )
   }
 
-  const filteredTasks = tasks.filter(t => 
-    t.name.toLowerCase().includes(search.toLowerCase()) || 
-    t.database.toLowerCase().includes(search.toLowerCase())
-  )
+  const filteredTasks = tasks.filter(t => {
+    const matchesSearch = t.name.toLowerCase().includes(search.toLowerCase()) || 
+                          t.database.toLowerCase().includes(search.toLowerCase())
+    const matchesTab = activeTab === "all" || t.type === activeTab
+    return matchesSearch && matchesTab
+  })
 
   return (
-    <div className="space-y-6 animate-in fade-in duration-500">
+    <div className="space-y-6 animate-in fade-in duration-500 pb-12">
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-3">
           <h1 className="text-2xl font-bold text-slate-900">Task Manager</h1>
@@ -419,111 +430,140 @@ export function ArchiveManager({
         </div>
       </div>
 
-      {filteredTasks.length === 0 ? (
-        <div className="py-20 flex flex-col items-center justify-center text-center bg-white border border-dashed rounded-3xl">
-          <Archive className="h-12 w-12 text-slate-200 mb-4" />
-          <h3 className="text-lg font-bold text-slate-700">No tasks found</h3>
-          <p className="text-sm text-slate-400 max-w-sm">
-            Start by selecting tables in the Table Manager and defining maintenance tasks.
-          </p>
-        </div>
-      ) : (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {filteredTasks.map((task) => (
-            <Card key={task.id} className="bg-white border-none shadow-sm rounded-2xl overflow-hidden group hover:ring-2 hover:ring-primary/10 transition-all cursor-pointer" onClick={() => handleTaskClick(task)}>
-              <CardHeader className="p-5 pb-3">
-                <div className="flex items-start justify-between">
-                  <div className="space-y-2">
-                    <CardTitle className="text-base font-bold text-slate-900">{task.name}</CardTitle>
-                    <div className="flex items-center flex-wrap gap-2">
-                      <div className="flex items-center gap-1.5">
-                        <span className="text-[10px] font-bold text-slate-400 uppercase tracking-tight">Type:</span>
-                        <Badge 
-                          className={cn(
-                            "font-bold text-[8px] px-1.5 py-0 rounded border-none uppercase tracking-tighter",
-                            task.type === "Archiving" && "bg-amber-50 text-amber-600",
-                            task.type === "Index Rebuild" && "bg-blue-50 text-blue-600",
-                            task.type === "Update Stats" && "bg-emerald-50 text-emerald-600",
-                            task.type === "Scanning" && "bg-purple-50 text-purple-600"
-                          )}
-                        >
-                          {task.type}
-                        </Badge>
+      <Tabs defaultValue="all" value={activeTab} onValueChange={setActiveTab} className="w-full">
+        <TabsList className="bg-slate-100/80 p-1 h-12 rounded-xl mb-6">
+          <TabsTrigger value="all" className="rounded-lg px-6 font-bold text-xs gap-2 data-[state=active]:bg-white data-[state=active]:shadow-sm">
+            <LayoutGrid className="h-3.5 w-3.5" />
+            All Tasks
+          </TabsTrigger>
+          <TabsTrigger value="Archiving" className="rounded-lg px-6 font-bold text-xs gap-2 data-[state=active]:bg-white data-[state=active]:shadow-sm">
+            <Archive className="h-3.5 w-3.5 text-amber-500" />
+            Archiving
+          </TabsTrigger>
+          <TabsTrigger value="Index Rebuild" className="rounded-lg px-6 font-bold text-xs gap-2 data-[state=active]:bg-white data-[state=active]:shadow-sm">
+            <Zap className="h-3.5 w-3.5 text-blue-500" />
+            Index Rebuild
+          </TabsTrigger>
+          <TabsTrigger value="Update Stats" className="rounded-lg px-6 font-bold text-xs gap-2 data-[state=active]:bg-white data-[state=active]:shadow-sm">
+            <RefreshCw className="h-3.5 w-3.5 text-emerald-500" />
+            Update Stats
+          </TabsTrigger>
+          <TabsTrigger value="Scanning" className="rounded-lg px-6 font-bold text-xs gap-2 data-[state=active]:bg-white data-[state=active]:shadow-sm">
+            <SearchIcon className="h-3.5 w-3.5 text-purple-500" />
+            Scanning
+          </TabsTrigger>
+        </TabsList>
+
+        <TabsContent value={activeTab} className="mt-0">
+          {filteredTasks.length === 0 ? (
+            <div className="py-20 flex flex-col items-center justify-center text-center bg-white border border-dashed rounded-3xl">
+              <Archive className="h-12 w-12 text-slate-200 mb-4" />
+              <h3 className="text-lg font-bold text-slate-700">No tasks found</h3>
+              <p className="text-sm text-slate-400 max-w-sm">
+                {activeTab === 'all' 
+                  ? "Start by selecting tables in the Table Manager and defining maintenance tasks."
+                  : `There are currently no ${activeTab} tasks defined.`}
+              </p>
+            </div>
+          ) : (
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+              {filteredTasks.map((task) => (
+                <Card key={task.id} className="bg-white border-none shadow-sm rounded-2xl overflow-hidden group hover:ring-2 hover:ring-primary/10 transition-all cursor-pointer" onClick={() => handleTaskClick(task)}>
+                  <CardHeader className="p-5 pb-3">
+                    <div className="flex items-start justify-between">
+                      <div className="space-y-2">
+                        <CardTitle className="text-base font-bold text-slate-900">{task.name}</CardTitle>
+                        <div className="flex items-center flex-wrap gap-2">
+                          <div className="flex items-center gap-1.5">
+                            <span className="text-[10px] font-bold text-slate-400 uppercase tracking-tight">Type:</span>
+                            <Badge 
+                              className={cn(
+                                "font-bold text-[8px] px-1.5 py-0 rounded border-none uppercase tracking-tighter",
+                                task.type === "Archiving" && "bg-amber-50 text-amber-600",
+                                task.type === "Index Rebuild" && "bg-blue-50 text-blue-600",
+                                task.type === "Update Stats" && "bg-emerald-50 text-emerald-600",
+                                task.type === "Scanning" && "bg-purple-50 text-purple-600"
+                              )}
+                            >
+                              {task.type}
+                            </Badge>
+                          </div>
+                          <div className="flex items-center gap-1.5 ml-1 border-l pl-2 border-slate-100">
+                            <span className="text-[10px] font-bold text-slate-400 uppercase tracking-tight">Status:</span>
+                            {task.status === 'scheduled' ? (
+                              <Badge className="bg-emerald-500 text-white border-none font-bold text-[8px] uppercase px-1.5 py-0 rounded">Scheduled</Badge>
+                            ) : (
+                              <Badge className="bg-slate-100 text-slate-400 border-none font-bold text-[8px] uppercase px-1.5 py-0 rounded">Pending</Badge>
+                            )}
+                          </div>
+                        </div>
                       </div>
-                      <div className="flex items-center gap-1.5 ml-1 border-l pl-2 border-slate-100">
-                        <span className="text-[10px] font-bold text-slate-400 uppercase tracking-tight">Status:</span>
-                        {task.status === 'scheduled' ? (
-                          <Badge className="bg-emerald-500 text-white border-none font-bold text-[8px] uppercase px-1.5 py-0 rounded">Scheduled</Badge>
-                        ) : (
-                          <Badge className="bg-slate-100 text-slate-400 border-none font-bold text-[8px] uppercase px-1.5 py-0 rounded">Pending</Badge>
+                      <Button variant="ghost" size="icon" className="h-8 w-8 text-slate-400">
+                        <MoreVertical className="h-4 w-4" />
+                      </Button>
+                    </div>
+                  </CardHeader>
+                  <CardContent className="p-5 pt-0 space-y-4">
+                    <div className="grid grid-cols-2 gap-4">
+                      <div className="space-y-1">
+                        <span className="text-[9px] font-bold text-slate-400 uppercase tracking-tight flex items-center gap-1">
+                          <Server className="h-2.5 w-2.5" /> Server
+                        </span>
+                        <div className="text-xs font-bold text-slate-700">{task.server}</div>
+                      </div>
+                      <div className="space-y-1">
+                        <span className="text-[9px] font-bold text-slate-400 uppercase tracking-tight flex items-center gap-1">
+                          <Database className="h-2.5 w-2.5" /> Database
+                        </span>
+                        <div className="text-xs font-bold text-slate-700">{task.database}</div>
+                      </div>
+                    </div>
+
+                    <div className="space-y-2">
+                      <span className="text-[9px] font-bold text-slate-400 uppercase tracking-tight">Scope: {task.tables.length} Tables</span>
+                      <div className="flex flex-wrap gap-1">
+                        {task.tables.slice(0, 3).map(t => (
+                          <Badge key={t} variant="secondary" className="bg-slate-50 text-slate-500 border-none text-[9px] font-medium px-2">
+                            {t}
+                          </Badge>
+                        ))}
+                        {task.tables.length > 3 && (
+                          <Badge variant="secondary" className="bg-slate-50 text-slate-400 border-none text-[9px] font-medium px-2">
+                            +{task.tables.length - 3} more
+                          </Badge>
                         )}
                       </div>
                     </div>
-                  </div>
-                  <Button variant="ghost" size="icon" className="h-8 w-8 text-slate-400">
-                    <MoreVertical className="h-4 w-4" />
-                  </Button>
-                </div>
-              </CardHeader>
-              <CardContent className="p-5 pt-0 space-y-4">
-                <div className="grid grid-cols-2 gap-4">
-                  <div className="space-y-1">
-                    <span className="text-[9px] font-bold text-slate-400 uppercase tracking-tight flex items-center gap-1">
-                      <Server className="h-2.5 w-2.5" /> Server
-                    </span>
-                    <div className="text-xs font-bold text-slate-700">{task.server}</div>
-                  </div>
-                  <div className="space-y-1">
-                    <span className="text-[9px] font-bold text-slate-400 uppercase tracking-tight flex items-center gap-1">
-                      <Database className="h-2.5 w-2.5" /> Database
-                    </span>
-                    <div className="text-xs font-bold text-slate-700">{task.database}</div>
-                  </div>
-                </div>
-
-                <div className="space-y-2">
-                  <span className="text-[9px] font-bold text-slate-400 uppercase tracking-tight">Scope: {task.tables.length} Tables</span>
-                  <div className="flex flex-wrap gap-1">
-                    {task.tables.slice(0, 3).map(t => (
-                      <Badge key={t} variant="secondary" className="bg-slate-50 text-slate-500 border-none text-[9px] font-medium px-2">
-                        {t}
-                      </Badge>
-                    ))}
-                    {task.tables.length > 3 && (
-                      <Badge variant="secondary" className="bg-slate-50 text-slate-400 border-none text-[9px] font-medium px-2">
-                        +{task.tables.length - 3} more
-                      </Badge>
-                    )}
-                  </div>
-                </div>
-                <div className="text-[9px] text-slate-300 font-medium italic">
-                  Modified on {new Date(task.createdAt).toLocaleDateString()}
-                </div>
-              </CardContent>
-              <CardFooter className="p-5 bg-slate-50/50 flex items-center justify-between border-t border-slate-50">
-                <Button 
-                  variant="link" 
-                  className="h-8 text-[10px] font-bold text-primary p-0 hover:no-underline gap-1.5 transition-all"
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    handleTaskClick(task);
-                  }}
-                >
-                  {task.type === "Scanning" ? <SearchIcon className="h-3.5 w-3.5" /> : <FileCode className="h-3.5 w-3.5" />}
-                  {task.type === "Scanning" ? "View Audit" : "Configure"}
-                </Button>
-                <Button 
-                  className="h-8 bg-white border border-slate-200 text-slate-700 text-[10px] font-bold rounded-lg px-4 hover:bg-slate-100 shadow-none gap-1.5"
-                  onClick={(e) => openScheduleDialog(e, task)}
-                >
-                  <Clock className="h-3 w-3" />
-                  Schedule
-                </Button>
-              </CardFooter>
-            </Card>
-          ))}
-        </div>
-      )}
+                    <div className="text-[9px] text-slate-300 font-medium italic">
+                      Modified on {new Date(task.createdAt).toLocaleDateString()}
+                    </div>
+                  </CardContent>
+                  <CardFooter className="p-5 bg-slate-50/50 flex items-center justify-between border-t border-slate-50">
+                    <Button 
+                      variant="link" 
+                      className="h-8 text-[10px] font-bold text-primary p-0 hover:no-underline gap-1.5 transition-all"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        handleTaskClick(task);
+                      }}
+                    >
+                      {task.type === "Scanning" ? <SearchIcon className="h-3.5 w-3.5" /> : <FileCode className="h-3.5 w-3.5" />}
+                      {task.type === "Scanning" ? "View Audit" : "Configure"}
+                    </Button>
+                    <Button 
+                      className="h-8 bg-white border border-slate-200 text-slate-700 text-[10px] font-bold rounded-lg px-4 hover:bg-slate-100 shadow-none gap-1.5"
+                      onClick={(e) => openScheduleDialog(e, task)}
+                    >
+                      <Clock className="h-3 w-3" />
+                      Schedule
+                    </Button>
+                  </CardFooter>
+                </Card>
+              ))}
+            </div>
+          )}
+        </TabsContent>
+      </Tabs>
 
       {/* Schedule Dialog */}
       <Dialog open={isScheduleModalOpen} onOpenChange={setIsScheduleModalOpen}>
