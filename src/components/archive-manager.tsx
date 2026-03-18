@@ -635,10 +635,6 @@ export function ArchiveManager({
                             <Play className="h-3.5 w-3.5 mr-2" />
                             View Execution
                           </DropdownMenuItem>
-                          <DropdownMenuItem className="text-rose-600" onClick={(e) => e.stopPropagation()}>
-                            <Trash2 className="h-3.5 w-3.5 mr-2" />
-                            Delete Task
-                          </DropdownMenuItem>
                         </DropdownMenuContent>
                       </DropdownMenu>
                     </div>
