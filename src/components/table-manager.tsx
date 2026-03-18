@@ -267,22 +267,6 @@ export function TableManager({
           <div className="text-xs text-slate-400">
             Last scan: today 08:42 AM
           </div>
-          <Button 
-            variant="outline" 
-            size="sm" 
-            className="h-8 text-xs border-slate-300 rounded-full px-4 bg-white"
-            onClick={handleRunScan}
-            disabled={isScanning}
-          >
-            {isScanning ? (
-              <>
-                <RefreshCw className="h-3 w-3 mr-1.5 animate-spin" />
-                Scanning...
-              </>
-            ) : (
-              "Run Scan"
-            )}
-          </Button>
         </div>
       </div>
 
@@ -383,6 +367,22 @@ export function TableManager({
               >
                 <Archive className="h-3 w-3 mr-1" />
                 Flag Archive
+              </Button>
+              <Button 
+                variant="outline" 
+                size="sm" 
+                className="h-8 text-xs border-[#1967D2] rounded-full px-6 bg-white text-[#1967D2] hover:bg-[#E8F0FE] font-bold shadow-sm"
+                onClick={handleRunScan}
+                disabled={isScanning}
+              >
+                {isScanning ? (
+                  <>
+                    <RefreshCw className="h-3 w-3 mr-1.5 animate-spin" />
+                    Scanning...
+                  </>
+                ) : (
+                  "Run Scan"
+                )}
               </Button>
             </div>
           </div>
