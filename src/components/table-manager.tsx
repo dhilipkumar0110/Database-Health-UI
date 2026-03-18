@@ -296,6 +296,8 @@ export function TableManager({
                   <TableHead className="text-[10px] font-bold uppercase text-slate-400">Row count</TableHead>
                   <TableHead className="text-[10px] font-bold uppercase text-slate-400">Size</TableHead>
                   <TableHead className="text-[10px] font-bold uppercase text-slate-400">Fragmentation</TableHead>
+                  <TableHead className="text-[10px] font-bold uppercase text-slate-400">Deadlocks</TableHead>
+                  <TableHead className="text-[10px] font-bold uppercase text-slate-400">Slow Qs</TableHead>
                   <TableHead className="text-[10px] font-bold uppercase text-slate-400">Last read</TableHead>
                   <TableHead className="text-right text-[10px] font-bold uppercase text-slate-400">Action</TableHead>
                 </TableRow>
@@ -322,6 +324,18 @@ export function TableManager({
                         <span className={cn("text-[10px] font-bold w-7 text-right", table.fragmentation > 50 ? "text-rose-500" : table.fragmentation > 20 ? "text-amber-500" : "text-emerald-500")}>
                           {table.fragmentation}%
                         </span>
+                      </div>
+                    </TableCell>
+                    <TableCell>
+                      <div className="flex items-center gap-1 text-[10px] font-bold text-slate-700">
+                        <Activity className="h-3 w-3 text-slate-300" />
+                        {table.deadlocks}
+                      </div>
+                    </TableCell>
+                    <TableCell>
+                      <div className="flex items-center gap-1 text-[10px] font-bold text-orange-500">
+                        <Zap className="h-3 w-3 text-orange-300" />
+                        {table.slowQ}
                       </div>
                     </TableCell>
                     <TableCell className="text-[10px] font-bold text-slate-500">{table.lastRead}</TableCell>
