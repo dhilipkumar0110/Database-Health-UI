@@ -339,32 +339,6 @@ export function RedundancyScanner({
               </Table>
             </CardContent>
           </Card>
-
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <Card className="bg-[#FFF8F1] border-amber-100 rounded-2xl p-6 flex gap-4 shadow-none">
-              <div className="h-10 w-10 rounded-full bg-amber-100 flex items-center justify-center shrink-0">
-                <AlertTriangle className="h-5 w-5 text-amber-600" />
-              </div>
-              <div className="space-y-1">
-                <h4 className="text-sm font-bold text-amber-900 uppercase tracking-tight">Best Practice Recommendation</h4>
-                <p className="text-xs text-amber-800/80 leading-relaxed font-medium">
-                  Tables with suffixes like <code className="bg-amber-200/50 px-1 rounded text-[10px]">_backup</code> or <code className="bg-amber-200/50 px-1 rounded text-[10px]">_old</code> often contribute to "data drift" where stale data is accidentally queried or maintained. We recommend a strict 30-day archival policy for such objects.
-                </p>
-              </div>
-            </Card>
-
-            <Card className="bg-[#F8FAFC] border-slate-200 rounded-2xl p-6 flex gap-4 shadow-none">
-              <div className="h-10 w-10 rounded-full bg-slate-200 flex items-center justify-center shrink-0">
-                <Info className="h-5 w-5 text-slate-600" />
-              </div>
-              <div className="space-y-1">
-                <h4 className="text-sm font-bold text-slate-900 uppercase tracking-tight">Detection Logic</h4>
-                <p className="text-xs text-slate-500 leading-relaxed font-medium">
-                  Our system evaluates redundancy by comparing the structural DDL of tables and analyzing <code className="bg-slate-200/50 px-1 rounded text-[10px]">user_scans</code> and <code className="bg-slate-200/50 px-1 rounded text-[10px]">user_lookups</code> from system dynamic management views.
-                </p>
-              </div>
-            </Card>
-          </div>
         </>
       )}
 
