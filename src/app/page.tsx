@@ -29,7 +29,7 @@ export type ScheduleConfig = {
   endDate: string
 }
 
-export type MaintenanceAction = 'Archiving' | 'Index Rebuild' | 'Update Stats' | 'Scanning'
+export type MaintenanceAction = 'Archiving' | 'Index Rebuild' | 'Update Stats' | 'Scanning' | 'Safe' | 'Drop'
 
 export type MaintenanceTask = {
   id: string

@@ -41,6 +41,7 @@ import { Label } from "@/components/ui/label"
 import { ScrollArea } from "@/components/ui/scroll-area"
 import { cn } from "@/lib/utils"
 import { toast } from "@/hooks/use-toast"
+import { MaintenanceAction } from "@/app/page"
 
 type RedundantTable = {
   name: string
@@ -130,11 +131,12 @@ export function RedundancyScanner({
   const handleFinalizeTask = () => {
     // Map actions
     const type = currentActionType === "Archive" ? "Archiving" : "Multi-Task"
+    const actionName = currentActionType === "Archive" ? "Archiving" : (currentActionType as MaintenanceAction)
     
     onCreateTask({
       name: taskName,
       type: type,
-      actions: currentActionType === "Archive" ? ["Archiving"] : ["Scanning"],
+      actions: [actionName],
       server: serverName,
       database: activeDb,
       tables: [...selectedTables]
