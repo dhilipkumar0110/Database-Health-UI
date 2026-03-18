@@ -91,7 +91,6 @@ export function AlertsManager({ activeDb }: { activeDb: string }) {
                   <TableHead className="h-12 text-[10px] font-bold uppercase text-slate-400">Target</TableHead>
                   <TableHead className="h-12 text-[10px] font-bold uppercase text-slate-400">Value</TableHead>
                   <TableHead className="h-12 text-[10px] font-bold uppercase text-slate-400">Time</TableHead>
-                  <TableHead className="h-12 text-[10px] font-bold uppercase text-slate-400">Status</TableHead>
                   <TableHead className="h-12 px-8 text-right text-[10px] font-bold uppercase text-slate-400">Action</TableHead>
                 </TableRow>
               </TableHeader>
@@ -116,14 +115,6 @@ export function AlertsManager({ activeDb }: { activeDb: string }) {
                     <TableCell className="text-xs font-medium text-slate-500">{alert.target}</TableCell>
                     <TableCell className="text-xs font-bold text-slate-900">{alert.value}</TableCell>
                     <TableCell className="text-[10px] font-bold text-slate-400 uppercase">{alert.time}</TableCell>
-                    <TableCell>
-                      <Badge className={cn(
-                        "font-bold text-[8px] uppercase px-1.5 py-0 rounded border-none",
-                        alert.status === 'Active' ? "bg-rose-50 text-rose-500" : "bg-emerald-50 text-emerald-600"
-                      )}>
-                        {alert.status}
-                      </Badge>
-                    </TableCell>
                     <TableCell className="px-8 text-right">
                       <Button variant="ghost" size="sm" className="h-8 text-[10px] font-bold text-primary hover:bg-primary/5 rounded-lg">
                         Details
