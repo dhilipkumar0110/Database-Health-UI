@@ -132,12 +132,6 @@ export function ReportsManager({ activeDb }: { activeDb: string }) {
           </Button>
         </CardFooter>
       </Card>
-
-      <div className="text-center">
-        <p className="text-[10px] font-bold text-slate-300 uppercase tracking-[0.2em]">
-          Professional SQL Sentinel Health Audit Utility
-        </p>
-      </div>
     </div>
   )
 }
