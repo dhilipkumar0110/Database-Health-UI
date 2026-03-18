@@ -12,10 +12,8 @@ import {
   Server as ServerIcon,
   ArrowLeft,
   Search as SearchIcon,
-  AlertCircle,
-  MoreVertical,
   Activity,
-  ShieldAlert
+  Plus
 } from "lucide-react"
 import { Card, CardContent } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
@@ -50,6 +48,7 @@ import { Label } from "@/components/ui/label"
 import { toast } from "@/hooks/use-toast"
 import { ScrollArea } from "@/components/ui/scroll-area"
 import { TableDetailsView } from "./table-details-view"
+import { MaintenanceAction } from "@/app/page"
 
 export type TableData = {
   name: string
@@ -96,8 +95,8 @@ export function TableManager({
   const [viewMode, setViewMode] = React.useState<'list' | 'details'>('list')
   const [selectedTableForDetails, setSelectedTableForDetails] = React.useState<TableData | null>(null)
   const [isTaskModalOpen, setIsTaskModalOpen] = React.useState(false)
-  const [currentTaskType, setCurrentTaskType] = React.useState<any>(null)
   const [taskName, setTaskName] = React.useState("")
+  const [selectedActions, setSelectedActions] = React.useState<MaintenanceAction[]>([])
 
   const activeTables = React.useMemo(() => {
     return ALL_MOCK_TABLES.filter(t => monitoredTables.includes(t.name))
@@ -151,16 +150,34 @@ export function TableManager({
     setSelectedTables(prev => prev.includes(name) ? prev.filter(n => n !== name) : [...prev, name])
   }
 
-  const openTaskCreation = (type: 'Archiving' | 'Index Rebuild' | 'Update Stats' | 'Scanning') => {
-    setCurrentTaskType(type)
-    setTaskName(`${type} - ${new Date().toLocaleDateString()}`)
+  const toggleAction = (action: MaintenanceAction) => {
+    setSelectedActions(prev => 
+      prev.includes(action) ? prev.filter(a => a !== action) : [...prev, action]
+    )
+  }
+
+  const openTaskCreation = () => {
+    setTaskName(`Task - ${new Date().toLocaleDateString()}`)
+    setSelectedActions([])
     setIsTaskModalOpen(true)
   }
 
   const handleFinalizeTask = () => {
+    if (selectedActions.length === 0) {
+      toast({
+        variant: "destructive",
+        title: "Action Required",
+        description: "Please select at least one task type.",
+      })
+      return
+    }
+
+    const type = selectedActions.length > 1 ? 'Multi-Task' : selectedActions[0]
+    
     onCreateTask({
       name: taskName,
-      type: currentTaskType,
+      type: type,
+      actions: [...selectedActions],
       server: serverName,
       database: activeDb,
       tables: [...selectedTables]
@@ -168,7 +185,7 @@ export function TableManager({
     setIsTaskModalOpen(false)
     setSelectedTables([])
     toast({
-      title: `${currentTaskType} Task Created`,
+      title: "Task Created",
       description: `Task "${taskName}" has been added to the Task Manager.`,
     })
   }
@@ -197,7 +214,6 @@ export function TableManager({
 
   return (
     <div className="space-y-8 animate-in fade-in duration-500 pb-20">
-      {/* Summary Header */}
       <div className="space-y-6">
         <div className="bg-amber-50/50 border border-amber-100 rounded-xl p-3 px-6 flex items-center justify-between shadow-sm">
           <div className="flex items-center gap-6">
@@ -272,24 +288,25 @@ export function TableManager({
         </div>
 
         {selectedTables.length > 0 && (
-          <div className="flex items-center gap-3 p-2 px-4 bg-[#E8F0FE] border border-[#D2E3FC] rounded-xl animate-in slide-in-from-top-2">
-            <span className="text-sm font-semibold text-[#1967D2] mr-2 whitespace-nowrap">
+          <div className="flex items-center gap-3 p-3 px-6 bg-[#E8F0FE] border border-[#D2E3FC] rounded-2xl animate-in slide-in-from-top-2 shadow-sm">
+            <span className="text-sm font-bold text-[#1967D2] mr-4 whitespace-nowrap flex items-center gap-2">
+              <div className="h-2 w-2 rounded-full bg-[#1967D2] animate-pulse" />
               {selectedTables.length} selected
             </span>
-            <div className="flex items-center gap-2 overflow-x-auto no-scrollbar">
-              <Button onClick={() => openTaskCreation('Index Rebuild')} variant="outline" size="sm" className="h-8 text-xs rounded-full bg-white border-white text-[#1967D2] hover:bg-white hover:text-[#185ABC] shadow-sm font-semibold px-4 whitespace-nowrap">
-                <Zap className="h-3 w-3 mr-1" /> Rebuild Indexes
-              </Button>
-              <Button onClick={() => openTaskCreation('Update Stats')} variant="outline" size="sm" className="h-8 text-xs rounded-full bg-white border-white text-[#1967D2] hover:bg-white hover:text-[#185ABC] shadow-sm font-semibold px-4 whitespace-nowrap">
-                <RefreshCw className="h-3 w-3 mr-1" /> Update Stats
-              </Button>
-              <Button onClick={() => openTaskCreation('Archiving')} variant="outline" size="sm" className="h-8 text-xs rounded-full bg-white border-white text-[#1967D2] hover:bg-white hover:text-[#185ABC] shadow-sm font-semibold px-4 whitespace-nowrap">
-                <Archive className="h-3 w-3 mr-1" /> Flag Archive
-              </Button>
-              <Button onClick={() => openTaskCreation('Scanning')} variant="outline" size="sm" className="h-8 text-xs border-[#1967D2] rounded-full px-6 bg-white text-[#1967D2] hover:bg-[#E8F0FE] font-bold shadow-sm">
-                <SearchIcon className="h-3 w-3 mr-1.5" /> Run Scan
-              </Button>
-            </div>
+            <Button 
+              onClick={openTaskCreation} 
+              className="h-10 px-6 rounded-xl bg-[#1967D2] hover:bg-[#185ABC] text-white font-bold shadow-md gap-2"
+            >
+              <Plus className="h-4 w-4" />
+              Create Maintenance Task
+            </Button>
+            <Button 
+              variant="ghost" 
+              onClick={() => setSelectedTables([])}
+              className="h-10 px-4 rounded-xl text-slate-500 hover:bg-white/50 font-bold"
+            >
+              Cancel
+            </Button>
           </div>
         )}
 
@@ -320,10 +337,10 @@ export function TableManager({
                   <TableHead className="text-[10px] font-bold uppercase text-slate-400">Row count</TableHead>
                   <TableHead className="text-[10px] font-bold uppercase text-slate-400">Size</TableHead>
                   <TableHead className="text-[10px] font-bold uppercase text-slate-400">Fragmentation</TableHead>
-                  <TableHead className="text-[10px] font-bold uppercase text-slate-400">Deadlocks</TableHead>
-                  <TableHead className="text-[10px] font-bold uppercase text-slate-400">Slow Qs</TableHead>
+                  <TableHead className="text-[10px] font-bold uppercase text-slate-400 text-center">Deadlocks</TableHead>
+                  <TableHead className="text-[10px] font-bold uppercase text-slate-400 text-center">Slow Qs</TableHead>
                   <TableHead className="text-[10px] font-bold uppercase text-slate-400">Last read</TableHead>
-                  <TableHead className="text-right text-[10px] font-bold uppercase text-slate-400">Action</TableHead>
+                  <TableHead className="text-right text-[10px] font-bold uppercase text-slate-400 pr-8">Action</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -350,20 +367,20 @@ export function TableManager({
                         </span>
                       </div>
                     </TableCell>
-                    <TableCell>
-                      <div className="flex items-center gap-1 text-[10px] font-bold text-slate-700">
+                    <TableCell className="text-center">
+                      <div className="flex items-center justify-center gap-1 text-[10px] font-bold text-slate-700">
                         <Activity className="h-3 w-3 text-slate-300" />
                         {table.deadlocks}
                       </div>
                     </TableCell>
-                    <TableCell>
-                      <div className="flex items-center gap-1 text-[10px] font-bold text-orange-500">
+                    <TableCell className="text-center">
+                      <div className="flex items-center justify-center gap-1 text-[10px] font-bold text-orange-500">
                         <Zap className="h-3 w-3 text-orange-300" />
                         {table.slowQ}
                       </div>
                     </TableCell>
                     <TableCell className="text-[10px] font-bold text-slate-500">{table.lastRead}</TableCell>
-                    <TableCell className="text-right">
+                    <TableCell className="text-right pr-8">
                       <Button variant="outline" size="sm" onClick={() => { setSelectedTableForDetails(table); setViewMode('details'); }} className="h-7 text-[10px] font-bold rounded-lg border-slate-200 text-slate-600 hover:bg-white hover:border-slate-300">
                         Details
                       </Button>
@@ -377,50 +394,68 @@ export function TableManager({
       </div>
 
       <Dialog open={isTaskModalOpen} onOpenChange={setIsTaskModalOpen}>
-        <DialogContent className="sm:max-w-[500px]">
+        <DialogContent className="sm:max-w-[550px] rounded-[2rem]">
           <DialogHeader>
-            <DialogTitle className="flex items-center gap-2">
-              {currentTaskType === 'Archiving' && <Archive className="h-5 w-5 text-amber-500" />}
-              {currentTaskType === 'Index Rebuild' && <Zap className="h-5 w-5 text-blue-500" />}
-              {currentTaskType === 'Update Stats' && <RefreshCw className="h-5 w-5 text-emerald-500" />}
-              {currentTaskType === 'Scanning' && <SearchIcon className="h-5 w-5 text-purple-500" />}
-              Create {currentTaskType} Task
+            <DialogTitle className="flex items-center gap-2 text-xl font-bold">
+              <RefreshCw className="h-6 w-6 text-primary" />
+              Configure Maintenance Task
             </DialogTitle>
-            <DialogDescription>Set up a {currentTaskType?.toLowerCase()} operation for the selected tables.</DialogDescription>
+            <DialogDescription className="text-sm font-medium">Define actions for your selected monitored tables.</DialogDescription>
           </DialogHeader>
           <div className="grid gap-6 py-4">
             <div className="space-y-2">
-              <Label htmlFor="task-name" className="text-sm font-semibold">Task Name</Label>
-              <Input id="task-name" value={taskName} onChange={(e) => setTaskName(e.target.value)} placeholder="e.g., Weekly Audit Scan" className="h-11 border-slate-200" />
+              <Label htmlFor="task-name" className="text-sm font-bold text-slate-700">Task Name</Label>
+              <Input id="task-name" value={taskName} onChange={(e) => setTaskName(e.target.value)} placeholder="e.g., Weekly Audit Scan" className="h-11 border-slate-200 rounded-xl" />
             </div>
+
+            <div className="space-y-4">
+              <Label className="text-sm font-bold text-slate-700">Select Maintenance Types</Label>
+              <div className="flex flex-wrap gap-2">
+                {[
+                  { id: 'Archiving' as MaintenanceAction, icon: Archive, color: 'text-amber-500', bg: 'bg-amber-50', border: 'border-amber-100' },
+                  { id: 'Index Rebuild' as MaintenanceAction, icon: Zap, color: 'text-blue-500', bg: 'bg-blue-50', border: 'border-blue-100' },
+                  { id: 'Update Stats' as MaintenanceAction, icon: RefreshCw, color: 'text-emerald-500', bg: 'bg-emerald-50', border: 'border-emerald-100' },
+                  { id: 'Scanning' as MaintenanceAction, icon: SearchIcon, color: 'text-purple-500', bg: 'bg-purple-50', border: 'border-purple-100' },
+                ].map((action) => (
+                  <Button
+                    key={action.id}
+                    variant="outline"
+                    onClick={() => toggleAction(action.id)}
+                    className={cn(
+                      "h-10 px-4 rounded-xl border font-bold text-xs gap-2 transition-all",
+                      selectedActions.includes(action.id) 
+                        ? `${action.bg} ${action.color} border-${action.id.split(' ')[0].toLowerCase()}-300 ring-2 ring-primary/10` 
+                        : "bg-white text-slate-500 border-slate-200"
+                    )}
+                  >
+                    <action.icon className={cn("h-3.5 w-3.5", selectedActions.includes(action.id) ? action.color : "text-slate-400")} />
+                    {action.id}
+                  </Button>
+                ))}
+              </div>
+            </div>
+
             <div className="space-y-3">
-              <Label className="text-sm font-semibold">Affected Tables Preview ({selectedTables.length})</Label>
-              <div className="border rounded-xl bg-slate-50 p-1">
-                <ScrollArea className="h-[180px]">
-                  <div className="p-3 space-y-2">
+              <Label className="text-sm font-bold text-slate-700">Affected Tables Preview ({selectedTables.length})</Label>
+              <div className="border rounded-2xl bg-slate-50/50 p-1 border-slate-100 overflow-hidden">
+                <ScrollArea className="h-[140px]">
+                  <div className="p-3 grid grid-cols-2 gap-2">
                     {selectedTables.map(t => (
-                      <div key={t} className="flex items-center gap-2 p-2 bg-white rounded-lg border border-slate-100 shadow-sm">
+                      <div key={t} className="flex items-center gap-2 p-2 bg-white rounded-xl border border-slate-100 shadow-sm">
                         <TableIcon className="h-3.5 w-3.5 text-slate-400" />
-                        <span className="text-xs font-medium text-slate-700">{t}</span>
+                        <span className="text-[11px] font-bold text-slate-700 truncate">{t}</span>
                       </div>
                     ))}
                   </div>
                 </ScrollArea>
               </div>
             </div>
-            <div className="p-4 rounded-xl border bg-[#F8FAFC] flex gap-3">
-              <div className="space-y-1 flex-1">
-                <div className="flex items-center gap-2 text-[10px] font-bold text-slate-400 uppercase tracking-wider">Target Context</div>
-                <div className="flex items-center gap-4 pt-1">
-                  <div className="flex items-center gap-1.5"><ServerIcon className="h-3 w-3 text-slate-400" /><span className="text-xs font-bold text-slate-700">{serverName}</span></div>
-                  <div className="flex items-center gap-1.5"><Database className="h-3 w-3 text-slate-400" /><span className="text-xs font-bold text-slate-700">{activeDb}</span></div>
-                </div>
-              </div>
-            </div>
           </div>
-          <DialogFooter>
-            <Button variant="outline" onClick={() => setIsTaskModalOpen(false)}>Cancel</Button>
-            <Button onClick={handleFinalizeTask} disabled={!taskName} className="bg-primary hover:bg-primary/90 text-white font-bold">Finalize Task</Button>
+          <DialogFooter className="bg-slate-50/50 p-6 -mx-6 -mb-6 border-t rounded-b-[2rem]">
+            <Button variant="outline" onClick={() => setIsTaskModalOpen(false)} className="rounded-xl font-bold h-11 px-8">Cancel</Button>
+            <Button onClick={handleFinalizeTask} disabled={!taskName || selectedActions.length === 0} className="bg-primary hover:bg-primary/90 text-white font-bold h-11 px-10 rounded-xl shadow-lg shadow-primary/10">
+              Create Task
+            </Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>

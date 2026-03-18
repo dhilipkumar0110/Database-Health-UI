@@ -14,7 +14,8 @@ import {
   Zap,
   Calendar,
   Edit2,
-  Search
+  Search,
+  LayoutGrid
 } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
@@ -76,7 +77,7 @@ export function MaintenancePlanner({
     if (selectedTaskId) {
       const task = tasks.find(t => t.id === selectedTaskId)
       onUpdateTask(selectedTaskId, {
-        name: task?.name, // Preservation of name
+        name: task?.name,
         status: 'scheduled',
         schedule: scheduleForm
       })
@@ -166,16 +167,20 @@ export function MaintenancePlanner({
                           task.type === 'Archiving' ? "bg-amber-50 text-amber-500 border-amber-100" :
                           task.type === 'Index Rebuild' ? "bg-blue-50 text-blue-500 border-blue-100" :
                           task.type === 'Scanning' ? "bg-purple-50 text-purple-500 border-purple-100" :
+                          task.type === 'Multi-Task' ? "bg-slate-100 text-slate-600 border-slate-200" :
                           "bg-emerald-50 text-emerald-500 border-emerald-100"
                         )}>
                           {task.type === 'Archiving' ? <TableIcon className="h-5 w-5" /> : 
                            task.type === 'Index Rebuild' ? <Zap className="h-5 w-5" /> : 
                            task.type === 'Scanning' ? <Search className="h-5 w-5" /> :
+                           task.type === 'Multi-Task' ? <LayoutGrid className="h-5 w-5" /> :
                            <RefreshCw className="h-5 w-5" />}
                         </div>
                         <div className="flex flex-col">
                           <span className="text-sm font-bold text-slate-800">{task.name}</span>
-                          <span className="text-[10px] font-bold text-slate-400 uppercase tracking-tighter">{task.type}</span>
+                          <span className="text-[10px] font-bold text-slate-400 uppercase tracking-tighter">
+                            {task.type === 'Multi-Task' ? 'Multi-Action' : task.type}
+                          </span>
                         </div>
                       </div>
                     </TableCell>

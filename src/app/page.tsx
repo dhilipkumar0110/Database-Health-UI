@@ -29,10 +29,13 @@ export type ScheduleConfig = {
   endDate: string
 }
 
+export type MaintenanceAction = 'Archiving' | 'Index Rebuild' | 'Update Stats' | 'Scanning'
+
 export type MaintenanceTask = {
   id: string
   name: string
-  type: 'Archiving' | 'Index Rebuild' | 'Update Stats' | 'Scanning'
+  type: MaintenanceAction | 'Multi-Task'
+  actions?: MaintenanceAction[]
   server: string
   database: string
   tables: string[]
@@ -212,7 +215,7 @@ export default function SQLSentinelApp() {
       status: 'pending'
     }
     setTasks(prev => [newTask, ...prev])
-    setActiveTaskTab(task.type)
+    setActiveTaskTab(newTask.type)
     setCurrentView("archive")
   }
 
