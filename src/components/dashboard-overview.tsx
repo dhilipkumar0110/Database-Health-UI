@@ -11,7 +11,10 @@ import {
   CheckCircle2,
   Clock,
   ShieldCheck,
-  MoreVertical
+  MoreVertical,
+  Settings,
+  Table as TableIcon,
+  Bell
 } from "lucide-react"
 import {
   Card,
@@ -23,6 +26,8 @@ import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { cn } from "@/lib/utils"
 import { ConnectDatabaseModal } from "@/components/connect-database-modal"
+import { ConfigureTablesModal } from "@/components/configure-tables-modal"
+import { ConfigureAlertsModal } from "@/components/configure-alerts-modal"
 import { DatabaseInstance } from "@/app/page"
 
 export function DashboardOverview({ 
@@ -32,7 +37,9 @@ export function DashboardOverview({
   databases: DatabaseInstance[], 
   onAddDatabase: (db: string, server: string, count: number) => void 
 }) {
-  const [isModalOpen, setIsModalOpen] = React.useState(false)
+  const [isConnectModalOpen, setIsConnectModalOpen] = React.useState(false)
+  const [configTablesDb, setConfigTablesDb] = React.useState<string | null>(null)
+  const [configAlertsDb, setConfigAlertsDb] = React.useState<string | null>(null)
 
   // Calculate dynamic stats
   const totalDatabases = databases.length
@@ -84,7 +91,7 @@ export function DashboardOverview({
           <div className="text-xs text-slate-400">
             Last scan: today 08:42 AM
           </div>
-          <Button variant="outline" size="sm" className="h-8 text-xs border-slate-300 rounded-full px-4 bg-white">
+          <Button variant="outline" size="sm" className="h-8 text-xs border-slate-300 rounded-full px-4 bg-white font-bold">
             Run Scan
           </Button>
         </div>
@@ -108,7 +115,7 @@ export function DashboardOverview({
         <div className="flex items-center justify-between">
           <h2 className="text-sm font-bold text-slate-900">Connected SQL Server databases</h2>
           <Button 
-            onClick={() => setIsModalOpen(true)}
+            onClick={() => setIsConnectModalOpen(true)}
             variant="link" 
             size="sm" 
             className="h-8 bg-[#1E8E3E] hover:bg-[#1A7F37] text-white no-underline px-4 rounded-lg text-xs font-bold gap-1.5 shadow-sm"
@@ -117,24 +124,24 @@ export function DashboardOverview({
           </Button>
         </div>
 
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
           {databases.map((db, i) => (
             <Card 
               key={i} 
               className={cn(
-                "relative overflow-hidden transition-all duration-300 bg-white border shadow-sm rounded-xl",
+                "relative overflow-hidden transition-all duration-300 bg-white border shadow-sm rounded-2xl flex flex-col",
                 db.isActive ? "border-[#1E8E3E] ring-1 ring-[#1E8E3E]" : "border-slate-200"
               )}
             >
-              <CardHeader className="p-4 pb-2">
+              <CardHeader className="p-6 pb-2">
                 <div className="flex items-start justify-between">
-                  <div>
+                  <div className="space-y-1">
                     <CardTitle className="text-base font-bold text-slate-900">{db.name}</CardTitle>
-                    <div className="text-[10px] text-slate-400 font-bold mt-0.5">{db.server}</div>
+                    <div className="text-[10px] text-slate-400 font-bold tracking-tight uppercase">{db.server}</div>
                   </div>
                   <Badge 
                     className={cn(
-                      "font-bold border-none px-2 py-0.5 text-[10px] rounded-md",
+                      "font-bold border-none px-2 py-0.5 text-[9px] rounded uppercase tracking-tighter",
                       db.statusVariant === "warning" && "bg-amber-50 text-amber-600",
                       db.statusVariant === "critical" && "bg-rose-50 text-rose-600",
                       db.statusVariant === "healthy" && "bg-emerald-50 text-emerald-600"
@@ -144,10 +151,10 @@ export function DashboardOverview({
                   </Badge>
                 </div>
               </CardHeader>
-              <CardContent className="p-4 pt-2 space-y-4">
-                <div className="grid grid-cols-2 gap-x-2 gap-y-3">
+              <CardContent className="p-6 pt-2 space-y-6 flex-1 flex flex-col">
+                <div className="grid grid-cols-2 gap-x-4 gap-y-4">
                   {db.metrics.map((metric, j) => (
-                    <div key={j} className="space-y-0.5">
+                    <div key={j} className="space-y-0.5 border-l-2 border-slate-50 pl-2">
                       <div className="text-[9px] uppercase font-bold tracking-tight text-slate-400">{metric.label}</div>
                       <div className={cn("text-xs font-bold", metric.color || "text-slate-900")}>
                         {metric.value}
@@ -156,13 +163,34 @@ export function DashboardOverview({
                   ))}
                 </div>
                 
-                <div className="pt-3 border-t border-slate-100">
+                <div className="pt-4 border-t border-slate-50">
                   <p className={cn(
                     "text-[10px] font-bold leading-tight",
                     db.statusVariant === "healthy" ? "text-emerald-600" : "text-amber-800"
                   )}>
                     {db.footer}
                   </p>
+                </div>
+
+                <div className="pt-4 mt-auto grid grid-cols-2 gap-2">
+                  <Button 
+                    variant="outline" 
+                    size="sm" 
+                    onClick={() => setConfigTablesDb(db.name)}
+                    className="h-8 text-[10px] font-bold text-slate-600 border-slate-200 rounded-lg hover:bg-slate-50 gap-1.5"
+                  >
+                    <TableIcon className="h-3 w-3" />
+                    Configure Tables
+                  </Button>
+                  <Button 
+                    variant="outline" 
+                    size="sm" 
+                    onClick={() => setConfigAlertsDb(db.name)}
+                    className="h-8 text-[10px] font-bold text-slate-600 border-slate-200 rounded-lg hover:bg-slate-50 gap-1.5"
+                  >
+                    <Bell className="h-3 w-3" />
+                    Configure Alerts
+                  </Button>
                 </div>
               </CardContent>
             </Card>
@@ -171,10 +199,26 @@ export function DashboardOverview({
       </div>
 
       <ConnectDatabaseModal 
-        isOpen={isModalOpen} 
-        onClose={() => setIsModalOpen(false)}
+        isOpen={isConnectModalOpen} 
+        onClose={() => setIsConnectModalOpen(false)}
         onComplete={onAddDatabase}
       />
+
+      {configTablesDb && (
+        <ConfigureTablesModal 
+          isOpen={true} 
+          onClose={() => setConfigTablesDb(null)} 
+          databaseName={configTablesDb} 
+        />
+      )}
+
+      {configAlertsDb && (
+        <ConfigureAlertsModal 
+          isOpen={true} 
+          onClose={() => setConfigAlertsDb(null)} 
+          databaseName={configAlertsDb} 
+        />
+      )}
     </div>
   )
 }

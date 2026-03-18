@@ -1,7 +1,7 @@
 "use client"
 
 import * as React from "react"
-import { X, Loader2, CheckCircle2, Search, Table as TableIcon, Settings, Check, ArrowUpDown, ChevronUp, ChevronDown } from "lucide-react"
+import { X, Loader2, CheckCircle2 } from "lucide-react"
 import {
   Dialog,
   DialogContent,
@@ -20,16 +20,6 @@ import {
   SelectValue,
 } from "@/components/ui/select"
 import { useToast } from "@/hooks/use-toast"
-import { Checkbox } from "@/components/ui/checkbox"
-import { ScrollArea } from "@/components/ui/scroll-area"
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table"
 
 interface ConnectDatabaseModalProps {
   isOpen: boolean
@@ -37,32 +27,10 @@ interface ConnectDatabaseModalProps {
   onComplete?: (dbName: string, serverName: string, tableCount: number) => void
 }
 
-type TableData = {
-  name: string
-  schema: string
-  size: string
-  records: string
-}
-
-const MOCK_TABLES: TableData[] = [
-  { name: "Auth_Consult_Notes", schema: "dbo", size: "420 MB", records: "609,251" },
-  { name: "Claims_inquiry_Response", schema: "dbo", size: "85 MB", records: "44,738" },
-  { name: "POST_DISMISSALS", schema: "dbo", size: "2.1 GB", records: "1,586,110" },
-  { name: "PROV_CONSULT_NOTES", schema: "dbo", size: "12.4 GB", records: "5,570,747" },
-  { name: "REQUEST_LOG", schema: "audit", size: "180 MB", records: "331,196" },
-  { name: "USERS", schema: "auth", size: "45 MB", records: "154,494" },
-  { name: "WEB_AUDIT_TRAIL", schema: "audit", size: "142 GB", records: "58,548,194" },
-  { name: "WEB_AUTH_DETAILS", schema: "auth", size: "32.1 GB", records: "22,069,814" },
-]
-
 export function ConnectDatabaseModal({ isOpen, onClose, onComplete }: ConnectDatabaseModalProps) {
   const { toast } = useToast()
-  const [currentStep, setCurrentStep] = React.useState(1)
   const [isTesting, setIsTesting] = React.useState(false)
   const [isTested, setIsTested] = React.useState(false)
-  const [tableSearch, setTableSearch] = React.useState("")
-  const [selectedTables, setSelectedTables] = React.useState<string[]>([])
-  const [sortConfig, setSortConfig] = React.useState<{ key: keyof TableData, direction: 'asc' | 'desc' } | null>({ key: 'name', direction: 'asc' })
   
   const [formData, setFormData] = React.useState({
     dataSourceName: "",
@@ -70,23 +38,18 @@ export function ConnectDatabaseModal({ isOpen, onClose, onComplete }: ConnectDat
     authType: "sql",
     userName: "",
     password: "",
-    database: "",
-    thresholdFrag: "30",
-    thresholdAccess: "90",
-    thresholdSlow: "5"
+    database: ""
   })
 
   React.useEffect(() => {
     if (!isOpen) {
       setTimeout(() => {
-        setCurrentStep(1)
         setIsTested(false)
-        setSelectedTables([])
       }, 300)
     }
   }, [isOpen])
 
-  const isStep1Valid = React.useMemo(() => {
+  const isValid = React.useMemo(() => {
     const common = formData.dataSourceName.trim() !== "" && formData.serverName.trim() !== "" && formData.database !== ""
     if (formData.authType === "windows") return common
     return common && formData.userName.trim() !== "" && formData.password.trim() !== ""
@@ -111,369 +74,27 @@ export function ConnectDatabaseModal({ isOpen, onClose, onComplete }: ConnectDat
     }, 1500)
   }
 
-  const toggleTable = (tableName: string) => {
-    setSelectedTables(prev => 
-      prev.includes(tableName) ? prev.filter(t => t !== tableName) : [...prev, tableName]
-    )
-  }
-
-  const handleSort = (key: keyof TableData) => {
-    let direction: 'asc' | 'desc' = 'asc'
-    if (sortConfig && sortConfig.key === key && sortConfig.direction === 'asc') {
-      direction = 'desc'
-    }
-    setSortConfig({ key, direction })
-  }
-
-  const parseSize = (sizeStr: string) => {
-    const value = parseFloat(sizeStr)
-    if (sizeStr.includes('GB')) return value * 1024 * 1024
-    if (sizeStr.includes('MB')) return value * 1024
-    if (sizeStr.includes('KB')) return value
-    return value
-  }
-
-  const parseRecords = (recordsStr: string) => {
-    return parseInt(recordsStr.replace(/,/g, ''), 10)
-  }
-
-  const filteredTables = React.useMemo(() => {
-    let results = MOCK_TABLES.filter(t => 
-      t.name.toLowerCase().includes(tableSearch.toLowerCase()) || 
-      t.schema.toLowerCase().includes(tableSearch.toLowerCase())
-    )
-
-    if (sortConfig) {
-      results = [...results].sort((a, b) => {
-        const aValue = a[sortConfig.key]
-        const bValue = b[sortConfig.key]
-
-        if (sortConfig.key === 'size') {
-          const aSize = parseSize(aValue)
-          const bSize = parseSize(bValue)
-          return sortConfig.direction === 'asc' ? aSize - bSize : bSize - aSize
-        }
-
-        if (sortConfig.key === 'records') {
-          const aRecs = parseRecords(aValue)
-          const bRecs = parseRecords(bValue)
-          return sortConfig.direction === 'asc' ? aRecs - bRecs : bRecs - aRecs
-        }
-
-        if (aValue < bValue) return sortConfig.direction === 'asc' ? -1 : 1
-        if (aValue > bValue) return sortConfig.direction === 'asc' ? 1 : -1
-        return 0
-      })
-    }
-    return results
-  }, [tableSearch, sortConfig])
-
-  const isAllSelected = filteredTables.length > 0 && selectedTables.length === filteredTables.length
-
-  const toggleSelectAll = () => {
-    if (isAllSelected) {
-      setSelectedTables([])
-    } else {
-      setSelectedTables(filteredTables.map(t => t.name))
-    }
-  }
-
   const handleFinalize = () => {
     if (onComplete) {
-      onComplete(formData.dataSourceName, formData.serverName, selectedTables.length)
+      // Default to 0 tables as they will be configured later
+      onComplete(formData.dataSourceName, formData.serverName, 0)
       toast({
-        title: "Setup Complete",
-        description: `${formData.dataSourceName} has been successfully connected.`
+        title: "Database Connected",
+        description: `${formData.dataSourceName} has been successfully added. Please configure tables next.`
       })
     }
     onClose()
   }
 
-  const SortIndicator = ({ column }: { column: keyof TableData }) => {
-    if (sortConfig?.key !== column) return <ArrowUpDown className="ml-2 h-3 w-3 opacity-30" />
-    return sortConfig.direction === 'asc' ? <ChevronUp className="ml-2 h-3 w-3" /> : <ChevronDown className="ml-2 h-3 w-3" />
-  }
-
-  const renderStep = () => {
-    switch (currentStep) {
-      case 1:
-        return (
-          <div className="space-y-4 animate-in fade-in slide-in-from-right-4 duration-300">
-            <div className="space-y-1.5">
-              <Label className="text-sm font-semibold text-slate-500">Data Source Name</Label>
-              <Input 
-                placeholder="Enter data source name" 
-                className="h-11 border-slate-200 bg-slate-50/50 rounded-xl focus-visible:ring-slate-200 shadow-sm"
-                value={formData.dataSourceName}
-                onChange={(e) => handleInputChange("dataSourceName", e.target.value)}
-              />
-            </div>
-
-            <div className="space-y-1.5">
-              <Label className="text-sm font-semibold text-slate-500">Server Name</Label>
-              <Input 
-                placeholder="Enter server name" 
-                className="h-11 border-slate-200 bg-slate-50/50 rounded-xl focus-visible:ring-slate-200 shadow-sm"
-                value={formData.serverName}
-                onChange={(e) => handleInputChange("serverName", e.target.value)}
-              />
-            </div>
-
-            <div className="space-y-1.5">
-              <Label className="text-sm font-semibold text-slate-500">Authentication type</Label>
-              <Select 
-                value={formData.authType} 
-                onValueChange={(val) => handleInputChange("authType", val)}
-              >
-                <SelectTrigger className="h-11 border-slate-200 bg-slate-50/50 rounded-xl shadow-sm">
-                  <SelectValue placeholder="Select authentication type" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="sql">SQL Server Authentication</SelectItem>
-                  <SelectItem value="windows">Windows Authentication</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-
-            {formData.authType === "sql" && (
-              <div className="grid grid-cols-2 gap-4 animate-in fade-in slide-in-from-top-2">
-                <div className="space-y-1.5">
-                  <Label className="text-sm font-semibold text-slate-500">User Name</Label>
-                  <Input 
-                    placeholder="User" 
-                    className="h-11 border-slate-200 bg-slate-50/50 rounded-xl focus-visible:ring-slate-200 shadow-sm"
-                    value={formData.userName}
-                    onChange={(e) => handleInputChange("userName", e.target.value)}
-                  />
-                </div>
-                <div className="space-y-1.5">
-                  <Label className="text-sm font-semibold text-slate-500">Password</Label>
-                  <Input 
-                    type="password"
-                    placeholder="••••••••" 
-                    className="h-11 border-slate-200 bg-slate-50/50 rounded-xl focus-visible:ring-slate-200 shadow-sm"
-                    value={formData.password}
-                    onChange={(e) => handleInputChange("password", e.target.value)}
-                  />
-                </div>
-              </div>
-            )}
-
-            <div className="space-y-1.5">
-              <Label className="text-sm font-semibold text-slate-500">Database Name</Label>
-              <Select 
-                value={formData.database} 
-                onValueChange={(val) => handleInputChange("database", val)}
-              >
-                <SelectTrigger className="h-11 border-slate-200 bg-slate-50/50 rounded-xl shadow-sm">
-                  <SelectValue placeholder="Select target database" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="WebPortalDB">WebPortalDB</SelectItem>
-                  <SelectItem value="ReportingDB">ReportingDB</SelectItem>
-                  <SelectItem value="SalesDB">SalesDB</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-
-            <div className="pt-2 flex items-center justify-between">
-              <Button 
-                variant="outline" 
-                onClick={handleTestConnection}
-                disabled={isTesting || !formData.serverName || !formData.database}
-                className="h-10 px-6 rounded-xl border-slate-200 bg-[#F8FAFC] text-[#4A6076] hover:bg-white hover:border-slate-300 font-semibold shadow-sm transition-all"
-              >
-                {isTesting ? (
-                  <Loader2 className="mr-2 h-4 w-4 animate-spin text-emerald-500" />
-                ) : isTested ? (
-                  <CheckCircle2 className="mr-2 h-4 w-4 text-emerald-500" />
-                ) : null}
-                {isTesting ? "Testing..." : isTested ? "Tested" : "Test Connection"}
-              </Button>
-              {isTested && (
-                <span className="text-[10px] font-bold text-emerald-600 uppercase tracking-wider">Ready to connect</span>
-              )}
-            </div>
-          </div>
-        )
-      case 2:
-        return (
-          <div className="space-y-4 animate-in fade-in slide-in-from-right-4 duration-300">
-            <div className="relative">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
-              <Input 
-                placeholder="Filter tables by name or schema..." 
-                className="pl-9 h-11 border-slate-200 bg-slate-50/50 rounded-xl"
-                value={tableSearch}
-                onChange={(e) => setTableSearch(e.target.value)}
-              />
-            </div>
-            
-            <div className="rounded-xl border border-slate-200 overflow-hidden bg-white shadow-sm">
-              <ScrollArea className="h-[320px] w-full">
-                <Table>
-                  <TableHeader className="bg-slate-50/80 sticky top-0 z-10 backdrop-blur-sm">
-                    <TableRow className="hover:bg-transparent border-b border-slate-200">
-                      <TableHead className="w-[50px] py-3">
-                        <Checkbox 
-                          checked={isAllSelected} 
-                          onCheckedChange={toggleSelectAll}
-                        />
-                      </TableHead>
-                      <TableHead 
-                        className="text-[10px] font-bold uppercase tracking-wider text-slate-400 py-3 cursor-pointer hover:text-slate-600 transition-colors"
-                        onClick={() => handleSort('name')}
-                      >
-                        <div className="flex items-center">
-                          Table Name
-                          <SortIndicator column="name" />
-                        </div>
-                      </TableHead>
-                      <TableHead 
-                        className="text-[10px] font-bold uppercase tracking-wider text-slate-400 py-3 cursor-pointer hover:text-slate-600 transition-colors"
-                        onClick={() => handleSort('schema')}
-                      >
-                        <div className="flex items-center">
-                          Schema
-                          <SortIndicator column="schema" />
-                        </div>
-                      </TableHead>
-                      <TableHead 
-                        className="text-[10px] font-bold uppercase tracking-wider text-slate-400 py-3 cursor-pointer hover:text-slate-600 transition-colors"
-                        onClick={() => handleSort('records')}
-                      >
-                        <div className="flex items-center">
-                          Records
-                          <SortIndicator column="records" />
-                        </div>
-                      </TableHead>
-                      <TableHead 
-                        className="text-right text-[10px] font-bold uppercase tracking-wider text-slate-400 py-3 cursor-pointer hover:text-slate-600 transition-colors"
-                        onClick={() => handleSort('size')}
-                      >
-                        <div className="flex items-center justify-end">
-                          Size
-                          <SortIndicator column="size" />
-                        </div>
-                      </TableHead>
-                    </TableRow>
-                  </TableHeader>
-                  <TableBody>
-                    {filteredTables.map((table) => (
-                      <TableRow 
-                        key={table.name}
-                        className="cursor-pointer hover:bg-slate-50/50 transition-colors border-b border-slate-100 last:border-0"
-                        onClick={() => toggleTable(table.name)}
-                      >
-                        <TableCell className="py-3">
-                          <Checkbox 
-                            checked={selectedTables.includes(table.name)}
-                            onCheckedChange={() => toggleTable(table.name)}
-                            onClick={(e) => e.stopPropagation()}
-                          />
-                        </TableCell>
-                        <TableCell className="py-3 text-sm font-semibold text-slate-700">{table.name}</TableCell>
-                        <TableCell className="py-3 text-[10px] font-bold text-slate-400 uppercase">{table.schema}</TableCell>
-                        <TableCell className="py-3 text-xs font-medium text-slate-500">{table.records}</TableCell>
-                        <TableCell className="py-3 text-right text-xs font-bold text-slate-600">{table.size}</TableCell>
-                      </TableRow>
-                    ))}
-                  </TableBody>
-                </Table>
-              </ScrollArea>
-            </div>
-            
-            <div className="flex items-center justify-between px-1">
-              <span className="text-xs text-slate-400 font-bold uppercase tracking-wide">
-                {selectedTables.length} tables selected
-              </span>
-              {selectedTables.length > 0 && (
-                <Button 
-                  variant="link" 
-                  size="sm" 
-                  onClick={() => setSelectedTables([])}
-                  className="text-[10px] h-auto p-0 text-rose-500 font-bold uppercase"
-                >
-                  Clear Selection
-                </Button>
-              )}
-            </div>
-          </div>
-        )
-      case 3:
-        return (
-          <div className="space-y-6 animate-in fade-in slide-in-from-right-4 duration-300">
-            <div className="grid gap-6">
-              <div className="space-y-2">
-                <div className="flex justify-between">
-                  <Label className="text-sm font-semibold text-slate-700">Fragmentation Alert</Label>
-                  <span className="text-xs font-bold text-emerald-600">{formData.thresholdFrag}%</span>
-                </div>
-                <Input 
-                  type="number" 
-                  value={formData.thresholdFrag}
-                  onChange={(e) => handleInputChange("thresholdFrag", e.target.value)}
-                  className="h-11 border-slate-200 rounded-xl"
-                />
-                <p className="text-[10px] text-slate-400 font-medium italic">Notify when index fragmentation exceeds this limit.</p>
-              </div>
-
-              <div className="space-y-2">
-                <div className="flex justify-between">
-                  <Label className="text-sm font-semibold text-slate-700">No-Access Warning</Label>
-                  <span className="text-xs font-bold text-emerald-600">{formData.thresholdAccess} Days</span>
-                </div>
-                <Input 
-                  type="number" 
-                  value={formData.thresholdAccess}
-                  onChange={(e) => handleInputChange("thresholdAccess", e.target.value)}
-                  className="h-11 border-slate-200 rounded-xl"
-                />
-                <p className="text-[10px] text-slate-400 font-medium italic">Flag tables that haven't been accessed in X days.</p>
-              </div>
-
-              <div className="space-y-2">
-                <div className="flex justify-between">
-                  <Label className="text-sm font-semibold text-slate-700">Slow Query Threshold</Label>
-                  <span className="text-xs font-bold text-emerald-600">{formData.thresholdSlow} Secs</span>
-                </div>
-                <Input 
-                  type="number" 
-                  value={formData.thresholdSlow}
-                  onChange={(e) => handleInputChange("thresholdSlow", e.target.value)}
-                  className="h-11 border-slate-200 rounded-xl"
-                />
-                <p className="text-[10px] text-slate-400 font-medium italic">Monitor queries executing longer than this duration.</p>
-              </div>
-            </div>
-          </div>
-        )
-      default:
-        return null
-    }
-  }
-
-  const stepIcons = [TableIcon, Search, Settings]
-
   return (
     <Dialog open={isOpen} onOpenChange={(open) => !open && onClose()}>
-      <DialogContent className="sm:max-w-[560px] p-0 gap-0 border-none overflow-hidden rounded-[2rem] shadow-2xl [&>button]:hidden">
+      <DialogContent className="sm:max-w-[500px] p-0 gap-0 border-none overflow-hidden rounded-[2rem] shadow-2xl [&>button]:hidden">
         <DialogHeader className="px-8 py-6 border-b flex flex-row items-center justify-between bg-white">
           <div className="space-y-1">
             <DialogTitle className="text-xl font-bold text-[#4A6076]">
-              {`New Data Source — Step ${currentStep}${currentStep === 3 ? " (Optional)" : ""}`}
+              New SQL Connection
             </DialogTitle>
-            <div className="flex items-center gap-1.5 pt-1">
-              {stepIcons.map((_, idx) => (
-                <React.Fragment key={idx}>
-                  <div 
-                    className={`h-1.5 w-6 rounded-full transition-colors ${
-                      currentStep > idx ? "bg-emerald-500" : currentStep === idx + 1 ? "bg-emerald-200" : "bg-slate-100"
-                    }`}
-                  />
-                </React.Fragment>
-              ))}
-            </div>
+            <p className="text-xs text-slate-400 font-medium">Enter your server credentials to establish a link.</p>
           </div>
           <Button 
             variant="outline" 
@@ -485,28 +106,115 @@ export function ConnectDatabaseModal({ isOpen, onClose, onComplete }: ConnectDat
           </Button>
         </DialogHeader>
 
-        <div className="p-8 bg-white min-h-[440px]">
-          {renderStep()}
+        <div className="p-8 bg-white space-y-4">
+          <div className="space-y-1.5">
+            <Label className="text-sm font-semibold text-slate-500">Data Source Name</Label>
+            <Input 
+              placeholder="e.g. Sales_Production" 
+              className="h-11 border-slate-200 bg-slate-50/50 rounded-xl"
+              value={formData.dataSourceName}
+              onChange={(e) => handleInputChange("dataSourceName", e.target.value)}
+            />
+          </div>
+
+          <div className="space-y-1.5">
+            <Label className="text-sm font-semibold text-slate-500">Server Address</Label>
+            <Input 
+              placeholder="SQLSRV-PROD-01" 
+              className="h-11 border-slate-200 bg-slate-50/50 rounded-xl"
+              value={formData.serverName}
+              onChange={(e) => handleInputChange("serverName", e.target.value)}
+            />
+          </div>
+
+          <div className="space-y-1.5">
+            <Label className="text-sm font-semibold text-slate-500">Authentication</Label>
+            <Select 
+              value={formData.authType} 
+              onValueChange={(val) => handleInputChange("authType", val)}
+            >
+              <SelectTrigger className="h-11 border-slate-200 bg-slate-50/50 rounded-xl">
+                <SelectValue placeholder="Select type" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="sql">SQL Server Authentication</SelectItem>
+                <SelectItem value="windows">Windows Authentication</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+
+          {formData.authType === "sql" && (
+            <div className="grid grid-cols-2 gap-4 animate-in fade-in slide-in-from-top-2">
+              <div className="space-y-1.5">
+                <Label className="text-sm font-semibold text-slate-500">Username</Label>
+                <Input 
+                  placeholder="admin" 
+                  className="h-11 border-slate-200 bg-slate-50/50 rounded-xl"
+                  value={formData.userName}
+                  onChange={(e) => handleInputChange("userName", e.target.value)}
+                />
+              </div>
+              <div className="space-y-1.5">
+                <Label className="text-sm font-semibold text-slate-500">Password</Label>
+                <Input 
+                  type="password"
+                  placeholder="••••••••" 
+                  className="h-11 border-slate-200 bg-slate-50/50 rounded-xl"
+                  value={formData.password}
+                  onChange={(e) => handleInputChange("password", e.target.value)}
+                />
+              </div>
+            </div>
+          )}
+
+          <div className="space-y-1.5">
+            <Label className="text-sm font-semibold text-slate-500">Target Database</Label>
+            <Select 
+              value={formData.database} 
+              onValueChange={(val) => handleInputChange("database", val)}
+            >
+              <SelectTrigger className="h-11 border-slate-200 bg-slate-50/50 rounded-xl">
+                <SelectValue placeholder="Select DB" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="WebPortalDB">WebPortalDB</SelectItem>
+                <SelectItem value="ReportingDB">ReportingDB</SelectItem>
+                <SelectItem value="SalesDB">SalesDB</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+
+          <div className="pt-2">
+            <Button 
+              variant="outline" 
+              onClick={handleTestConnection}
+              disabled={isTesting || !formData.serverName || !formData.database}
+              className="h-10 w-full rounded-xl border-slate-200 bg-slate-50 text-slate-600 font-semibold"
+            >
+              {isTesting ? (
+                <Loader2 className="mr-2 h-4 w-4 animate-spin text-emerald-500" />
+              ) : isTested ? (
+                <CheckCircle2 className="mr-2 h-4 w-4 text-emerald-500" />
+              ) : null}
+              {isTesting ? "Testing Connection..." : isTested ? "Connection Verified" : "Test Connection"}
+            </Button>
+          </div>
         </div>
 
-        <DialogFooter className="px-8 py-6 border-t bg-[#F8F9FA] flex sm:justify-between gap-4">
+        <DialogFooter className="px-8 py-6 border-t bg-slate-50 flex sm:justify-between gap-4">
           <Button 
             variant="outline" 
-            onClick={currentStep === 1 ? onClose : () => setCurrentStep(prev => prev - 1)}
-            className="flex-1 h-12 border-slate-300 bg-white text-slate-600 font-bold rounded-xl hover:bg-slate-50 transition-all shadow-sm"
+            onClick={onClose}
+            className="flex-1 h-12 border-slate-300 bg-white text-slate-600 font-bold rounded-xl"
           >
-            {currentStep === 1 ? "Cancel" : "Back"}
+            Cancel
           </Button>
           <Button 
-            disabled={(currentStep === 1 && (!isStep1Valid || !isTested)) || (currentStep === 2 && selectedTables.length === 0)}
-            onClick={currentStep === 3 ? handleFinalize : () => setCurrentStep(prev => prev + 1)}
-            className={`flex-1 h-12 font-bold rounded-xl transition-all shadow-sm ${
-              ((currentStep === 1 && isStep1Valid && isTested) || (currentStep === 2 && selectedTables.length > 0) || currentStep === 3)
-                ? "bg-primary hover:bg-primary/90 text-white" 
-                : "bg-slate-200 text-slate-400 cursor-not-allowed"
-            }`}
+            disabled={!isValid || !isTested}
+            onClick={handleFinalize}
+            className="flex-1 h-12 font-bold rounded-xl bg-primary hover:bg-primary/90 text-white"
           >
-            {currentStep === 1 ? "Connect DB" : currentStep === 3 ? "Finalize" : "Next Step"}
+            Add Database
           </Button>
         </DialogFooter>
       </DialogContent>
