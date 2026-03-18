@@ -22,9 +22,12 @@ import {
   Calendar,
   Search as SearchIcon,
   RefreshCw,
-  LayoutGrid
+  LayoutGrid,
+  Play,
+  CheckCircle2,
+  Timer
 } from "lucide-react"
-import { Card, CardContent, CardHeader, CardTitle, CardFooter } from "@/components/ui/card"
+import { Card, CardContent, CardHeader, CardTitle, CardFooter, CardDescription } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { Input } from "@/components/ui/input"
@@ -59,10 +62,17 @@ import {
   TabsList,
   TabsTrigger,
 } from "@/components/ui/tabs"
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu"
 import { Label } from "@/components/ui/label"
+import { Progress } from "@/components/ui/progress"
 import { toast } from "@/hooks/use-toast"
 
-type ViewState = 'list' | 'task-details' | 'query-builder'
+type ViewState = 'list' | 'task-details' | 'query-builder' | 'execution-view'
 
 type QueryRow = {
   id: string
@@ -115,6 +125,11 @@ export function ArchiveManager({
     setView('task-details')
   }
 
+  const handleViewExecution = (task: MaintenanceTask) => {
+    setSelectedTask(task)
+    setView('execution-view')
+  }
+
   const handleConfigureQuery = (tableName: string) => {
     setSelectedTable(tableName)
     setView('query-builder')
@@ -122,7 +137,7 @@ export function ArchiveManager({
 
   const handleBack = () => {
     if (view === 'query-builder') setView('task-details')
-    else if (view === 'task-details') setView('list')
+    else if (view === 'task-details' || view === 'execution-view') setView('list')
   }
 
   const addQueryRow = () => {
@@ -156,6 +171,119 @@ export function ArchiveManager({
       })
       onViewChange("maintenance")
     }
+  }
+
+  if (view === 'execution-view' && selectedTask) {
+    const totalTables = selectedTask.tables.length
+    const completedTables = Math.floor(totalTables * 0.75) // Mock progress
+    const successRate = 98.4
+    const duration = "1h 14m"
+    const progressValue = (completedTables / totalTables) * 100
+
+    return (
+      <div className="space-y-8 animate-in fade-in slide-in-from-right-4 duration-500 pb-20">
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-4">
+            <Button variant="ghost" size="icon" onClick={handleBack} className="rounded-full h-10 w-10">
+              <ArrowLeft className="h-5 w-5" />
+            </Button>
+            <div>
+              <h1 className="text-2xl font-bold text-slate-900">Execution Monitor</h1>
+              <div className="flex items-center gap-2 text-xs font-medium text-slate-400">
+                <Activity className="h-3 w-3 text-primary" />
+                <span>Monitoring: {selectedTask.name}</span>
+              </div>
+            </div>
+          </div>
+          <Badge className="bg-emerald-50 text-emerald-600 border-emerald-100 flex items-center gap-2 px-3 py-1 font-bold">
+            <RefreshCw className="h-3 w-3 animate-spin" />
+            In Progress
+          </Badge>
+        </div>
+
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+          <Card className="bg-white border-none shadow-sm rounded-2xl p-6">
+            <div className="flex flex-col gap-1">
+              <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Tables Completed</span>
+              <div className="text-3xl font-bold text-slate-900">{completedTables} / {totalTables}</div>
+              <div className="text-[10px] text-slate-400 font-bold mt-1">Scope: All assigned tables</div>
+            </div>
+          </Card>
+          <Card className="bg-white border-none shadow-sm rounded-2xl p-6">
+            <div className="flex flex-col gap-1">
+              <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Success Rate</span>
+              <div className="text-3xl font-bold text-emerald-600">{successRate}%</div>
+              <div className="text-[10px] text-emerald-600/60 font-bold mt-1">2 minor warnings reported</div>
+            </div>
+          </Card>
+          <Card className="bg-white border-none shadow-sm rounded-2xl p-6">
+            <div className="flex flex-col gap-1">
+              <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Total Duration</span>
+              <div className="text-3xl font-bold text-slate-900">{duration}</div>
+              <div className="text-[10px] text-slate-400 font-bold mt-1">Elapsed time since trigger</div>
+            </div>
+          </Card>
+        </div>
+
+        <Card className="bg-white border-none shadow-sm rounded-3xl overflow-hidden p-8 space-y-6">
+          <div className="space-y-2">
+            <div className="flex items-center justify-between text-sm font-bold">
+              <span className="text-slate-700">Overall Task Progress</span>
+              <span className="text-primary">{progressValue.toFixed(0)}%</span>
+            </div>
+            <Progress value={progressValue} className="h-3 bg-slate-100" />
+          </div>
+
+          <div className="pt-6">
+            <Table>
+              <TableHeader className="bg-slate-50/50">
+                <TableRow className="hover:bg-transparent">
+                  <TableHead className="h-12 px-6 text-[10px] font-bold uppercase text-slate-400">Table Name</TableHead>
+                  <TableHead className="h-12 text-[10px] font-bold uppercase text-slate-400">Status</TableHead>
+                  <TableHead className="h-12 text-[10px] font-bold uppercase text-slate-400">Records Processed</TableHead>
+                  <TableHead className="h-12 text-[10px] font-bold uppercase text-slate-400">Start Time</TableHead>
+                  <TableHead className="h-12 text-[10px] font-bold uppercase text-slate-400">End Time</TableHead>
+                  <TableHead className="h-12 px-6 text-right text-[10px] font-bold uppercase text-slate-400">Duration</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {selectedTask.tables.map((table, i) => (
+                  <TableRow key={table} className="hover:bg-slate-50/50 border-b border-slate-50">
+                    <TableCell className="py-4 px-6">
+                      <div className="flex items-center gap-3">
+                        <TableIcon className="h-4 w-4 text-slate-300" />
+                        <span className="text-sm font-bold text-slate-700">{table}</span>
+                      </div>
+                    </TableCell>
+                    <TableCell>
+                      {i < completedTables ? (
+                        <Badge className="bg-emerald-50 text-emerald-600 border-none font-bold text-[9px] uppercase px-2">Completed</Badge>
+                      ) : i === completedTables ? (
+                        <Badge className="bg-blue-50 text-blue-600 border-none font-bold text-[9px] uppercase px-2">Running</Badge>
+                      ) : (
+                        <Badge className="bg-slate-50 text-slate-400 border-none font-bold text-[9px] uppercase px-2">Pending</Badge>
+                      )}
+                    </TableCell>
+                    <TableCell className="text-xs font-bold text-slate-900">
+                      {i < completedTables ? "1,240,500" : i === completedTables ? "450,210" : "0"}
+                    </TableCell>
+                    <TableCell className="text-[10px] font-bold text-slate-400 uppercase">
+                      {i <= completedTables ? "08:00 AM" : "—"}
+                    </TableCell>
+                    <TableCell className="text-[10px] font-bold text-slate-400 uppercase">
+                      {i < completedTables ? "08:12 AM" : "—"}
+                    </TableCell>
+                    <TableCell className="px-6 text-right text-xs font-bold text-slate-600">
+                      {i < completedTables ? "12m" : i === completedTables ? "4m" : "—"}
+                    </TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+          </div>
+        </Card>
+      </div>
+    )
   }
 
   if (view === 'query-builder') {
@@ -501,9 +629,23 @@ export function ArchiveManager({
                           </div>
                         </div>
                       </div>
-                      <Button variant="ghost" size="icon" className="h-8 w-8 text-slate-400">
-                        <MoreVertical className="h-4 w-4" />
-                      </Button>
+                      <DropdownMenu>
+                        <DropdownMenuTrigger asChild onClick={(e) => e.stopPropagation()}>
+                          <Button variant="ghost" size="icon" className="h-8 w-8 text-slate-400">
+                            <MoreVertical className="h-4 w-4" />
+                          </Button>
+                        </DropdownMenuTrigger>
+                        <DropdownMenuContent align="end">
+                          <DropdownMenuItem onClick={() => handleViewExecution(task)}>
+                            <Play className="h-3.5 w-3.5 mr-2" />
+                            View Execution
+                          </DropdownMenuItem>
+                          <DropdownMenuItem className="text-rose-600">
+                            <Trash2 className="h-3.5 w-3.5 mr-2" />
+                            Delete Task
+                          </DropdownMenuItem>
+                        </DropdownMenuContent>
+                      </DropdownMenu>
                     </div>
                   </CardHeader>
                   <CardContent className="p-5 pt-0 space-y-4">
