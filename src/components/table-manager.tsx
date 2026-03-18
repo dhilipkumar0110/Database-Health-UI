@@ -3,8 +3,6 @@
 
 import * as React from "react"
 import { 
-  Download, 
-  Search, 
   X,
   Table as TableIcon,
   RefreshCw,
@@ -13,7 +11,11 @@ import {
   Database,
   Server as ServerIcon,
   ArrowLeft,
-  Search as SearchIcon
+  Search as SearchIcon,
+  AlertCircle,
+  MoreVertical,
+  Activity,
+  ShieldAlert
 } from "lucide-react"
 import { Card, CardContent } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
@@ -165,33 +167,65 @@ export function TableManager({
   }
 
   return (
-    <div className="space-y-6 animate-in fade-in duration-500 pb-20">
-      <div className="flex items-center justify-between">
-        <div className="flex items-center gap-3">
-          <h1 className="text-2xl font-bold text-slate-900">Table Manager</h1>
-          <Badge className="bg-[#E6F4EA] text-[#1E8E3E] hover:bg-[#E6F4EA] border-none font-medium px-2 py-0.5 text-[10px]">
-            {activeDb} - {monitoredTables.length} Monitored
-          </Badge>
-        </div>
-      </div>
-
-      <div className="bg-[#FFF4E5] border border-amber-100 rounded-xl p-3 flex items-center justify-between shadow-sm">
-        <div className="flex items-center gap-3">
-          <div className="h-2 w-2 rounded-full bg-amber-500" />
-          <div className="text-[11px] font-medium text-amber-900 flex items-center gap-4">
-            <span className="flex items-center gap-1">Monitoring active for <strong className="font-bold">{monitoredTables.length} tables</strong></span>
-            <span className="flex items-center gap-1">Click "Details" for in-depth sys.dm analysis</span>
+    <div className="space-y-8 animate-in fade-in duration-500 pb-20">
+      {/* Summary Header */}
+      <div className="space-y-6">
+        <div className="bg-amber-50/50 border border-amber-100 rounded-xl p-3 px-6 flex items-center justify-between shadow-sm">
+          <div className="flex items-center gap-6">
+            <div className="flex items-center gap-2">
+              <div className="h-2 w-2 rounded-full bg-amber-500" />
+              <span className="text-xs font-bold text-amber-900"><strong className="font-extrabold text-amber-950">3 tables</strong> fragmentation {'>'}30%</span>
+            </div>
+            <div className="flex items-center gap-2">
+              <div className="h-2 w-2 rounded-full bg-amber-500" />
+              <span className="text-xs font-bold text-amber-900"><strong className="font-extrabold text-amber-950">2 tables</strong> no access in 60+ days</span>
+            </div>
+            <div className="flex items-center gap-2 border-l border-amber-200 pl-6">
+              <span className="text-xs font-bold text-amber-700 uppercase tracking-tight">Pattern detection:</span>
+              <span className="text-xs font-medium text-amber-900 italic">Matches for _2011, _2014 archive patterns</span>
+            </div>
           </div>
+          <X className="h-4 w-4 text-amber-400 cursor-pointer hover:text-amber-600" />
         </div>
-        <X className="h-4 w-4 text-amber-400 cursor-pointer hover:text-amber-600" />
+
+        <div className="grid grid-cols-1 md:grid-cols-5 gap-4">
+          <Card className="bg-white border-none shadow-sm rounded-2xl p-6">
+            <div className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-2">Tables</div>
+            <div className="text-3xl font-bold text-slate-900">{monitoredTables.length}</div>
+            <div className="text-[10px] font-bold text-rose-500 mt-1 uppercase">4 need action</div>
+          </Card>
+          <Card className="bg-white border-none shadow-sm rounded-2xl p-6">
+            <div className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-2">DB Size</div>
+            <div className="text-3xl font-bold text-slate-900">120 GB</div>
+            <div className="text-[10px] font-bold text-emerald-500 mt-1 uppercase">+2% this month</div>
+          </Card>
+          <Card className="bg-white border-none shadow-sm rounded-2xl p-6">
+            <div className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-2">Avg Fragmentation</div>
+            <div className="text-3xl font-bold text-amber-500">18%</div>
+            <div className="text-[10px] font-bold text-amber-600 mt-1 uppercase">3 tables {'>'} 30%</div>
+          </Card>
+          <Card className="bg-white border-none shadow-sm rounded-2xl p-6">
+            <div className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-2">Cache Hit Ratio</div>
+            <div className="text-3xl font-bold text-emerald-500">96%</div>
+            <div className="text-[10px] font-bold text-slate-400 mt-1 uppercase tracking-tighter">Target {'>'} 95%</div>
+          </Card>
+          <Card className="bg-white border-none shadow-sm rounded-2xl p-6">
+            <div className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-2">Deadlocks (24h)</div>
+            <div className="text-3xl font-bold text-slate-900">2</div>
+            <div className="text-[10px] font-bold text-slate-400 mt-1 uppercase">Stable</div>
+          </Card>
+        </div>
       </div>
 
-      <div className="space-y-4 pt-2">
+      <div className="space-y-4">
         <div className="flex items-center justify-between">
-          <h2 className="text-sm font-bold text-slate-900">Active monitored tables</h2>
+          <div className="flex items-center gap-3">
+            <h2 className="text-sm font-bold text-slate-900">Active monitored tables</h2>
+            <Badge className="bg-emerald-50 text-emerald-600 border-none font-bold text-[10px]">{filteredTables.length} result(s)</Badge>
+          </div>
           <div className="flex items-center gap-2">
             <div className="relative">
-              <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-slate-400" />
+              <SearchIcon className="absolute left-2.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-slate-400" />
               <Input 
                 placeholder="Search monitored tables..." 
                 className="h-8 text-xs pl-8 w-48 bg-white border-slate-200 rounded-lg shadow-none"
