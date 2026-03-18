@@ -241,8 +241,6 @@ export function ArchiveManager({
                   <TableHead className="h-12 px-6 text-[10px] font-bold uppercase text-slate-400">Table Name</TableHead>
                   <TableHead className="h-12 text-[10px] font-bold uppercase text-slate-400">Status</TableHead>
                   <TableHead className="h-12 text-[10px] font-bold uppercase text-slate-400">Records Processed</TableHead>
-                  <TableHead className="h-12 text-[10px] font-bold uppercase text-slate-400">Start Time</TableHead>
-                  <TableHead className="h-12 text-[10px] font-bold uppercase text-slate-400">End Time</TableHead>
                   <TableHead className="h-12 px-6 text-right text-[10px] font-bold uppercase text-slate-400">Duration</TableHead>
                 </TableRow>
               </TableHeader>
@@ -266,12 +264,6 @@ export function ArchiveManager({
                     </TableCell>
                     <TableCell className="text-xs font-bold text-slate-900">
                       {i < completedTables ? "1,240,500" : i === completedTables ? "450,210" : "0"}
-                    </TableCell>
-                    <TableCell className="text-[10px] font-bold text-slate-400 uppercase">
-                      {i <= completedTables ? "08:00 AM" : "—"}
-                    </TableCell>
-                    <TableCell className="text-[10px] font-bold text-slate-400 uppercase">
-                      {i < completedTables ? "08:12 AM" : "—"}
                     </TableCell>
                     <TableCell className="px-6 text-right text-xs font-bold text-slate-600">
                       {i < completedTables ? "12m" : i === completedTables ? "4m" : "—"}
@@ -741,6 +733,7 @@ export function ArchiveManager({
           <div className="grid gap-6 py-4">
             <div className="space-y-2">
               <Label className="text-sm font-semibold">Frequency</Label>
+              <span className="sr-only">Frequency Selection</span>
               <Select 
                 value={scheduleForm.frequency} 
                 onValueChange={(v: any) => setScheduleForm(prev => ({ ...prev, frequency: v }))}
