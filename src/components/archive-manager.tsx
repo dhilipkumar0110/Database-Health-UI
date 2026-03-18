@@ -76,17 +76,24 @@ type QueryRow = {
 export function ArchiveManager({ 
   tasks, 
   onUpdateTask,
-  onViewChange
+  onViewChange,
+  initialTab = "Archiving"
 }: { 
   tasks: MaintenanceTask[], 
   onUpdateTask: (id: string, updates: Partial<MaintenanceTask>) => void,
-  onViewChange: (view: string) => void
+  onViewChange: (view: string) => void,
+  initialTab?: string
 }) {
   const [view, setView] = React.useState<ViewState>('list')
   const [selectedTask, setSelectedTask] = React.useState<MaintenanceTask | null>(null)
   const [selectedTable, setSelectedTable] = React.useState<string | null>(null)
   const [search, setSearch] = React.useState("")
-  const [activeTab, setActiveTab] = React.useState("Archiving")
+  const [activeTab, setActiveTab] = React.useState(initialTab)
+
+  // Sync active tab when initialTab prop changes (e.g., when creating a new task of a different type)
+  React.useEffect(() => {
+    setActiveTab(initialTab)
+  }, [initialTab])
 
   // Schedule Modal State
   const [isScheduleModalOpen, setIsScheduleModalOpen] = React.useState(false)

@@ -127,6 +127,7 @@ export default function SQLSentinelApp() {
   const [activeDbName, setActiveDbName] = React.useState("WebPortalDB")
   const [databases, setDatabases] = React.useState<DatabaseInstance[]>(DEFAULT_DATABASES)
   const [tasks, setTasks] = React.useState<MaintenanceTask[]>(DEFAULT_TASKS)
+  const [activeTaskTab, setActiveTaskTab] = React.useState("Archiving")
   const [isMounted, setIsMounted] = React.useState(false)
 
   // Load state from localStorage on mount
@@ -135,11 +136,13 @@ export default function SQLSentinelApp() {
     const savedDb = localStorage.getItem("sql_sentinel_activeDbName")
     const savedDatabases = localStorage.getItem("sql_sentinel_databases")
     const savedTasks = localStorage.getItem("sql_sentinel_tasks")
+    const savedTaskTab = localStorage.getItem("sql_sentinel_activeTaskTab")
 
     if (savedView) setCurrentView(savedView)
     if (savedDb) setActiveDbName(savedDb)
     if (savedDatabases) setDatabases(JSON.parse(savedDatabases))
     if (savedTasks) setTasks(JSON.parse(savedTasks))
+    if (savedTaskTab) setActiveTaskTab(savedTaskTab)
     
     setIsMounted(true)
   }, [])
@@ -151,8 +154,9 @@ export default function SQLSentinelApp() {
       localStorage.setItem("sql_sentinel_activeDbName", activeDbName)
       localStorage.setItem("sql_sentinel_databases", JSON.stringify(databases))
       localStorage.setItem("sql_sentinel_tasks", JSON.stringify(tasks))
+      localStorage.setItem("sql_sentinel_activeTaskTab", activeTaskTab)
     }
-  }, [currentView, activeDbName, databases, tasks, isMounted])
+  }, [currentView, activeDbName, databases, tasks, activeTaskTab, isMounted])
 
   const handleAddDatabase = (dbName: string, serverName: string, tableCount: number) => {
     const newDb: DatabaseInstance = {
@@ -183,6 +187,7 @@ export default function SQLSentinelApp() {
       status: 'pending'
     }
     setTasks(prev => [newTask, ...prev])
+    setActiveTaskTab(task.type)
     setCurrentView("archive")
   }
 
@@ -214,7 +219,7 @@ export default function SQLSentinelApp() {
       case "maintenance":
         return <MaintenancePlanner tasks={tasks} onUpdateTask={handleUpdateTask} onDeleteTask={handleDeleteTask} />
       case "archive":
-        return <ArchiveManager tasks={tasks} onUpdateTask={handleUpdateTask} onViewChange={setCurrentView} />
+        return <ArchiveManager tasks={tasks} onUpdateTask={handleUpdateTask} onViewChange={setCurrentView} initialTab={activeTaskTab} />
       case "export":
         return <ReportsManager activeDb={activeDbName} />
       case "alerts":
