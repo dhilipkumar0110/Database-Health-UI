@@ -1,3 +1,4 @@
+
 "use client"
 
 import * as React from "react"
@@ -26,20 +27,20 @@ import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { cn } from "@/lib/utils"
 import { ConnectDatabaseModal } from "@/components/connect-database-modal"
-import { ConfigureTablesModal } from "@/components/configure-tables-modal"
-import { ConfigureAlertsModal } from "@/components/configure-alerts-modal"
 import { DatabaseInstance } from "@/app/page"
 
 export function DashboardOverview({ 
   databases, 
-  onAddDatabase 
+  onAddDatabase,
+  onViewChange,
+  onDbChange
 }: { 
   databases: DatabaseInstance[], 
-  onAddDatabase: (db: string, server: string, count: number) => void 
+  onAddDatabase: (db: string, server: string, count: number) => void,
+  onViewChange: (view: string) => void,
+  onDbChange: (db: string) => void
 }) {
   const [isConnectModalOpen, setIsConnectModalOpen] = React.useState(false)
-  const [configTablesDb, setConfigTablesDb] = React.useState<string | null>(null)
-  const [configAlertsDb, setConfigAlertsDb] = React.useState<string | null>(null)
 
   // Calculate dynamic stats
   const totalDatabases = databases.length
@@ -77,6 +78,16 @@ export function DashboardOverview({
       subtextColor: "text-rose-600"
     }
   ]
+
+  const handleConfigTables = (dbName: string) => {
+    onDbChange(dbName);
+    onViewChange("config-tables");
+  }
+
+  const handleConfigAlerts = (dbName: string) => {
+    onDbChange(dbName);
+    onViewChange("config-alerts");
+  }
 
   return (
     <div className="space-y-6 animate-in fade-in duration-500">
@@ -176,7 +187,7 @@ export function DashboardOverview({
                   <Button 
                     variant="outline" 
                     size="sm" 
-                    onClick={() => setConfigTablesDb(db.name)}
+                    onClick={() => handleConfigTables(db.name)}
                     className="h-8 text-[10px] font-bold text-slate-600 border-slate-200 rounded-lg hover:bg-slate-50 gap-1.5"
                   >
                     <TableIcon className="h-3 w-3" />
@@ -185,7 +196,7 @@ export function DashboardOverview({
                   <Button 
                     variant="outline" 
                     size="sm" 
-                    onClick={() => setConfigAlertsDb(db.name)}
+                    onClick={() => handleConfigAlerts(db.name)}
                     className="h-8 text-[10px] font-bold text-slate-600 border-slate-200 rounded-lg hover:bg-slate-50 gap-1.5"
                   >
                     <Bell className="h-3 w-3" />
@@ -203,22 +214,6 @@ export function DashboardOverview({
         onClose={() => setIsConnectModalOpen(false)}
         onComplete={onAddDatabase}
       />
-
-      {configTablesDb && (
-        <ConfigureTablesModal 
-          isOpen={true} 
-          onClose={() => setConfigTablesDb(null)} 
-          databaseName={configTablesDb} 
-        />
-      )}
-
-      {configAlertsDb && (
-        <ConfigureAlertsModal 
-          isOpen={true} 
-          onClose={() => setConfigAlertsDb(null)} 
-          databaseName={configAlertsDb} 
-        />
-      )}
     </div>
   )
 }

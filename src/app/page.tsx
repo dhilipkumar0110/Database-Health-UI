@@ -12,6 +12,8 @@ import { PerformanceMonitor } from "@/components/performance-monitor"
 import { ArchiveManager } from "@/components/archive-manager"
 import { ReportsManager } from "@/components/reports-manager"
 import { AlertsManager } from "@/components/alerts-manager"
+import { ConfigureTablesView } from "@/components/configure-tables-view"
+import { ConfigureAlertsView } from "@/components/configure-alerts-view"
 import { Separator } from "@/components/ui/separator"
 import { Button } from "@/components/ui/button"
 import { Bell, Search } from "lucide-react"
@@ -179,6 +181,18 @@ export default function SQLSentinelApp() {
     setActiveDbName(newDb.name)
   }
 
+  const handleUpdateDatabaseTables = (dbName: string, count: number) => {
+    setDatabases(prev => prev.map(db => {
+      if (db.name === dbName) {
+        return {
+          ...db,
+          metrics: db.metrics.map(m => m.label === "Tables" ? { ...m, value: count.toString() } : m)
+        }
+      }
+      return db
+    }))
+  }
+
   const handleCreateTask = (task: Omit<MaintenanceTask, 'id' | 'createdAt'>) => {
     const newTask: MaintenanceTask = {
       ...task,
@@ -209,7 +223,33 @@ export default function SQLSentinelApp() {
 
     switch (currentView) {
       case "overview":
-        return <DashboardOverview databases={databases} onAddDatabase={handleAddDatabase} />
+        return (
+          <DashboardOverview 
+            databases={databases} 
+            onAddDatabase={handleAddDatabase} 
+            onViewChange={setCurrentView}
+            onDbChange={setActiveDbName}
+          />
+        )
+      case "config-tables":
+        return (
+          <ConfigureTablesView 
+            databaseName={activeDbName} 
+            onBack={() => setCurrentView("overview")}
+            onSave={(count) => {
+              handleUpdateDatabaseTables(activeDbName, count);
+              setCurrentView("overview");
+            }}
+          />
+        )
+      case "config-alerts":
+        return (
+          <ConfigureAlertsView 
+            databaseName={activeDbName} 
+            onBack={() => setCurrentView("overview")}
+            onSave={() => setCurrentView("overview")}
+          />
+        )
       case "table-manager":
         return <TableManager activeDb={activeDbName} serverName={serverName} onCreateTask={handleCreateTask} />
       case "performance":
