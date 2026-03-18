@@ -103,6 +103,35 @@ export function TableManager({
     return ALL_MOCK_TABLES.filter(t => monitoredTables.includes(t.name))
   }, [monitoredTables])
 
+  const stats = React.useMemo(() => {
+    if (activeTables.length === 0) {
+      return { size: "0 GB", avgFrag: "0%", deadlocks: "0", tables: "0" }
+    }
+    
+    const totalTables = activeTables.length
+    const totalDeadlocks = activeTables.reduce((acc, t) => acc + t.deadlocks, 0)
+    const sumFrag = activeTables.reduce((acc, t) => acc + t.fragmentation, 0)
+    const avgFrag = Math.round(sumFrag / totalTables)
+    
+    const totalSizeGB = activeTables.reduce((acc, t) => {
+      const val = parseFloat(t.size)
+      if (t.size.includes('GB')) return acc + val
+      if (t.size.includes('MB')) return acc + (val / 1024)
+      return acc
+    }, 0)
+    
+    const sizeStr = totalSizeGB >= 1 
+      ? `${totalSizeGB.toFixed(1)} GB` 
+      : `${(totalSizeGB * 1024).toFixed(0)} MB`
+
+    return {
+      tables: totalTables.toString(),
+      size: sizeStr,
+      avgFrag: `${avgFrag}%`,
+      deadlocks: totalDeadlocks.toString()
+    }
+  }, [activeTables])
+
   const filteredTables = React.useMemo(() => {
     return activeTables.filter(table => {
       const matchesSearch = table.name.toLowerCase().includes(search.toLowerCase())
@@ -191,23 +220,23 @@ export function TableManager({
         <div className="grid grid-cols-1 md:grid-cols-5 gap-4">
           <Card className="bg-white border-none shadow-sm rounded-2xl p-6">
             <div className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-2">Tables</div>
-            <div className="text-3xl font-bold text-slate-900">{monitoredTables.length}</div>
+            <div className="text-3xl font-bold text-slate-900">{stats.tables}</div>
           </Card>
           <Card className="bg-white border-none shadow-sm rounded-2xl p-6">
             <div className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-2">DB Size</div>
-            <div className="text-3xl font-bold text-slate-900">120 GB</div>
+            <div className="text-3xl font-bold text-slate-900">{stats.size}</div>
           </Card>
           <Card className="bg-white border-none shadow-sm rounded-2xl p-6">
             <div className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-2">Avg Fragmentation</div>
-            <div className="text-3xl font-bold text-amber-500">18%</div>
+            <div className="text-3xl font-bold text-amber-500">{stats.avgFrag}</div>
           </Card>
           <Card className="bg-white border-none shadow-sm rounded-2xl p-6">
             <div className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-2">Cache Hit Ratio</div>
-            <div className="text-3xl font-bold text-emerald-500">96%</div>
+            <div className="text-3xl font-bold text-emerald-500">91.4%</div>
           </Card>
           <Card className="bg-white border-none shadow-sm rounded-2xl p-6">
             <div className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-2">Deadlocks (24h)</div>
-            <div className="text-3xl font-bold text-slate-900">2</div>
+            <div className="text-3xl font-bold text-slate-900">{stats.deadlocks}</div>
           </Card>
         </div>
       </div>
