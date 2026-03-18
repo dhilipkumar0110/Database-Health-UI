@@ -4,15 +4,11 @@
 import * as React from "react"
 import { 
   Bell, 
-  Settings, 
   RefreshCw
 } from "lucide-react"
-import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from "@/components/ui/card"
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
-import { Switch } from "@/components/ui/switch"
-import { Input } from "@/components/ui/input"
-import { Label } from "@/components/ui/label"
 import { 
   Table, 
   TableBody, 
@@ -24,23 +20,6 @@ import {
 import { toast } from "@/hooks/use-toast"
 import { cn } from "@/lib/utils"
 
-type AlertRule = {
-  id: string
-  name: string
-  type: 'Fragmentation' | 'Usage' | 'Deadlocks' | 'Slow Query'
-  threshold: string
-  unit: string
-  enabled: boolean
-  severity: 'Critical' | 'Warning' | 'Info'
-}
-
-const INITIAL_RULES: AlertRule[] = [
-  { id: '1', name: 'High Fragmentation', type: 'Fragmentation', threshold: '30', unit: '%', enabled: true, severity: 'Warning' },
-  { id: '2', name: 'Critical Resource usage', type: 'Usage', threshold: '90', unit: '%', enabled: true, severity: 'Critical' },
-  { id: '3', name: 'Deadlock Spike', type: 'Deadlocks', threshold: '5', unit: 'per hour', enabled: true, severity: 'Critical' },
-  { id: '4', name: 'Query Timeout Warning', type: 'Slow Query', threshold: '5', unit: 'sec', enabled: false, severity: 'Warning' },
-]
-
 const RECENT_ALERTS = [
   { id: 'a1', rule: 'High Fragmentation', target: 'WEB_AUTH_DETAILS', value: '42.3%', time: '12m ago', severity: 'Warning', status: 'Active' },
   { id: 'a2', rule: 'Critical Resource usage', target: 'Buffer Cache', value: '78%', time: '1h 14m ago', severity: 'Critical', status: 'Active' },
@@ -49,17 +28,7 @@ const RECENT_ALERTS = [
 ]
 
 export function AlertsManager({ activeDb }: { activeDb: string }) {
-  const [rules, setRules] = React.useState<AlertRule[]>(INITIAL_RULES)
   const [isRefreshing, setIsRefreshing] = React.useState(false)
-
-  const toggleRule = (id: string) => {
-    setRules(prev => prev.map(r => r.id === id ? { ...r, enabled: !r.enabled } : r))
-    const rule = rules.find(r => r.id === id)
-    toast({
-      title: rule?.enabled ? "Rule Disabled" : "Rule Enabled",
-      description: `Monitoring for "${rule?.name}" has been updated.`,
-    })
-  }
 
   const handleRefresh = () => {
     setIsRefreshing(true)
@@ -67,7 +36,7 @@ export function AlertsManager({ activeDb }: { activeDb: string }) {
       setIsRefreshing(false)
       toast({
         title: "Monitoring Sync",
-        description: "Alert rules synchronized with system metrics.",
+        description: "Alert history synchronized with system metrics.",
       })
     }, 1500)
   }
@@ -80,7 +49,7 @@ export function AlertsManager({ activeDb }: { activeDb: string }) {
             <Bell className="h-7 w-7 text-primary" />
             Alerts & Notifications
           </h1>
-          <p className="text-sm text-slate-400 font-medium">Configure thresholds and automated triggers for {activeDb}.</p>
+          <p className="text-sm text-slate-400 font-medium">Monitoring events and automated triggers for {activeDb}.</p>
         </div>
         <div className="flex items-center gap-3">
           <Button 
@@ -90,72 +59,13 @@ export function AlertsManager({ activeDb }: { activeDb: string }) {
             className="h-10 border-slate-200 bg-white rounded-xl px-4 font-bold text-slate-600 gap-2"
           >
             <RefreshCw className={cn("h-4 w-4", isRefreshing && "animate-spin")} />
-            Sync Metrics
+            Sync History
           </Button>
         </div>
       </div>
 
       <div className="space-y-8">
-        {/* Rules Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-          {rules.map((rule) => (
-            <Card key={rule.id} className={cn(
-              "bg-white border-none shadow-sm rounded-2xl overflow-hidden transition-all",
-              !rule.enabled && "opacity-60 grayscale-[0.5]"
-            )}>
-              <CardHeader className="p-6 pb-2">
-                <div className="flex items-start justify-between">
-                  <div className="space-y-1">
-                    <div className="flex items-center gap-2">
-                      <Badge className={cn(
-                        "font-bold text-[8px] uppercase px-1.5 py-0 rounded border-none",
-                        rule.severity === 'Critical' ? "bg-rose-50 text-rose-500" :
-                        rule.severity === 'Warning' ? "bg-amber-50 text-amber-500" :
-                        "bg-blue-50 text-blue-500"
-                      )}>
-                        {rule.severity}
-                      </Badge>
-                      <span className="text-xs font-bold text-slate-500 uppercase tracking-tight">{rule.type}</span>
-                    </div>
-                    <CardTitle className="text-base font-bold text-slate-900">{rule.name}</CardTitle>
-                  </div>
-                  <Switch 
-                    checked={rule.enabled} 
-                    onCheckedChange={() => toggleRule(rule.id)} 
-                  />
-                </div>
-              </CardHeader>
-              <CardContent className="p-6 pt-2 space-y-4">
-                <div className="flex items-end gap-3">
-                  <div className="flex-1 space-y-1.5">
-                    <Label className="text-[10px] font-bold text-slate-400 uppercase">Trigger Threshold</Label>
-                    <div className="relative">
-                      <Input 
-                        type="number" 
-                        value={rule.threshold} 
-                        className="h-10 pr-12 font-bold text-slate-800 rounded-xl"
-                        readOnly
-                      />
-                      <span className="absolute right-3 top-1/2 -translate-y-1/2 text-xs font-bold text-slate-400">
-                        {rule.unit}
-                      </span>
-                    </div>
-                  </div>
-                  <Button variant="ghost" size="icon" className="h-10 w-10 text-slate-300 hover:text-slate-600 rounded-xl">
-                    <Settings className="h-4 w-4" />
-                  </Button>
-                </div>
-              </CardContent>
-              <CardFooter className="px-6 py-3 bg-slate-50/50 border-t border-slate-50">
-                <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">
-                  Last check: Just now
-                </span>
-              </CardFooter>
-            </Card>
-          ))}
-        </div>
-
-        {/* Activity Table - Now Full Width */}
+        {/* Activity Table */}
         <Card className="bg-white border-none shadow-sm rounded-[2rem] overflow-hidden">
           <CardHeader className="p-8 border-b border-slate-50">
             <div className="flex items-center justify-between">
