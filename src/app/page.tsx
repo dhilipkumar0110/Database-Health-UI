@@ -49,7 +49,16 @@ export type DatabaseInstance = {
   metrics: { label: string; value: string; color?: string }[]
   footer: string
   isActive: boolean
+  monitoredTables: string[]
 }
+
+const DEFAULT_MONITORED = [
+  "WEB_AUTH_DETAILS",
+  "WEB_AUDIT_TRAIL",
+  "PROV_CONSULT_NOTES",
+  "USERS",
+  "POST_DISMISSALS"
+]
 
 const DEFAULT_DATABASES: DatabaseInstance[] = [
   {
@@ -57,9 +66,10 @@ const DEFAULT_DATABASES: DatabaseInstance[] = [
     server: "SQLSRV-PROD-01 · port 1433",
     status: "Warning",
     statusVariant: "warning",
+    monitoredTables: [...DEFAULT_MONITORED],
     metrics: [
       { label: "Size", value: "842 GB" },
-      { label: "Tables", value: "34" },
+      { label: "Tables", value: "5" },
       { label: "Avg frag", value: "24.3%", color: "text-amber-600" },
       { label: "Cache hit", value: "91.4%", color: "text-emerald-600" },
       { label: "Deadlocks", value: "7", color: "text-rose-600" },
@@ -73,9 +83,10 @@ const DEFAULT_DATABASES: DatabaseInstance[] = [
     server: "SQLSRV-PROD-01 · port 1433",
     status: "Critical",
     statusVariant: "critical",
+    monitoredTables: ["Auth_Consult_Notes", "REQUEST_LOG"],
     metrics: [
       { label: "Size", value: "210 GB" },
-      { label: "Tables", value: "34" },
+      { label: "Tables", value: "2" },
       { label: "Avg frag", value: "41%", color: "text-rose-600" },
       { label: "Cache hit", value: "78%", color: "text-rose-600" },
       { label: "Deadlocks", value: "2", color: "text-slate-900" },
@@ -132,7 +143,6 @@ export default function SQLSentinelApp() {
   const [activeTaskTab, setActiveTaskTab] = React.useState("Archiving")
   const [isMounted, setIsMounted] = React.useState(false)
 
-  // Load state from localStorage on mount
   React.useEffect(() => {
     const savedView = localStorage.getItem("sql_sentinel_currentView")
     const savedDb = localStorage.getItem("sql_sentinel_activeDbName")
@@ -149,7 +159,6 @@ export default function SQLSentinelApp() {
     setIsMounted(true)
   }, [])
 
-  // Save state to localStorage on changes
   React.useEffect(() => {
     if (isMounted) {
       localStorage.setItem("sql_sentinel_currentView", currentView)
@@ -160,15 +169,16 @@ export default function SQLSentinelApp() {
     }
   }, [currentView, activeDbName, databases, tasks, activeTaskTab, isMounted])
 
-  const handleAddDatabase = (dbName: string, serverName: string, tableCount: number) => {
+  const handleAddDatabase = (dbName: string, serverName: string) => {
     const newDb: DatabaseInstance = {
       name: dbName || "New_Connection",
       server: `${serverName || "Localhost"} · port 1433`,
       status: "Healthy",
       statusVariant: "healthy",
+      monitoredTables: [],
       metrics: [
         { label: "Size", value: "0 GB" },
-        { label: "Tables", value: tableCount.toString() },
+        { label: "Tables", value: "0" },
         { label: "Avg frag", value: "0%", color: "text-emerald-600" },
         { label: "Cache hit", value: "100%", color: "text-emerald-600" },
         { label: "Deadlocks", value: "0", color: "text-slate-900" },
@@ -181,12 +191,13 @@ export default function SQLSentinelApp() {
     setActiveDbName(newDb.name)
   }
 
-  const handleUpdateDatabaseTables = (dbName: string, count: number) => {
+  const handleUpdateDatabaseTables = (dbName: string, tables: string[]) => {
     setDatabases(prev => prev.map(db => {
       if (db.name === dbName) {
         return {
           ...db,
-          metrics: db.metrics.map(m => m.label === "Tables" ? { ...m, value: count.toString() } : m)
+          monitoredTables: tables,
+          metrics: db.metrics.map(m => m.label === "Tables" ? { ...m, value: tables.length.toString() } : m)
         }
       }
       return db
@@ -235,9 +246,10 @@ export default function SQLSentinelApp() {
         return (
           <ConfigureTablesView 
             databaseName={activeDbName} 
+            initialSelectedTables={activeDb?.monitoredTables || []}
             onBack={() => setCurrentView("overview")}
-            onSave={(count) => {
-              handleUpdateDatabaseTables(activeDbName, count);
+            onSave={(tables) => {
+              handleUpdateDatabaseTables(activeDbName, tables);
               setCurrentView("overview");
             }}
           />
@@ -251,7 +263,14 @@ export default function SQLSentinelApp() {
           />
         )
       case "table-manager":
-        return <TableManager activeDb={activeDbName} serverName={serverName} onCreateTask={handleCreateTask} />
+        return (
+          <TableManager 
+            activeDb={activeDbName} 
+            serverName={serverName} 
+            monitoredTables={activeDb?.monitoredTables || []}
+            onCreateTask={handleCreateTask} 
+          />
+        )
       case "performance":
         return <PerformanceMonitor activeDb={activeDbName} />
       case "redundancy":
@@ -275,7 +294,6 @@ export default function SQLSentinelApp() {
     }
   }
 
-  // Prevent flash of unstyled content or default state before localStorage loads
   if (!isMounted) return null
 
   return (

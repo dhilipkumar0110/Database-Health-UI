@@ -17,11 +17,13 @@ import {
 } from "@/components/ui/table"
 import { useToast } from "@/hooks/use-toast"
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card"
+import { cn } from "@/lib/utils"
 
 interface ConfigureTablesViewProps {
   databaseName: string
+  initialSelectedTables: string[]
   onBack: () => void
-  onSave: (count: number) => void
+  onSave: (tables: string[]) => void
 }
 
 type TableData = {
@@ -40,12 +42,21 @@ const MOCK_TABLES: TableData[] = [
   { name: "USERS", schema: "auth", size: "45 MB", records: "154,494" },
   { name: "WEB_AUDIT_TRAIL", schema: "audit", size: "142 GB", records: "58,548,194" },
   { name: "WEB_AUTH_DETAILS", schema: "auth", size: "32.1 GB", records: "22,069,814" },
+  { name: "WEB_AUTH_NOTES", schema: "auth", size: "88.4 GB", records: "31,693,191" },
+  { name: "USER_PROVIDERS", schema: "auth", size: "8.2 GB", records: "9,098,052" },
+  { name: "WEB_AUTH_DIAGS", schema: "auth", size: "12.8 GB", records: "31,330,066" },
+  { name: "WEB_AUTH_CHANGES", schema: "auth", size: "18.4 GB", records: "14,886,733" },
 ]
 
-export function ConfigureTablesView({ databaseName, onBack, onSave }: ConfigureTablesViewProps) {
+export function ConfigureTablesView({ 
+  databaseName, 
+  initialSelectedTables, 
+  onBack, 
+  onSave 
+}: ConfigureTablesViewProps) {
   const { toast } = useToast()
   const [tableSearch, setTableSearch] = React.useState("")
-  const [selectedTables, setSelectedTables] = React.useState<string[]>([])
+  const [selectedTables, setSelectedTables] = React.useState<string[]>(initialSelectedTables)
   const [sortConfig, setSortConfig] = React.useState<{ key: keyof TableData, direction: 'asc' | 'desc' } | null>({ key: 'name', direction: 'asc' })
 
   const toggleTable = (tableName: string) => {
@@ -105,7 +116,7 @@ export function ConfigureTablesView({ databaseName, onBack, onSave }: ConfigureT
       title: "Tables Configured",
       description: `Monitoring ${selectedTables.length} tables for ${databaseName}.`
     })
-    onSave(selectedTables.length)
+    onSave(selectedTables)
   }
 
   const SortIndicator = ({ column }: { column: keyof TableData }) => {
@@ -114,7 +125,7 @@ export function ConfigureTablesView({ databaseName, onBack, onSave }: ConfigureT
   }
 
   return (
-    <div className="space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-500">
+    <div className="space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-500 pb-20">
       <div className="flex items-center gap-4">
         <Button variant="ghost" size="icon" onClick={onBack} className="rounded-full h-10 w-10">
           <ArrowLeft className="h-5 w-5" />
@@ -138,7 +149,7 @@ export function ConfigureTablesView({ databaseName, onBack, onSave }: ConfigureT
           </div>
           <div className="flex items-center gap-4">
             <div className="text-xs font-bold text-slate-400 uppercase">
-              {selectedTables.length} Tables Selected
+              {selectedTables.length} Tables Monitored
             </div>
             <Button onClick={handleSave} className="h-11 px-8 rounded-xl bg-primary text-white font-bold shadow-lg shadow-primary/10">
               Update Monitoring
@@ -202,8 +213,4 @@ export function ConfigureTablesView({ databaseName, onBack, onSave }: ConfigureT
       </Card>
     </div>
   )
-}
-
-function cn(...inputs: any[]) {
-  return inputs.filter(Boolean).join(' ')
 }
