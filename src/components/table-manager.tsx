@@ -192,27 +192,22 @@ export function TableManager({
           <Card className="bg-white border-none shadow-sm rounded-2xl p-6">
             <div className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-2">Tables</div>
             <div className="text-3xl font-bold text-slate-900">{monitoredTables.length}</div>
-            <div className="text-[10px] font-bold text-rose-500 mt-1 uppercase">4 need action</div>
           </Card>
           <Card className="bg-white border-none shadow-sm rounded-2xl p-6">
             <div className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-2">DB Size</div>
             <div className="text-3xl font-bold text-slate-900">120 GB</div>
-            <div className="text-[10px] font-bold text-emerald-500 mt-1 uppercase">+2% this month</div>
           </Card>
           <Card className="bg-white border-none shadow-sm rounded-2xl p-6">
             <div className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-2">Avg Fragmentation</div>
             <div className="text-3xl font-bold text-amber-500">18%</div>
-            <div className="text-[10px] font-bold text-amber-600 mt-1 uppercase">3 tables {'>'} 30%</div>
           </Card>
           <Card className="bg-white border-none shadow-sm rounded-2xl p-6">
             <div className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-2">Cache Hit Ratio</div>
             <div className="text-3xl font-bold text-emerald-500">96%</div>
-            <div className="text-[10px] font-bold text-slate-400 mt-1 uppercase tracking-tighter">Target {'>'} 95%</div>
           </Card>
           <Card className="bg-white border-none shadow-sm rounded-2xl p-6">
             <div className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-2">Deadlocks (24h)</div>
             <div className="text-3xl font-bold text-slate-900">2</div>
-            <div className="text-[10px] font-bold text-slate-400 mt-1 uppercase">Stable</div>
           </Card>
         </div>
       </div>
