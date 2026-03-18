@@ -522,7 +522,7 @@ export function ArchiveManager({
                       </div>
                     </div>
 
-                    {task.actions && task.actions.length > 0 && (
+                    {task.type === "Multi-Task" && task.actions && task.actions.length > 0 && (
                       <div className="space-y-2">
                         <span className="text-[9px] font-bold text-slate-400 uppercase tracking-tight">Included Actions:</span>
                         <div className="flex flex-wrap gap-1">
