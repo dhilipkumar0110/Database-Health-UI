@@ -617,11 +617,11 @@ export function ArchiveManager({
                                      (task.type === 'Multi-Task' && (task.actions?.includes('Archiving') || task.actions?.includes('Index Rebuild')));
                 
                 return (
-                  <Card key={task.id} className="bg-white border-none shadow-sm rounded-2xl overflow-hidden group hover:ring-2 hover:ring-primary/10 transition-all">
+                  <Card key={task.id} className="bg-white border-none shadow-sm rounded-2xl overflow-hidden group hover:ring-2 hover:ring-primary/10 transition-all flex flex-col h-[320px]">
                     <CardHeader className="p-5 pb-3">
                       <div className="flex items-start justify-between">
                         <div className="space-y-2">
-                          <CardTitle className="text-base font-bold text-slate-900">{task.name}</CardTitle>
+                          <CardTitle className="text-base font-bold text-slate-900 truncate max-w-[200px]">{task.name}</CardTitle>
                           <div className="flex items-center flex-wrap gap-2">
                             <div className="flex items-center gap-1.5">
                               <span className="text-[10px] font-bold text-slate-400 uppercase tracking-tight">Type:</span>
@@ -666,25 +666,34 @@ export function ArchiveManager({
                         </DropdownMenu>
                       </div>
                     </CardHeader>
-                    <CardContent className="p-5 pt-0 space-y-4">
+                    <CardContent className="p-5 pt-0 space-y-4 flex-1">
                       <div className="grid grid-cols-2 gap-4">
                         <div className="space-y-1">
                           <span className="text-[9px] font-bold text-slate-400 uppercase tracking-tight flex items-center gap-1">
                             <Server className="h-2.5 w-2.5" /> Server
                           </span>
-                          <div className="text-xs font-bold text-slate-700">{task.server}</div>
+                          <div className="text-xs font-bold text-slate-700 truncate">{task.server}</div>
                         </div>
                         <div className="space-y-1">
                           <span className="text-[9px] font-bold text-slate-400 uppercase tracking-tight flex items-center gap-1">
                             <Database className="h-2.5 w-2.5" /> Database
                           </span>
-                          <div className="text-xs font-bold text-slate-700">{task.database}</div>
+                          <div className="text-xs font-bold text-slate-700 truncate">{task.database}</div>
+                        </div>
+                      </div>
+
+                      <div className="space-y-2">
+                        <div className="flex items-center gap-2">
+                          <div className="h-7 w-7 rounded-lg bg-primary/5 flex items-center justify-center text-primary border border-primary/10">
+                            <TableIcon className="h-3.5 w-3.5" />
+                          </div>
+                          <span className="text-[10px] font-bold text-slate-500 uppercase tracking-widest">Scope: {task.tables.length} Tables</span>
                         </div>
                       </div>
 
                       {task.type === "Multi-Task" && task.actions && task.actions.length > 0 && (
-                        <div className="space-y-2">
-                          <span className="text-[9px] font-bold text-slate-400 uppercase tracking-tight">Included Actions:</span>
+                        <div className="space-y-1.5">
+                          <span className="text-[9px] font-bold text-slate-400 uppercase tracking-tight">Actions:</span>
                           <div className="flex flex-wrap gap-1">
                             {task.actions.map(a => (
                               <Badge key={a} variant="outline" className="text-[8px] font-bold px-1.5 py-0 border-slate-200 text-slate-500 uppercase">
@@ -695,48 +704,39 @@ export function ArchiveManager({
                         </div>
                       )}
 
-                      <div className="space-y-2">
-                        <span className="text-[9px] font-bold text-slate-400 uppercase tracking-tight">Scope: {task.tables.length} Tables</span>
-                        <div className="flex flex-wrap gap-1">
-                          {task.tables.slice(0, 3).map(t => (
-                            <Badge key={t} variant="secondary" className="bg-slate-50 text-slate-500 border-none text-[9px] font-medium px-2">
-                              {t}
-                            </Badge>
-                          ))}
-                          {task.tables.length > 3 && (
-                            <Badge variant="secondary" className="bg-slate-50 text-slate-400 border-none text-[9px] font-medium px-2">
-                              +{task.tables.length - 3} more
-                            </Badge>
-                          )}
+                      <div className="pt-2">
+                        <div className="text-[9px] font-bold text-slate-300 uppercase tracking-widest mb-0.5">Modified on</div>
+                        <div className="text-[10px] font-bold text-slate-400">
+                          {new Date(task.createdAt).toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' })}
                         </div>
                       </div>
-                      <div className="text-[9px] text-slate-300 font-medium italic">
-                        Modified on {new Date(task.createdAt).toLocaleDateString()}
-                      </div>
                     </CardContent>
-                    <CardFooter className="p-5 bg-slate-50/50 flex items-center justify-between border-t border-slate-50">
-                      {isConfigurable ? (
+                    <CardFooter className="p-5 bg-slate-50/50 flex items-center justify-between border-t border-slate-50 gap-3">
+                      <div className="flex-1">
+                        {isConfigurable && (
+                          <Button 
+                            variant="outline" 
+                            className="w-full h-9 text-[10px] font-bold text-emerald-600 border-emerald-200 bg-white hover:bg-emerald-50 rounded-xl px-4 transition-all gap-1.5"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              handleTaskClick(task);
+                            }}
+                          >
+                            <FileCode className="h-3.5 w-3.5" />
+                            Configure
+                          </Button>
+                        )}
+                      </div>
+                      <div className="flex-1">
                         <Button 
-                          variant="link" 
-                          className="h-8 text-[10px] font-bold text-primary p-0 hover:no-underline gap-1.5 transition-all"
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            handleTaskClick(task);
-                          }}
+                          variant="outline"
+                          className="w-full h-9 bg-white border border-slate-200 text-slate-700 text-[10px] font-bold rounded-xl px-4 hover:bg-slate-100 shadow-none gap-1.5"
+                          onClick={(e) => openScheduleDialog(e, task)}
                         >
-                          <FileCode className="h-3.5 w-3.5" />
-                          Configure
+                          <Clock className="h-3.5 w-3.5" />
+                          Schedule
                         </Button>
-                      ) : (
-                        <div className="h-8" /> 
-                      )}
-                      <Button 
-                        className="h-8 bg-white border border-slate-200 text-slate-700 text-[10px] font-bold rounded-lg px-4 hover:bg-slate-100 shadow-none gap-1.5"
-                        onClick={(e) => openScheduleDialog(e, task)}
-                      >
-                        <Clock className="h-3 w-3" />
-                        Schedule
-                      </Button>
+                      </div>
                     </CardFooter>
                   </Card>
                 );
