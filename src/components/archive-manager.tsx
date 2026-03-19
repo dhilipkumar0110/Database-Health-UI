@@ -549,9 +549,16 @@ export function ArchiveManager({
 
   const filteredTasks = tasks.filter(t => {
     const matchesSearch = t.name.toLowerCase().includes(search.toLowerCase()) || 
-                          t.database.toLowerCase().includes(search.toLowerCase())
-    const matchesTab = t.type === activeTab
-    return matchesSearch && matchesTab
+                          t.database.toLowerCase().includes(search.toLowerCase());
+    
+    // Categorization logic for tabs
+    if (activeTab === "Multi-Task") {
+      // Catch-all for Others: Multi-Task type OR any type not in the first 4 tabs
+      const isPrimaryType = ['Archiving', 'Index Rebuild', 'Update Stats', 'Scanning'].includes(t.type);
+      return matchesSearch && (!isPrimaryType || t.type === 'Multi-Task');
+    }
+    
+    return matchesSearch && t.type === activeTab;
   })
 
   return (
@@ -632,7 +639,7 @@ export function ArchiveManager({
                                   task.type === "Index Rebuild" && "bg-blue-50 text-blue-600",
                                   task.type === "Update Stats" && "bg-emerald-50 text-emerald-600",
                                   task.type === "Scanning" && "bg-purple-50 text-purple-600",
-                                  task.type === "Multi-Task" && "bg-slate-100 text-slate-600"
+                                  (task.type === "Multi-Task" || !['Archiving', 'Index Rebuild', 'Update Stats', 'Scanning'].includes(task.type)) && "bg-slate-100 text-slate-600"
                                 )}
                               >
                                 {task.type === "Multi-Task" ? "Others" : task.type}
@@ -694,7 +701,7 @@ export function ArchiveManager({
                         </div>
                       </div>
 
-                      {task.type === "Multi-Task" && task.actions && task.actions.length > 0 && (
+                      {task.actions && task.actions.length > 0 && (
                         <div className="space-y-2">
                           <span className="text-[9px] font-bold text-slate-400 uppercase tracking-tight">Included Actions:</span>
                           <div className="flex flex-wrap gap-1.5">
@@ -707,10 +714,10 @@ export function ArchiveManager({
                         </div>
                       )}
 
-                      <div className="pt-2 border-t border-slate-50">
-                        <div className="text-[9px] font-extrabold text-slate-400 uppercase tracking-[0.1em] mb-1">Last Modified</div>
+                      <div className="pt-2 border-t border-slate-50 mt-auto">
+                        <div className="text-[10px] font-extrabold text-slate-500 uppercase tracking-[0.1em] mb-1">Last Modified</div>
                         <div className="text-xs font-bold text-slate-900 flex items-center gap-1.5">
-                          <Clock className="h-3 w-3 text-slate-300" />
+                          <Clock className="h-3 w-3 text-primary" />
                           {new Date(task.createdAt).toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' })}
                         </div>
                       </div>

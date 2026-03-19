@@ -135,6 +135,17 @@ const DEFAULT_TASKS: MaintenanceTask[] = [
       startDate: '2024-03-01',
       endDate: '2024-12-31'
     }
+  },
+  {
+    id: "task-4",
+    name: "Redundancy Cleanup",
+    type: "Multi-Task",
+    actions: ["Drop"],
+    server: "SQLSRV-PROD-01",
+    database: "WebPortalDB",
+    tables: ["staging_data_temp_copy", "temp_orders_old"],
+    createdAt: "2024-03-12T10:00:00Z",
+    status: 'pending'
   }
 ]
 
@@ -215,7 +226,12 @@ export default function SQLSentinelApp() {
       status: 'pending'
     }
     setTasks(prev => [newTask, ...prev])
-    setActiveTaskTab(newTask.type)
+    
+    // Determine which tab to navigate to
+    const primaryTypes = ['Archiving', 'Index Rebuild', 'Update Stats', 'Scanning'];
+    const targetTab = primaryTypes.includes(newTask.type) ? newTask.type : 'Multi-Task';
+    
+    setActiveTaskTab(targetTab)
     setCurrentView("archive")
   }
 
