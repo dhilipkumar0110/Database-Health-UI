@@ -551,9 +551,7 @@ export function ArchiveManager({
     const matchesSearch = t.name.toLowerCase().includes(search.toLowerCase()) || 
                           t.database.toLowerCase().includes(search.toLowerCase());
     
-    // Categorization logic for tabs
     if (activeTab === "Multi-Task") {
-      // Catch-all for Others: Multi-Task type OR any type not in the first 4 tabs
       const isPrimaryType = ['Archiving', 'Index Rebuild', 'Update Stats', 'Scanning'].includes(t.type);
       return matchesSearch && (!isPrimaryType || t.type === 'Multi-Task');
     }
@@ -624,7 +622,7 @@ export function ArchiveManager({
                                      (task.type === 'Multi-Task' && (task.actions?.includes('Archiving') || task.actions?.includes('Index Rebuild')));
                 
                 return (
-                  <Card key={task.id} className="bg-white border-none shadow-sm rounded-2xl overflow-hidden group hover:ring-2 hover:ring-primary/10 transition-all flex flex-col h-[380px]">
+                  <Card key={task.id} className="bg-white border-none shadow-sm rounded-2xl overflow-hidden group hover:ring-2 hover:ring-primary/10 transition-all flex flex-col min-h-[420px]">
                     <CardHeader className="p-6 pb-4">
                       <div className="flex items-start justify-between">
                         <div className="space-y-2">
@@ -656,16 +654,13 @@ export function ArchiveManager({
                           </div>
                         </div>
                         <DropdownMenu>
-                          <DropdownMenuTrigger asChild onClick={(e) => e.stopPropagation()}>
+                          <DropdownMenuTrigger asChild>
                             <Button variant="ghost" size="icon" className="h-8 w-8 text-slate-400 rounded-full hover:bg-slate-50">
                               <MoreVertical className="h-4 w-4" />
                             </Button>
                           </DropdownMenuTrigger>
                           <DropdownMenuContent align="end" className="w-48 rounded-xl shadow-xl border-slate-100">
-                            <DropdownMenuItem onClick={(e) => {
-                              e.stopPropagation();
-                              handleViewExecution(task);
-                            }} className="gap-2 py-2 cursor-pointer font-medium text-xs">
+                            <DropdownMenuItem onClick={() => handleViewExecution(task)} className="gap-2 py-2 cursor-pointer font-medium text-xs">
                               <Play className="h-3.5 w-3.5 text-emerald-600" />
                               View Execution
                             </DropdownMenuItem>
@@ -673,7 +668,7 @@ export function ArchiveManager({
                         </DropdownMenu>
                       </div>
                     </CardHeader>
-                    <CardContent className="p-6 pt-0 space-y-5 flex-1">
+                    <CardContent className="p-6 pt-0 space-y-5 flex-1 flex flex-col">
                       <div className="grid grid-cols-2 gap-6">
                         <div className="space-y-1.5">
                           <span className="text-[9px] font-bold text-slate-400 uppercase tracking-tight flex items-center gap-1">
@@ -722,7 +717,7 @@ export function ArchiveManager({
                         </div>
                       </div>
                     </CardContent>
-                    <CardFooter className="p-4 bg-slate-50/50 border-t border-slate-100 mt-auto">
+                    <CardFooter className="p-4 bg-slate-50/50 border-t border-slate-100">
                       <div className="flex w-full gap-2">
                         {isConfigurable && (
                           <Button 
@@ -740,7 +735,7 @@ export function ArchiveManager({
                         <Button 
                           variant="outline"
                           className={cn(
-                            "h-11 bg-white border border-slate-200 text-slate-700 text-[11px] font-bold rounded-xl hover:bg-slate-100 shadow-sm gap-2",
+                            "bg-white border border-slate-200 text-slate-700 text-[11px] font-bold rounded-xl hover:bg-slate-100 shadow-sm gap-2 h-11",
                             isConfigurable ? "flex-1" : "w-full"
                           )}
                           onClick={(e) => openScheduleDialog(e, task)}
@@ -758,7 +753,6 @@ export function ArchiveManager({
         </TabsContent>
       </Tabs>
 
-      {/* Schedule Dialog */}
       <Dialog open={isScheduleModalOpen} onOpenChange={setIsScheduleModalOpen}>
         <DialogContent className="sm:max-w-[480px]">
           <DialogHeader>
@@ -773,7 +767,6 @@ export function ArchiveManager({
           <div className="grid gap-6 py-4">
             <div className="space-y-2">
               <Label className="text-sm font-semibold">Frequency</Label>
-              <span className="sr-only">Frequency Selection</span>
               <Select 
                 value={scheduleForm.frequency} 
                 onValueChange={(v: any) => setScheduleForm(prev => ({ ...prev, frequency: v }))}
