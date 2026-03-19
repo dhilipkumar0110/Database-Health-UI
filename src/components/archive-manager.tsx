@@ -617,7 +617,7 @@ export function ArchiveManager({
                                      (task.type === 'Multi-Task' && (task.actions?.includes('Archiving') || task.actions?.includes('Index Rebuild')));
                 
                 return (
-                  <Card key={task.id} className="bg-white border-none shadow-sm rounded-2xl overflow-hidden group hover:ring-2 hover:ring-primary/10 transition-all flex flex-col h-[320px]">
+                  <Card key={task.id} className="bg-white border-none shadow-sm rounded-2xl overflow-hidden group hover:ring-2 hover:ring-primary/10 transition-all flex flex-col h-[340px]">
                     <CardHeader className="p-5 pb-3">
                       <div className="flex items-start justify-between">
                         <div className="space-y-2">
@@ -705,18 +705,18 @@ export function ArchiveManager({
                       )}
 
                       <div className="pt-2">
-                        <div className="text-[9px] font-bold text-slate-300 uppercase tracking-widest mb-0.5">Modified on</div>
-                        <div className="text-[10px] font-bold text-slate-400">
+                        <div className="text-[9px] font-extrabold text-slate-500 uppercase tracking-widest mb-0.5">Modified on</div>
+                        <div className="text-[11px] font-bold text-slate-900">
                           {new Date(task.createdAt).toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' })}
                         </div>
                       </div>
                     </CardContent>
-                    <CardFooter className="p-5 bg-slate-50/50 flex items-center justify-between border-t border-slate-50 gap-3">
-                      <div className="flex-1">
-                        {isConfigurable && (
+                    <CardFooter className="p-4 bg-slate-50/50 flex items-center gap-3 border-t border-slate-50 mt-auto">
+                      {isConfigurable ? (
+                        <>
                           <Button 
                             variant="outline" 
-                            className="w-full h-9 text-[10px] font-bold text-emerald-600 border-emerald-200 bg-white hover:bg-emerald-50 rounded-xl px-4 transition-all gap-1.5"
+                            className="flex-1 h-10 text-[10px] font-bold text-emerald-600 border-emerald-200 bg-white hover:bg-emerald-50 rounded-xl px-3 transition-all gap-1.5"
                             onClick={(e) => {
                               e.stopPropagation();
                               handleTaskClick(task);
@@ -725,18 +725,25 @@ export function ArchiveManager({
                             <FileCode className="h-3.5 w-3.5" />
                             Configure
                           </Button>
-                        )}
-                      </div>
-                      <div className="flex-1">
+                          <Button 
+                            variant="outline"
+                            className="flex-1 h-10 bg-white border border-slate-200 text-slate-700 text-[10px] font-bold rounded-xl px-3 hover:bg-slate-100 shadow-none gap-1.5"
+                            onClick={(e) => openScheduleDialog(e, task)}
+                          >
+                            <Clock className="h-3.5 w-3.5" />
+                            Schedule
+                          </Button>
+                        </>
+                      ) : (
                         <Button 
                           variant="outline"
-                          className="w-full h-9 bg-white border border-slate-200 text-slate-700 text-[10px] font-bold rounded-xl px-4 hover:bg-slate-100 shadow-none gap-1.5"
+                          className="w-full h-10 bg-white border border-slate-200 text-slate-700 text-[10px] font-bold rounded-xl px-4 hover:bg-slate-100 shadow-none gap-1.5"
                           onClick={(e) => openScheduleDialog(e, task)}
                         >
                           <Clock className="h-3.5 w-3.5" />
-                          Schedule
+                          Schedule Task
                         </Button>
-                      </div>
+                      )}
                     </CardFooter>
                   </Card>
                 );
@@ -798,7 +805,7 @@ export function ArchiveManager({
 
             {scheduleForm.frequency === 'Monthly' && (
               <div className="space-y-2 animate-in fade-in slide-in-from-top-2">
-                <Label className="text-sm font-semibold">Run on date (1-31)</Label>
+                <Label className="text-sm font-semibold">Run on day of month (1-31)</Label>
                 <Input 
                   type="number" 
                   min={1} 
