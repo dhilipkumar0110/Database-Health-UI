@@ -25,7 +25,8 @@ import {
   LayoutGrid,
   Play,
   CheckCircle2,
-  Timer
+  Timer,
+  Settings2
 } from "lucide-react"
 import { Card, CardContent, CardHeader, CardTitle, CardFooter, CardDescription } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
@@ -435,7 +436,7 @@ export function ArchiveManager({
 
   if (view === 'task-details' && selectedTask) {
     return (
-      <div className="space-y-6 animate-in fade-in slide-in-from-right-4 duration-500">
+      <div className="space-y-6 animate-in fade-in slide-in-from-right-4 duration-500 pb-12">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-4">
             <Button variant="ghost" size="icon" onClick={handleBack} className="rounded-full h-10 w-10">
@@ -458,10 +459,11 @@ export function ArchiveManager({
             <TableHeader className="bg-slate-50/50">
               <TableRow className="hover:bg-transparent border-none">
                 <TableHead className="h-12 px-8 text-[10px] font-bold uppercase text-slate-400">Table Name</TableHead>
-                <TableHead className="h-12 text-[10px] font-bold uppercase text-slate-400">Missing Indexes</TableHead>
+                <TableHead className="h-12 text-[10px] font-bold uppercase text-slate-400">Status Info</TableHead>
                 <TableHead className="h-12 text-[10px] font-bold uppercase text-slate-400">Deadlocks</TableHead>
-                <TableHead className="h-12 text-[10px] font-bold uppercase text-slate-400">Slow Queries</TableHead>
-                <TableHead className="h-12 text-[10px] font-bold uppercase text-slate-400">Table Size</TableHead>
+                <TableHead className="h-12 text-[10px] font-bold uppercase text-slate-400">Slow Qs</TableHead>
+                <TableHead className="h-12 text-[10px] font-bold uppercase text-slate-400">Size</TableHead>
+                <TableHead className="h-12 text-[10px] font-bold uppercase text-slate-400">Index Strategy</TableHead>
                 <TableHead className="h-12 px-8 text-right text-[10px] font-bold uppercase text-slate-400">Action</TableHead>
               </TableRow>
             </TableHeader>
@@ -474,8 +476,8 @@ export function ArchiveManager({
                         <TableIcon className="h-5 w-5" />
                       </div>
                       <div className="flex flex-col">
-                        <span className="text-sm font-bold text-primary hover:underline cursor-pointer">{tableName}</span>
-                        <span className="text-[10px] font-bold text-slate-300 uppercase tracking-tighter">Click for analytics</span>
+                        <span className="text-sm font-bold text-slate-700">{tableName}</span>
+                        <span className="text-[10px] font-bold text-slate-300 uppercase tracking-tighter">Monitored Resource</span>
                       </div>
                     </div>
                   </TableCell>
@@ -483,22 +485,25 @@ export function ArchiveManager({
                     {tableName.includes('UPLOAD') || tableName.includes('AUDIT') ? (
                       <Badge className="bg-rose-50 text-rose-500 border-none font-bold text-[9px] px-2 py-0.5 rounded-full flex items-center gap-1 w-fit">
                         <ShieldAlert className="h-3 w-3" />
-                        4 Issues
+                        Frag High
                       </Badge>
                     ) : (
-                      <span className="text-slate-300">—</span>
+                      <Badge className="bg-emerald-50 text-emerald-600 border-none font-bold text-[9px] px-2 py-0.5 rounded-full flex items-center gap-1 w-fit">
+                        <CheckCircle2 className="h-3 w-3" />
+                        Stable
+                      </Badge>
                     )}
                   </TableCell>
                   <TableCell>
                     <div className="flex items-center gap-2 text-slate-400 font-bold text-xs">
                       <Activity className="h-3 w-3" />
-                      {Math.floor(Math.random() * 12) + 2}
+                      {Math.floor(Math.random() * 5)}
                     </div>
                   </TableCell>
                   <TableCell>
                     <div className="flex items-center gap-2 text-amber-500 font-bold text-xs">
                       <Zap className="h-3 w-3" />
-                      {Math.floor(Math.random() * 20) + 1}
+                      {Math.floor(Math.random() * 10)}
                     </div>
                   </TableCell>
                   <TableCell>
@@ -506,14 +511,25 @@ export function ArchiveManager({
                       {tableName.includes('BYTES') || tableName.includes('UPLOAD') ? '45.0 GB' : '8.1 GB'}
                     </span>
                   </TableCell>
+                  <TableCell>
+                    <Select defaultValue="rebuild">
+                      <SelectTrigger className="h-9 w-32 border-slate-200 bg-white text-[11px] font-bold rounded-lg shadow-none">
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="rebuild">Rebuild</SelectItem>
+                        <SelectItem value="reorganize">Re-organize</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </TableCell>
                   <TableCell className="px-8 text-right">
                     <Button 
                       variant="link"
                       onClick={() => handleConfigureQuery(tableName)}
                       className="h-10 px-6 text-primary hover:no-underline text-[11px] font-bold rounded-xl gap-2"
                     >
-                      <FileCode className="h-4 w-4" />
-                      Configure
+                      <Settings2 className="h-4 w-4" />
+                      Configure Query
                     </Button>
                   </TableCell>
                 </TableRow>
@@ -688,17 +704,21 @@ export function ArchiveManager({
                     </div>
                   </CardContent>
                   <CardFooter className="p-5 bg-slate-50/50 flex items-center justify-between border-t border-slate-50">
-                    <Button 
-                      variant="link" 
-                      className="h-8 text-[10px] font-bold text-primary p-0 hover:no-underline gap-1.5 transition-all"
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        handleTaskClick(task);
-                      }}
-                    >
-                      {task.type === "Scanning" ? <SearchIcon className="h-3.5 w-3.5" /> : <FileCode className="h-3.5 w-3.5" />}
-                      {task.type === "Scanning" ? "View Audit" : "Configure"}
-                    </Button>
+                    {(task.type === "Archiving" || task.type === "Index Rebuild") ? (
+                      <Button 
+                        variant="link" 
+                        className="h-8 text-[10px] font-bold text-primary p-0 hover:no-underline gap-1.5 transition-all"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          handleTaskClick(task);
+                        }}
+                      >
+                        <FileCode className="h-3.5 w-3.5" />
+                        Configure
+                      </Button>
+                    ) : (
+                      <div className="h-8" /> 
+                    )}
                     <Button 
                       className="h-8 bg-white border border-slate-200 text-slate-700 text-[10px] font-bold rounded-lg px-4 hover:bg-slate-100 shadow-none gap-1.5"
                       onClick={(e) => openScheduleDialog(e, task)}
