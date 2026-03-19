@@ -25,7 +25,6 @@ import {
   LayoutGrid,
   Play,
   CheckCircle2,
-  Timer,
   Settings2
 } from "lucide-react"
 import { Card, CardContent, CardHeader, CardTitle, CardFooter, CardDescription } from "@/components/ui/card"
@@ -435,6 +434,9 @@ export function ArchiveManager({
   }
 
   if (view === 'task-details' && selectedTask) {
+    const isArchiving = selectedTask.type === 'Archiving' || selectedTask.actions?.includes('Archiving');
+    const isIndexRebuild = selectedTask.type === 'Index Rebuild' || selectedTask.actions?.includes('Index Rebuild');
+
     return (
       <div className="space-y-6 animate-in fade-in slide-in-from-right-4 duration-500 pb-12">
         <div className="flex items-center justify-between">
@@ -463,8 +465,8 @@ export function ArchiveManager({
                 <TableHead className="h-12 text-[10px] font-bold uppercase text-slate-400">Deadlocks</TableHead>
                 <TableHead className="h-12 text-[10px] font-bold uppercase text-slate-400">Slow Qs</TableHead>
                 <TableHead className="h-12 text-[10px] font-bold uppercase text-slate-400">Size</TableHead>
-                <TableHead className="h-12 text-[10px] font-bold uppercase text-slate-400">Index Strategy</TableHead>
-                <TableHead className="h-12 px-8 text-right text-[10px] font-bold uppercase text-slate-400">Action</TableHead>
+                {isIndexRebuild && <TableHead className="h-12 text-[10px] font-bold uppercase text-slate-400">Index Strategy</TableHead>}
+                {isArchiving && <TableHead className="h-12 px-8 text-right text-[10px] font-bold uppercase text-slate-400">Action</TableHead>}
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -511,27 +513,31 @@ export function ArchiveManager({
                       {tableName.includes('BYTES') || tableName.includes('UPLOAD') ? '45.0 GB' : '8.1 GB'}
                     </span>
                   </TableCell>
-                  <TableCell>
-                    <Select defaultValue="rebuild">
-                      <SelectTrigger className="h-9 w-32 border-slate-200 bg-white text-[11px] font-bold rounded-lg shadow-none">
-                        <SelectValue />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="rebuild">Rebuild</SelectItem>
-                        <SelectItem value="reorganize">Re-organize</SelectItem>
-                      </SelectContent>
-                    </Select>
-                  </TableCell>
-                  <TableCell className="px-8 text-right">
-                    <Button 
-                      variant="link"
-                      onClick={() => handleConfigureQuery(tableName)}
-                      className="h-10 px-6 text-primary hover:no-underline text-[11px] font-bold rounded-xl gap-2"
-                    >
-                      <Settings2 className="h-4 w-4" />
-                      Configure Query
-                    </Button>
-                  </TableCell>
+                  {isIndexRebuild && (
+                    <TableCell>
+                      <Select defaultValue="rebuild">
+                        <SelectTrigger className="h-9 w-32 border-slate-200 bg-white text-[11px] font-bold rounded-lg shadow-none">
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="rebuild">Rebuild</SelectItem>
+                          <SelectItem value="reorganize">Re-organize</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </TableCell>
+                  )}
+                  {isArchiving && (
+                    <TableCell className="px-8 text-right">
+                      <Button 
+                        variant="link"
+                        onClick={() => handleConfigureQuery(tableName)}
+                        className="h-10 px-6 text-primary hover:no-underline text-[11px] font-bold rounded-xl gap-2"
+                      >
+                        <Settings2 className="h-4 w-4" />
+                        Configure Query
+                      </Button>
+                    </TableCell>
+                  )}
                 </TableRow>
               ))}
             </TableBody>
@@ -605,130 +611,136 @@ export function ArchiveManager({
             </div>
           ) : (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-              {filteredTasks.map((task) => (
-                <Card key={task.id} className="bg-white border-none shadow-sm rounded-2xl overflow-hidden group hover:ring-2 hover:ring-primary/10 transition-all">
-                  <CardHeader className="p-5 pb-3">
-                    <div className="flex items-start justify-between">
-                      <div className="space-y-2">
-                        <CardTitle className="text-base font-bold text-slate-900">{task.name}</CardTitle>
-                        <div className="flex items-center flex-wrap gap-2">
-                          <div className="flex items-center gap-1.5">
-                            <span className="text-[10px] font-bold text-slate-400 uppercase tracking-tight">Type:</span>
-                            <Badge 
-                              className={cn(
-                                "font-bold text-[8px] px-1.5 py-0 rounded border-none uppercase tracking-tighter",
-                                task.type === "Archiving" && "bg-amber-50 text-amber-600",
-                                task.type === "Index Rebuild" && "bg-blue-50 text-blue-600",
-                                task.type === "Update Stats" && "bg-emerald-50 text-emerald-600",
-                                task.type === "Scanning" && "bg-purple-50 text-purple-600",
-                                task.type === "Multi-Task" && "bg-slate-100 text-slate-600"
+              {filteredTasks.map((task) => {
+                const isConfigurable = task.type === 'Archiving' || 
+                                     task.type === 'Index Rebuild' || 
+                                     (task.type === 'Multi-Task' && (task.actions?.includes('Archiving') || task.actions?.includes('Index Rebuild')));
+                
+                return (
+                  <Card key={task.id} className="bg-white border-none shadow-sm rounded-2xl overflow-hidden group hover:ring-2 hover:ring-primary/10 transition-all">
+                    <CardHeader className="p-5 pb-3">
+                      <div className="flex items-start justify-between">
+                        <div className="space-y-2">
+                          <CardTitle className="text-base font-bold text-slate-900">{task.name}</CardTitle>
+                          <div className="flex items-center flex-wrap gap-2">
+                            <div className="flex items-center gap-1.5">
+                              <span className="text-[10px] font-bold text-slate-400 uppercase tracking-tight">Type:</span>
+                              <Badge 
+                                className={cn(
+                                  "font-bold text-[8px] px-1.5 py-0 rounded border-none uppercase tracking-tighter",
+                                  task.type === "Archiving" && "bg-amber-50 text-amber-600",
+                                  task.type === "Index Rebuild" && "bg-blue-50 text-blue-600",
+                                  task.type === "Update Stats" && "bg-emerald-50 text-emerald-600",
+                                  task.type === "Scanning" && "bg-purple-50 text-purple-600",
+                                  task.type === "Multi-Task" && "bg-slate-100 text-slate-600"
+                                )}
+                              >
+                                {task.type === "Multi-Task" ? "Others" : task.type}
+                              </Badge>
+                            </div>
+                            <div className="flex items-center gap-1.5 ml-1 border-l pl-2 border-slate-100">
+                              <span className="text-[10px] font-bold text-slate-400 uppercase tracking-tight">Status:</span>
+                              {task.status === 'scheduled' ? (
+                                <Badge className="bg-emerald-500 text-white border-none font-bold text-[8px] uppercase px-1.5 py-0 rounded">Scheduled</Badge>
+                              ) : (
+                                <Badge className="bg-slate-100 text-slate-400 border-none font-bold text-[8px] uppercase px-1.5 py-0 rounded">Pending</Badge>
                               )}
-                            >
-                              {task.type === "Multi-Task" ? "Others" : task.type}
-                            </Badge>
-                          </div>
-                          <div className="flex items-center gap-1.5 ml-1 border-l pl-2 border-slate-100">
-                            <span className="text-[10px] font-bold text-slate-400 uppercase tracking-tight">Status:</span>
-                            {task.status === 'scheduled' ? (
-                              <Badge className="bg-emerald-500 text-white border-none font-bold text-[8px] uppercase px-1.5 py-0 rounded">Scheduled</Badge>
-                            ) : (
-                              <Badge className="bg-slate-100 text-slate-400 border-none font-bold text-[8px] uppercase px-1.5 py-0 rounded">Pending</Badge>
-                            )}
+                            </div>
                           </div>
                         </div>
+                        <DropdownMenu>
+                          <DropdownMenuTrigger asChild onClick={(e) => e.stopPropagation()}>
+                            <Button variant="ghost" size="icon" className="h-8 w-8 text-slate-400">
+                              <MoreVertical className="h-4 w-4" />
+                            </Button>
+                          </DropdownMenuTrigger>
+                          <DropdownMenuContent align="end">
+                            <DropdownMenuItem onClick={(e) => {
+                              e.stopPropagation();
+                              handleViewExecution(task);
+                            }}>
+                              <Play className="h-3.5 w-3.5 mr-2" />
+                              View Execution
+                            </DropdownMenuItem>
+                          </DropdownMenuContent>
+                        </DropdownMenu>
                       </div>
-                      <DropdownMenu>
-                        <DropdownMenuTrigger asChild onClick={(e) => e.stopPropagation()}>
-                          <Button variant="ghost" size="icon" className="h-8 w-8 text-slate-400">
-                            <MoreVertical className="h-4 w-4" />
-                          </Button>
-                        </DropdownMenuTrigger>
-                        <DropdownMenuContent align="end">
-                          <DropdownMenuItem onClick={(e) => {
-                            e.stopPropagation();
-                            handleViewExecution(task);
-                          }}>
-                            <Play className="h-3.5 w-3.5 mr-2" />
-                            View Execution
-                          </DropdownMenuItem>
-                        </DropdownMenuContent>
-                      </DropdownMenu>
-                    </div>
-                  </CardHeader>
-                  <CardContent className="p-5 pt-0 space-y-4">
-                    <div className="grid grid-cols-2 gap-4">
-                      <div className="space-y-1">
-                        <span className="text-[9px] font-bold text-slate-400 uppercase tracking-tight flex items-center gap-1">
-                          <Server className="h-2.5 w-2.5" /> Server
-                        </span>
-                        <div className="text-xs font-bold text-slate-700">{task.server}</div>
+                    </CardHeader>
+                    <CardContent className="p-5 pt-0 space-y-4">
+                      <div className="grid grid-cols-2 gap-4">
+                        <div className="space-y-1">
+                          <span className="text-[9px] font-bold text-slate-400 uppercase tracking-tight flex items-center gap-1">
+                            <Server className="h-2.5 w-2.5" /> Server
+                          </span>
+                          <div className="text-xs font-bold text-slate-700">{task.server}</div>
+                        </div>
+                        <div className="space-y-1">
+                          <span className="text-[9px] font-bold text-slate-400 uppercase tracking-tight flex items-center gap-1">
+                            <Database className="h-2.5 w-2.5" /> Database
+                          </span>
+                          <div className="text-xs font-bold text-slate-700">{task.database}</div>
+                        </div>
                       </div>
-                      <div className="space-y-1">
-                        <span className="text-[9px] font-bold text-slate-400 uppercase tracking-tight flex items-center gap-1">
-                          <Database className="h-2.5 w-2.5" /> Database
-                        </span>
-                        <div className="text-xs font-bold text-slate-700">{task.database}</div>
-                      </div>
-                    </div>
 
-                    {task.type === "Multi-Task" && task.actions && task.actions.length > 0 && (
+                      {task.type === "Multi-Task" && task.actions && task.actions.length > 0 && (
+                        <div className="space-y-2">
+                          <span className="text-[9px] font-bold text-slate-400 uppercase tracking-tight">Included Actions:</span>
+                          <div className="flex flex-wrap gap-1">
+                            {task.actions.map(a => (
+                              <Badge key={a} variant="outline" className="text-[8px] font-bold px-1.5 py-0 border-slate-200 text-slate-500 uppercase">
+                                {a}
+                              </Badge>
+                            ))}
+                          </div>
+                        </div>
+                      )}
+
                       <div className="space-y-2">
-                        <span className="text-[9px] font-bold text-slate-400 uppercase tracking-tight">Included Actions:</span>
+                        <span className="text-[9px] font-bold text-slate-400 uppercase tracking-tight">Scope: {task.tables.length} Tables</span>
                         <div className="flex flex-wrap gap-1">
-                          {task.actions.map(a => (
-                            <Badge key={a} variant="outline" className="text-[8px] font-bold px-1.5 py-0 border-slate-200 text-slate-500 uppercase">
-                              {a}
+                          {task.tables.slice(0, 3).map(t => (
+                            <Badge key={t} variant="secondary" className="bg-slate-50 text-slate-500 border-none text-[9px] font-medium px-2">
+                              {t}
                             </Badge>
                           ))}
+                          {task.tables.length > 3 && (
+                            <Badge variant="secondary" className="bg-slate-50 text-slate-400 border-none text-[9px] font-medium px-2">
+                              +{task.tables.length - 3} more
+                            </Badge>
+                          )}
                         </div>
                       </div>
-                    )}
-
-                    <div className="space-y-2">
-                      <span className="text-[9px] font-bold text-slate-400 uppercase tracking-tight">Scope: {task.tables.length} Tables</span>
-                      <div className="flex flex-wrap gap-1">
-                        {task.tables.slice(0, 3).map(t => (
-                          <Badge key={t} variant="secondary" className="bg-slate-50 text-slate-500 border-none text-[9px] font-medium px-2">
-                            {t}
-                          </Badge>
-                        ))}
-                        {task.tables.length > 3 && (
-                          <Badge variant="secondary" className="bg-slate-50 text-slate-400 border-none text-[9px] font-medium px-2">
-                            +{task.tables.length - 3} more
-                          </Badge>
-                        )}
+                      <div className="text-[9px] text-slate-300 font-medium italic">
+                        Modified on {new Date(task.createdAt).toLocaleDateString()}
                       </div>
-                    </div>
-                    <div className="text-[9px] text-slate-300 font-medium italic">
-                      Modified on {new Date(task.createdAt).toLocaleDateString()}
-                    </div>
-                  </CardContent>
-                  <CardFooter className="p-5 bg-slate-50/50 flex items-center justify-between border-t border-slate-50">
-                    {(task.type === "Archiving" || task.type === "Index Rebuild") ? (
+                    </CardContent>
+                    <CardFooter className="p-5 bg-slate-50/50 flex items-center justify-between border-t border-slate-50">
+                      {isConfigurable ? (
+                        <Button 
+                          variant="link" 
+                          className="h-8 text-[10px] font-bold text-primary p-0 hover:no-underline gap-1.5 transition-all"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            handleTaskClick(task);
+                          }}
+                        >
+                          <FileCode className="h-3.5 w-3.5" />
+                          Configure
+                        </Button>
+                      ) : (
+                        <div className="h-8" /> 
+                      )}
                       <Button 
-                        variant="link" 
-                        className="h-8 text-[10px] font-bold text-primary p-0 hover:no-underline gap-1.5 transition-all"
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          handleTaskClick(task);
-                        }}
+                        className="h-8 bg-white border border-slate-200 text-slate-700 text-[10px] font-bold rounded-lg px-4 hover:bg-slate-100 shadow-none gap-1.5"
+                        onClick={(e) => openScheduleDialog(e, task)}
                       >
-                        <FileCode className="h-3.5 w-3.5" />
-                        Configure
+                        <Clock className="h-3 w-3" />
+                        Schedule
                       </Button>
-                    ) : (
-                      <div className="h-8" /> 
-                    )}
-                    <Button 
-                      className="h-8 bg-white border border-slate-200 text-slate-700 text-[10px] font-bold rounded-lg px-4 hover:bg-slate-100 shadow-none gap-1.5"
-                      onClick={(e) => openScheduleDialog(e, task)}
-                    >
-                      <Clock className="h-3 w-3" />
-                      Schedule
-                    </Button>
-                  </CardFooter>
-                </Card>
-              ))}
+                    </CardFooter>
+                  </Card>
+                );
+              })}
             </div>
           )}
         </TabsContent>
