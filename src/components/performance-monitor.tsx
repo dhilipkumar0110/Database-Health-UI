@@ -1,3 +1,4 @@
+
 "use client"
 
 import * as React from "react"
@@ -46,37 +47,61 @@ const METRICS = [
   { label: "Lock wait time", value: "1.2s", subtext: "Avg per request", color: "text-amber-600" },
 ]
 
-const FRAGMENTATION_DATA = [
-  { table: "invoices", index: "IX_invoice_date", frag: 68, severity: "Critical" },
-  { table: "session_history", index: "IX_session_user", frag: 61, severity: "Critical" },
-  { table: "orders", index: "IX_orders_cust", frag: 54, severity: "Critical" },
-  { table: "payments", index: "IX_pay_date", frag: 47, severity: "Critical" },
+const ALL_FRAGMENTATION = [
+  { table: "WEB_AUTH_NOTES", index: "IX_notes_created", frag: 68, severity: "Critical" },
+  { table: "WEB_AUDIT_TRAIL", index: "IX_audit_ts", frag: 62, severity: "Critical" },
+  { table: "WEB_AUTH_DETAILS", index: "IX_auth_user", frag: 59, severity: "Critical" },
+  { table: "PROV_CONSULT_NOTES", index: "IX_consult_date", frag: 52, severity: "Critical" },
+  { table: "USER_PROVIDERS", index: "IX_prov_id", frag: 48, severity: "Warning" },
+  { table: "POST_DISMISSALS", index: "IX_dismissal_type", frag: 24, severity: "Warning" },
+  { table: "REQUEST_LOG", index: "IX_req_log_id", frag: 5, severity: "Healthy" },
+  { table: "Auth_Consult_Notes", index: "IX_auth_consult", frag: 8, severity: "Healthy" },
 ]
 
-const SLOW_QUERIES = [
-  { query: "DELETE FROM session_history WHERE...", table: "session_history", avgTime: "12.5s", executions: "88", lastRun: "2m ago", fix: "Missing index" },
-  { query: "SELECT TOP 100 * FROM invoices WHERE...", table: "invoices", avgTime: "8.2s", executions: "412", lastRun: "5m ago", fix: "Missing index" },
-  { query: "UPDATE transactions SET status...", table: "transactions", avgTime: "6.1s", executions: "203", lastRun: "12m ago", fix: "Rebuild index" },
-  { query: "SELECT * FROM orders JOIN payments...", table: "orders", avgTime: "4.4s", executions: "670", lastRun: "18m ago", fix: "Missing index" },
-  { query: "INSERT INTO audit_logs VALUES...", table: "audit_logs", avgTime: "3.2s", executions: "1,840", lastRun: "1m ago", fix: "Fragmentation" },
-  { query: "SELECT * FROM portal_sessions WHERE...", table: "portal_sessions", avgTime: "2.8s", executions: "920", lastRun: "3m ago", fix: "Missing index" },
-  { query: "UPDATE customers SET last_login...", table: "customers", avgTime: "1.9s", executions: "445", lastRun: "8m ago", fix: "Fragmentation" },
-  { query: "SELECT SUM(amount) FROM payments...", table: "payments", avgTime: "1.4s", executions: "289", lastRun: "22m ago", fix: "Rebuild index" },
+const ALL_SLOW_QUERIES = [
+  { query: "DELETE FROM WEB_AUTH_NOTES WHERE...", table: "WEB_AUTH_NOTES", avgTime: "12.5s", executions: "88", lastRun: "2m ago", fix: "Missing index" },
+  { query: "SELECT * FROM WEB_AUDIT_TRAIL WHERE...", table: "WEB_AUDIT_TRAIL", avgTime: "8.2s", executions: "412", lastRun: "5m ago", fix: "Missing index" },
+  { query: "UPDATE PROV_CONSULT_NOTES SET...", table: "PROV_CONSULT_NOTES", avgTime: "6.1s", executions: "203", lastRun: "12m ago", fix: "Rebuild index" },
+  { query: "SELECT * FROM USERS JOIN WEB_AUTH_DETAILS...", table: "USERS", avgTime: "4.4s", executions: "670", lastRun: "18m ago", fix: "Missing index" },
+  { query: "INSERT INTO REQUEST_LOG VALUES...", table: "REQUEST_LOG", avgTime: "3.2s", executions: "1,840", lastRun: "1m ago", fix: "Fragmentation" },
+  { query: "SELECT * FROM POST_DISMISSALS WHERE...", table: "POST_DISMISSALS", avgTime: "2.8s", executions: "920", lastRun: "3m ago", fix: "Missing index" },
+  { query: "UPDATE Auth_Consult_Notes SET...", table: "Auth_Consult_Notes", avgTime: "1.9s", executions: "445", lastRun: "8m ago", fix: "Fragmentation" },
 ]
 
-const MISSING_INDEXES = [
-  { table: "session_history", columns: "[user_id, created_at]", impact: "Very high" },
-  { table: "invoices", columns: "[transaction_id]", impact: "Very high" },
-  { table: "invoices", columns: "[created_at, status]", impact: "High" },
+const ALL_MISSING_INDEXES = [
+  { table: "WEB_AUDIT_TRAIL", columns: "[user_id, event_ts]", impact: "Very high" },
+  { table: "WEB_AUTH_DETAILS", columns: "[auth_id]", impact: "Very high" },
+  { table: "PROV_CONSULT_NOTES", columns: "[patient_id, consult_date]", impact: "High" },
+  { table: "REQUEST_LOG", columns: "[request_id]", impact: "Medium" },
 ]
 
-const DEADLOCKS = [
-  { block: "orders ↹ payments", info: "SPID 58 vs 61 · 14 min ago", time: "2.3s" },
-  { block: "invoices ↹ transactions", info: "SPID 42 vs 77 · 1h 12m ago", time: "4.1s" },
-  { block: "session_history ↹ portal_sessions", info: "SPID 12 vs 19 · 2h 45m ago", time: "1.8s" },
+const ALL_DEADLOCKS = [
+  { block: "USERS ↹ WEB_AUTH_DETAILS", info: "SPID 58 vs 61 · 14 min ago", time: "2.3s", tables: ["USERS", "WEB_AUTH_DETAILS"] },
+  { block: "WEB_AUDIT_TRAIL ↹ PROV_CONSULT_NOTES", info: "SPID 42 vs 77 · 1h 12m ago", time: "4.1s", tables: ["WEB_AUDIT_TRAIL", "PROV_CONSULT_NOTES"] },
+  { block: "Auth_Consult_Notes ↹ REQUEST_LOG", info: "SPID 12 vs 19 · 2h 45m ago", time: "1.8s", tables: ["Auth_Consult_Notes", "REQUEST_LOG"] },
 ]
 
-export function PerformanceMonitor({ activeDb }: { activeDb: string }) {
+export function PerformanceMonitor({ activeDb, monitoredTables }: { activeDb: string, monitoredTables: string[] }) {
+  const fragData = React.useMemo(() => 
+    ALL_FRAGMENTATION.filter(f => monitoredTables.includes(f.table)),
+    [monitoredTables]
+  )
+
+  const slowQueries = React.useMemo(() => 
+    ALL_SLOW_QUERIES.filter(q => monitoredTables.includes(q.table)),
+    [monitoredTables]
+  )
+
+  const missingIndexes = React.useMemo(() => 
+    ALL_MISSING_INDEXES.filter(i => monitoredTables.includes(i.table)),
+    [monitoredTables]
+  )
+
+  const deadlocks = React.useMemo(() => 
+    ALL_DEADLOCKS.filter(d => d.tables.some(t => monitoredTables.includes(t))),
+    [monitoredTables]
+  )
+
   return (
     <div className="space-y-6 animate-in fade-in duration-500 pb-12">
       {/* Header */}
@@ -143,7 +168,7 @@ export function PerformanceMonitor({ activeDb }: { activeDb: string }) {
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {FRAGMENTATION_DATA.map((item, i) => (
+                {fragData.length > 0 ? fragData.map((item, i) => (
                   <TableRow key={i} className="group hover:bg-slate-50/50 transition-colors border-b border-slate-50 last:border-0">
                     <TableCell className="py-2.5 px-6">
                       <span className="text-xs font-bold text-slate-800">{item.table}</span>
@@ -187,7 +212,13 @@ export function PerformanceMonitor({ activeDb }: { activeDb: string }) {
                       </Button>
                     </TableCell>
                   </TableRow>
-                ))}
+                )) : (
+                  <TableRow>
+                    <TableCell colSpan={5} className="py-12 text-center text-slate-400 font-medium">
+                      No fragmentation issues detected for monitored tables.
+                    </TableCell>
+                  </TableRow>
+                )}
               </TableBody>
             </Table>
           </CardContent>
@@ -245,12 +276,12 @@ export function PerformanceMonitor({ activeDb }: { activeDb: string }) {
         </div>
       </div>
 
-      {/* NEW: Slow Queries Dashboard */}
+      {/* Slow Queries Dashboard */}
       <Card className="bg-white border-none shadow-sm rounded-2xl overflow-hidden">
         <CardHeader className="p-6 pb-2 flex flex-row items-center justify-between space-y-0">
           <div>
             <CardTitle className="text-sm font-bold text-slate-900">Slow queries</CardTitle>
-            <CardDescription className="text-[10px] font-bold text-slate-400 uppercase mt-0.5">Queries exceeding 1s — sys.dm_exec_query_stats + sys.dm_exec_sql_text</CardDescription>
+            <CardDescription className="text-[10px] font-bold text-slate-400 uppercase mt-0.5">Queries exceeding 1s — monitored tables only</CardDescription>
           </div>
           <div className="flex items-center gap-2">
             <div className="flex bg-slate-100 rounded-lg p-0.5 mr-2">
@@ -277,7 +308,7 @@ export function PerformanceMonitor({ activeDb }: { activeDb: string }) {
               </TableRow>
             </TableHeader>
             <TableBody>
-              {SLOW_QUERIES.map((q, i) => (
+              {slowQueries.length > 0 ? slowQueries.map((q, i) => (
                 <TableRow key={i} className="group hover:bg-slate-50/50 transition-colors border-b border-slate-50 last:border-0">
                   <TableCell className="py-3 px-6">
                     <span className="text-[10px] font-mono text-slate-400 block max-w-[300px] truncate">{q.query}</span>
@@ -295,7 +326,7 @@ export function PerformanceMonitor({ activeDb }: { activeDb: string }) {
                       className={cn(
                         "font-bold text-[8px] px-2 py-0.5 rounded border-none shadow-none uppercase tracking-tighter",
                         q.fix === "Missing index" && "bg-rose-50 text-rose-500",
-                        q.fix === "Fragmentation" && "bg-amber-50 text-amber-500",
+                        q.fix === "Fragmentation" && "bg-amber-50 text-amber-600",
                         q.fix === "Rebuild index" && "bg-orange-50 text-orange-500"
                       )}
                     >
@@ -308,7 +339,13 @@ export function PerformanceMonitor({ activeDb }: { activeDb: string }) {
                     </Button>
                   </TableCell>
                 </TableRow>
-              ))}
+              )) : (
+                <TableRow>
+                  <TableCell colSpan={7} className="py-12 text-center text-slate-400 font-medium">
+                    No slow queries detected for monitored tables.
+                  </TableCell>
+                </TableRow>
+              )}
             </TableBody>
           </Table>
         </CardContent>
@@ -320,7 +357,7 @@ export function PerformanceMonitor({ activeDb }: { activeDb: string }) {
           <CardHeader className="p-6 pb-2 flex flex-row items-center justify-between space-y-0">
             <div>
               <CardTitle className="text-sm font-bold text-slate-900">Missing index recommendations</CardTitle>
-              <CardDescription className="text-[10px] font-bold text-slate-400 uppercase mt-0.5">sys.dm_db_missing_index_details + dm_db_missing_index_groups</CardDescription>
+              <CardDescription className="text-[10px] font-bold text-slate-400 uppercase mt-0.5">Monitored tables insights</CardDescription>
             </div>
             <Button className="h-8 bg-[#1E8E3E] hover:bg-[#1A7F37] text-white text-[10px] font-bold rounded-full px-4">
               Generate scripts
@@ -337,7 +374,7 @@ export function PerformanceMonitor({ activeDb }: { activeDb: string }) {
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {MISSING_INDEXES.map((idx, i) => (
+                {missingIndexes.length > 0 ? missingIndexes.map((idx, i) => (
                   <TableRow key={i} className="hover:bg-slate-50/50 transition-colors border-b border-slate-50 last:border-0">
                     <TableCell className="py-3 px-6">
                       <span className="text-xs font-bold text-slate-800">{idx.table}</span>
@@ -354,7 +391,13 @@ export function PerformanceMonitor({ activeDb }: { activeDb: string }) {
                       </Button>
                     </TableCell>
                   </TableRow>
-                ))}
+                )) : (
+                  <TableRow>
+                    <TableCell colSpan={4} className="py-12 text-center text-slate-400 font-medium">
+                      No index recommendations for current monitored scope.
+                    </TableCell>
+                  </TableRow>
+                )}
               </TableBody>
             </Table>
           </CardContent>
@@ -365,20 +408,23 @@ export function PerformanceMonitor({ activeDb }: { activeDb: string }) {
           <CardHeader className="p-6 pb-2 flex flex-row items-center justify-between space-y-0">
             <div>
               <CardTitle className="text-sm font-bold text-slate-900">Lock waits & deadlocks</CardTitle>
-              <CardDescription className="text-[10px] font-bold text-slate-400 uppercase mt-0.5">sys.dm_exec_requests + sys.dm_os_performance_counters</CardDescription>
+              <CardDescription className="text-[10px] font-bold text-slate-400 uppercase mt-0.5">Recent conflict events</CardDescription>
             </div>
-            <Badge className="bg-rose-50 text-rose-500 border-none font-bold text-[9px] uppercase px-3 py-1">7 deadlocks today</Badge>
           </CardHeader>
           <CardContent className="px-6 py-4 space-y-4">
-            {DEADLOCKS.map((dl, i) => (
-              <div key={i} className="flex items-center justify-between group cursor-pointer">
+            {deadlocks.length > 0 ? deadlocks.map((dl, i) => (
+              <div key={i} className="flex items-center justify-between group cursor-pointer border-b border-slate-50 pb-3 last:border-0 last:pb-0">
                 <div className="space-y-1">
                   <div className="text-xs font-bold text-slate-800">{dl.block}</div>
                   <div className="text-[10px] font-medium text-slate-400">{dl.info}</div>
                 </div>
                 <div className="text-xs font-bold text-rose-500">{dl.time}</div>
               </div>
-            ))}
+            )) : (
+              <div className="py-10 text-center text-slate-400 font-medium text-sm">
+                No recent deadlocks involving monitored tables.
+              </div>
+            )}
           </CardContent>
         </Card>
       </div>

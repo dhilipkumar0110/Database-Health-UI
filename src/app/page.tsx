@@ -275,7 +275,12 @@ export default function SQLSentinelApp() {
           />
         )
       case "performance":
-        return <PerformanceMonitor activeDb={activeDbName} />
+        return (
+          <PerformanceMonitor 
+            activeDb={activeDbName} 
+            monitoredTables={activeDb?.monitoredTables || []} 
+          />
+        )
       case "redundancy":
         return (
           <RedundancyScanner 
