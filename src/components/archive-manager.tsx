@@ -617,11 +617,11 @@ export function ArchiveManager({
                                      (task.type === 'Multi-Task' && (task.actions?.includes('Archiving') || task.actions?.includes('Index Rebuild')));
                 
                 return (
-                  <Card key={task.id} className="bg-white border-none shadow-sm rounded-2xl overflow-hidden group hover:ring-2 hover:ring-primary/10 transition-all flex flex-col h-[340px]">
-                    <CardHeader className="p-5 pb-3">
+                  <Card key={task.id} className="bg-white border-none shadow-sm rounded-2xl overflow-hidden group hover:ring-2 hover:ring-primary/10 transition-all flex flex-col h-[380px]">
+                    <CardHeader className="p-6 pb-4">
                       <div className="flex items-start justify-between">
                         <div className="space-y-2">
-                          <CardTitle className="text-base font-bold text-slate-900 truncate max-w-[200px]">{task.name}</CardTitle>
+                          <CardTitle className="text-base font-bold text-slate-900 truncate max-w-[220px]">{task.name}</CardTitle>
                           <div className="flex items-center flex-wrap gap-2">
                             <div className="flex items-center gap-1.5">
                               <span className="text-[10px] font-bold text-slate-400 uppercase tracking-tight">Type:</span>
@@ -650,31 +650,31 @@ export function ArchiveManager({
                         </div>
                         <DropdownMenu>
                           <DropdownMenuTrigger asChild onClick={(e) => e.stopPropagation()}>
-                            <Button variant="ghost" size="icon" className="h-8 w-8 text-slate-400">
+                            <Button variant="ghost" size="icon" className="h-8 w-8 text-slate-400 rounded-full hover:bg-slate-50">
                               <MoreVertical className="h-4 w-4" />
                             </Button>
                           </DropdownMenuTrigger>
-                          <DropdownMenuContent align="end">
+                          <DropdownMenuContent align="end" className="w-48 rounded-xl shadow-xl border-slate-100">
                             <DropdownMenuItem onClick={(e) => {
                               e.stopPropagation();
                               handleViewExecution(task);
-                            }}>
-                              <Play className="h-3.5 w-3.5 mr-2" />
+                            }} className="gap-2 py-2 cursor-pointer font-medium text-xs">
+                              <Play className="h-3.5 w-3.5 text-emerald-600" />
                               View Execution
                             </DropdownMenuItem>
                           </DropdownMenuContent>
                         </DropdownMenu>
                       </div>
                     </CardHeader>
-                    <CardContent className="p-5 pt-0 space-y-4 flex-1">
-                      <div className="grid grid-cols-2 gap-4">
-                        <div className="space-y-1">
+                    <CardContent className="p-6 pt-0 space-y-5 flex-1">
+                      <div className="grid grid-cols-2 gap-6">
+                        <div className="space-y-1.5">
                           <span className="text-[9px] font-bold text-slate-400 uppercase tracking-tight flex items-center gap-1">
                             <Server className="h-2.5 w-2.5" /> Server
                           </span>
                           <div className="text-xs font-bold text-slate-700 truncate">{task.server}</div>
                         </div>
-                        <div className="space-y-1">
+                        <div className="space-y-1.5">
                           <span className="text-[9px] font-bold text-slate-400 uppercase tracking-tight flex items-center gap-1">
                             <Database className="h-2.5 w-2.5" /> Database
                           </span>
@@ -682,21 +682,24 @@ export function ArchiveManager({
                         </div>
                       </div>
 
-                      <div className="space-y-2">
-                        <div className="flex items-center gap-2">
-                          <div className="h-7 w-7 rounded-lg bg-primary/5 flex items-center justify-center text-primary border border-primary/10">
-                            <TableIcon className="h-3.5 w-3.5" />
+                      <div className="p-3.5 rounded-2xl bg-slate-50 border border-slate-100/50">
+                        <div className="flex items-center gap-3">
+                          <div className="h-8 w-8 rounded-xl bg-white flex items-center justify-center text-primary shadow-sm border border-slate-100">
+                            <TableIcon className="h-4 w-4" />
                           </div>
-                          <span className="text-[10px] font-bold text-slate-500 uppercase tracking-widest">Scope: {task.tables.length} Tables</span>
+                          <div className="flex flex-col">
+                            <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest leading-none mb-1">Scope</span>
+                            <span className="text-sm font-bold text-slate-900">{task.tables.length} Monitored Tables</span>
+                          </div>
                         </div>
                       </div>
 
                       {task.type === "Multi-Task" && task.actions && task.actions.length > 0 && (
-                        <div className="space-y-1.5">
-                          <span className="text-[9px] font-bold text-slate-400 uppercase tracking-tight">Actions:</span>
-                          <div className="flex flex-wrap gap-1">
+                        <div className="space-y-2">
+                          <span className="text-[9px] font-bold text-slate-400 uppercase tracking-tight">Included Actions:</span>
+                          <div className="flex flex-wrap gap-1.5">
                             {task.actions.map(a => (
-                              <Badge key={a} variant="outline" className="text-[8px] font-bold px-1.5 py-0 border-slate-200 text-slate-500 uppercase">
+                              <Badge key={a} variant="outline" className="text-[8px] font-bold px-2 py-0.5 border-slate-200 text-slate-500 uppercase tracking-tighter">
                                 {a}
                               </Badge>
                             ))}
@@ -704,46 +707,41 @@ export function ArchiveManager({
                         </div>
                       )}
 
-                      <div className="pt-2">
-                        <div className="text-[9px] font-extrabold text-slate-500 uppercase tracking-widest mb-0.5">Modified on</div>
-                        <div className="text-[11px] font-bold text-slate-900">
+                      <div className="pt-2 border-t border-slate-50">
+                        <div className="text-[9px] font-extrabold text-slate-400 uppercase tracking-[0.1em] mb-1">Last Modified</div>
+                        <div className="text-xs font-bold text-slate-900 flex items-center gap-1.5">
+                          <Clock className="h-3 w-3 text-slate-300" />
                           {new Date(task.createdAt).toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' })}
                         </div>
                       </div>
                     </CardContent>
-                    <CardFooter className="p-4 bg-slate-50/50 flex items-center gap-3 border-t border-slate-50 mt-auto">
-                      {isConfigurable ? (
-                        <>
+                    <CardFooter className="p-4 bg-slate-50/50 border-t border-slate-100 mt-auto">
+                      <div className="flex w-full gap-2">
+                        {isConfigurable && (
                           <Button 
                             variant="outline" 
-                            className="flex-1 h-10 text-[10px] font-bold text-emerald-600 border-emerald-200 bg-white hover:bg-emerald-50 rounded-xl px-3 transition-all gap-1.5"
+                            className="flex-1 h-11 text-[11px] font-bold text-slate-700 border-slate-200 bg-white hover:bg-emerald-50 hover:text-emerald-700 hover:border-emerald-200 rounded-xl transition-all gap-2 shadow-sm"
                             onClick={(e) => {
                               e.stopPropagation();
                               handleTaskClick(task);
                             }}
                           >
-                            <FileCode className="h-3.5 w-3.5" />
+                            <Settings2 className="h-4 w-4" />
                             Configure
                           </Button>
-                          <Button 
-                            variant="outline"
-                            className="flex-1 h-10 bg-white border border-slate-200 text-slate-700 text-[10px] font-bold rounded-xl px-3 hover:bg-slate-100 shadow-none gap-1.5"
-                            onClick={(e) => openScheduleDialog(e, task)}
-                          >
-                            <Clock className="h-3.5 w-3.5" />
-                            Schedule
-                          </Button>
-                        </>
-                      ) : (
+                        )}
                         <Button 
                           variant="outline"
-                          className="w-full h-10 bg-white border border-slate-200 text-slate-700 text-[10px] font-bold rounded-xl px-4 hover:bg-slate-100 shadow-none gap-1.5"
+                          className={cn(
+                            "h-11 bg-white border border-slate-200 text-slate-700 text-[11px] font-bold rounded-xl hover:bg-slate-100 shadow-sm gap-2",
+                            isConfigurable ? "flex-1" : "w-full"
+                          )}
                           onClick={(e) => openScheduleDialog(e, task)}
                         >
-                          <Clock className="h-3.5 w-3.5" />
-                          Schedule Task
+                          <Clock className="h-4 w-4" />
+                          {isConfigurable ? "Schedule" : "Schedule Action"}
                         </Button>
-                      )}
+                      </div>
                     </CardFooter>
                   </Card>
                 );
