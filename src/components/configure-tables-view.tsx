@@ -109,7 +109,19 @@ export function ConfigureTablesView({
     return results
   }, [tableSearch, sortConfig])
 
-  const isAllSelected = filteredTables.length > 0 && selectedTables.length === filteredTables.length
+  const isAllSelected = filteredTables.length > 0 && filteredTables.every(t => selectedTables.includes(t.name))
+
+  const handleToggleAll = () => {
+    if (isAllSelected) {
+      const filteredNames = filteredTables.map(t => t.name)
+      setSelectedTables(prev => prev.filter(name => !filteredNames.includes(name)))
+    } else {
+      setSelectedTables(prev => {
+        const newOnes = filteredTables.map(t => t.name).filter(name => !prev.includes(name))
+        return [...prev, ...newOnes]
+      })
+    }
+  }
 
   const handleSave = () => {
     toast({
@@ -164,7 +176,7 @@ export function ConfigureTablesView({
                   <TableHead className="w-[80px] px-8">
                     <Checkbox 
                       checked={isAllSelected} 
-                      onCheckedChange={() => setSelectedTables(isAllSelected ? [] : filteredTables.map(t => t.name))}
+                      onCheckedChange={handleToggleAll}
                     />
                   </TableHead>
                   <TableHead className="text-[10px] font-bold uppercase cursor-pointer py-4" onClick={() => handleSort('name')}>
@@ -189,7 +201,11 @@ export function ConfigureTablesView({
                     onClick={() => toggleTable(table.name)}
                   >
                     <TableCell className="px-8 py-4">
-                      <Checkbox checked={selectedTables.includes(table.name)} />
+                      <Checkbox 
+                        checked={selectedTables.includes(table.name)} 
+                        onCheckedChange={() => toggleTable(table.name)}
+                        onClick={(e) => e.stopPropagation()}
+                      />
                     </TableCell>
                     <TableCell>
                       <div className="flex items-center gap-3">

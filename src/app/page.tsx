@@ -20,10 +20,11 @@ import { Bell, Search } from "lucide-react"
 import { Input } from "@/components/ui/input"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { toast } from "@/hooks/use-toast"
+import { Toaster } from "@/components/ui/toaster"
 
 export type ScheduleConfig = {
   frequency: 'Daily' | 'Weekly' | 'Monthly'
-  dayOfWeek?: string
+  daysOfWeek?: string[]
   dayOfMonth?: number
   startDate: string
   endDate: string
@@ -76,7 +77,6 @@ const DEFAULT_DATABASES: DatabaseInstance[] = [
       { label: "Avg frag", value: "24.3%", color: "text-amber-600" },
       { label: "Cache hit", value: "91.4%", color: "text-emerald-600" },
       { label: "Deadlocks", value: "7", color: "text-rose-600" },
-      { label: "Slow queries", value: "243", color: "text-rose-600" },
     ],
     footer: "3 tables above 30% fragmentation · 1 redundant table detected",
     isActive: true
@@ -93,7 +93,6 @@ const DEFAULT_DATABASES: DatabaseInstance[] = [
       { label: "Avg frag", value: "41%", color: "text-rose-600" },
       { label: "Cache hit", value: "78%", color: "text-rose-600" },
       { label: "Deadlocks", value: "2", color: "text-slate-900" },
-      { label: "Slow queries", value: "189", color: "text-rose-600" },
     ],
     footer: "5 tables critical · cache hit below 80% threshold",
     isActive: false
@@ -135,17 +134,6 @@ const DEFAULT_TASKS: MaintenanceTask[] = [
       startDate: '2024-03-01',
       endDate: '2024-12-31'
     }
-  },
-  {
-    id: "task-4",
-    name: "Redundancy Cleanup",
-    type: "Multi-Task",
-    actions: ["Drop"],
-    server: "SQLSRV-PROD-01",
-    database: "WebPortalDB",
-    tables: ["staging_data_temp_copy", "temp_orders_old"],
-    createdAt: "2024-03-12T10:00:00Z",
-    status: 'pending'
   }
 ]
 
@@ -196,7 +184,6 @@ export default function SQLSentinelApp() {
         { label: "Avg frag", value: "0%", color: "text-emerald-600" },
         { label: "Cache hit", value: "100%", color: "text-emerald-600" },
         { label: "Deadlocks", value: "0", color: "text-slate-900" },
-        { label: "Slow queries", value: "0", color: "text-slate-900" },
       ],
       footer: "Initial scan in progress · No issues found",
       isActive: false
@@ -227,7 +214,6 @@ export default function SQLSentinelApp() {
     }
     setTasks(prev => [newTask, ...prev])
     
-    // Determine which tab to navigate to
     const primaryTypes = ['Archiving', 'Index Rebuild', 'Update Stats', 'Scanning'];
     const targetTab = primaryTypes.includes(newTask.type) ? newTask.type : 'Multi-Task';
     
@@ -381,6 +367,7 @@ export default function SQLSentinelApp() {
           &copy; 2026 MPM Database Health • developed by keysoftware Team
         </footer>
       </SidebarInset>
+      <Toaster />
     </SidebarProvider>
   )
 }

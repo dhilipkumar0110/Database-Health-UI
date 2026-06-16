@@ -67,12 +67,12 @@ export function TableDetailsView({ table }: { table: TableData }) {
         <Card className="bg-white border-none shadow-sm rounded-2xl p-6 flex flex-col justify-between min-h-[140px]">
           <div className="space-y-1">
             <div className="flex items-center gap-2 text-[10px] font-bold text-slate-400 uppercase tracking-widest">
-              <Zap className="h-3 w-3" /> Slow Queries
+              <Zap className="h-3 w-3" /> Fragmentation
             </div>
-            <div className="text-3xl font-bold text-orange-500">{table.slowQ}</div>
+            <div className="text-3xl font-bold text-orange-500">{table.fragmentation}%</div>
           </div>
           <div className="flex items-center gap-1.5 text-xs font-bold text-orange-400">
-            <span>Averaging 2.4s Execution Time</span>
+            <span>Scan completed: today 08:42 AM</span>
           </div>
         </Card>
 
@@ -175,25 +175,33 @@ export function TableDetailsView({ table }: { table: TableData }) {
             </div>
           </Card>
 
-          {/* Slow Query Logs */}
+          {/* Table Stats Summary */}
           <Card className="bg-white border-none shadow-sm rounded-3xl p-8">
             <div className="flex items-center justify-between mb-8">
-              <h3 className="text-sm font-bold text-slate-900 uppercase tracking-widest">Slow Query Logs</h3>
+              <h3 className="text-sm font-bold text-slate-900 uppercase tracking-widest">Resource Usage</h3>
             </div>
             <div className="space-y-6">
-              {[
-                { sql: "SELECT TOP 100 * FROM...", time: "10 min ago", duration: "4.8s" },
-                { sql: "UPDATE transactions SET...", time: "45 min ago", duration: "3.2s" },
-                { sql: "DELETE FROM transactions WHERE...", time: "2 hours ago", duration: "12.5s" },
-              ].map((query, idx) => (
-                <div key={idx} className="flex items-start justify-between group cursor-pointer border-b border-slate-50 pb-4 last:border-0 last:pb-0">
-                  <div className="space-y-1">
-                    <div className="text-[11px] font-bold text-slate-800 group-hover:text-primary transition-colors">{query.sql}</div>
-                    <div className="text-[9px] font-bold text-slate-400 uppercase">{query.time}</div>
-                  </div>
-                  <div className="text-xs font-bold text-rose-500">{query.duration}</div>
+              <div className="flex items-center justify-between group cursor-pointer border-b border-slate-50 pb-4">
+                <div className="space-y-1">
+                  <div className="text-[11px] font-bold text-slate-800">Buffer Pool Usage</div>
+                  <div className="text-[9px] font-bold text-slate-400 uppercase">Monitored metric</div>
                 </div>
-              ))}
+                <div className="text-xs font-bold text-emerald-500">82.1 MB</div>
+              </div>
+              <div className="flex items-center justify-between group cursor-pointer border-b border-slate-50 pb-4">
+                <div className="space-y-1">
+                  <div className="text-[11px] font-bold text-slate-800">Scan Operations</div>
+                  <div className="text-[9px] font-bold text-slate-400 uppercase">Last 24h</div>
+                </div>
+                <div className="text-xs font-bold text-amber-500">1,244</div>
+              </div>
+              <div className="flex items-center justify-between group cursor-pointer pb-0">
+                <div className="space-y-1">
+                  <div className="text-[11px] font-bold text-slate-800">Last DDL Activity</div>
+                  <div className="text-[9px] font-bold text-slate-400 uppercase">Schema version</div>
+                </div>
+                <div className="text-xs font-bold text-slate-600">3d ago</div>
+              </div>
             </div>
           </Card>
         </div>

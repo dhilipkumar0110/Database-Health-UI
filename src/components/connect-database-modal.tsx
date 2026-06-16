@@ -1,3 +1,4 @@
+
 "use client"
 
 import * as React from "react"
@@ -45,21 +46,30 @@ export function ConnectDatabaseModal({ isOpen, onClose, onComplete }: ConnectDat
     if (!isOpen) {
       setTimeout(() => {
         setIsTested(false)
+        setFormData({
+          dataSourceName: "",
+          serverName: "",
+          authType: "sql",
+          userName: "",
+          password: "",
+          database: ""
+        })
       }, 300)
     }
   }, [isOpen])
 
   const isValid = React.useMemo(() => {
-    const common = formData.dataSourceName.trim() !== "" && formData.serverName.trim() !== "" && formData.database !== ""
+    const common = formData.dataSourceName.trim() !== "" && 
+                   formData.serverName.trim() !== "" && 
+                   formData.database !== ""
+    
     if (formData.authType === "windows") return common
     return common && formData.userName.trim() !== "" && formData.password.trim() !== ""
   }, [formData])
 
   const handleInputChange = (field: string, value: string) => {
     setFormData((prev) => ({ ...prev, [field]: value }))
-    if (["serverName", "userName", "password", "authType", "database"].includes(field)) {
-      setIsTested(false)
-    }
+    setIsTested(false)
   }
 
   const handleTestConnection = () => {
@@ -76,7 +86,6 @@ export function ConnectDatabaseModal({ isOpen, onClose, onComplete }: ConnectDat
 
   const handleFinalize = () => {
     if (onComplete) {
-      // Default to 0 tables as they will be configured later
       onComplete(formData.dataSourceName, formData.serverName, 0)
       toast({
         title: "Database Connected",
