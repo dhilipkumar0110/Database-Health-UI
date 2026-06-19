@@ -15,7 +15,8 @@ import {
   Calendar,
   Edit2,
   Search,
-  LayoutGrid
+  LayoutGrid,
+  AlertTriangle
 } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
@@ -38,6 +39,16 @@ import {
   DialogFooter,
   DialogDescription,
 } from "@/components/ui/dialog"
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog"
 import { Label } from "@/components/ui/label"
 import {
   Select,
@@ -48,6 +59,8 @@ import {
 } from "@/components/ui/select"
 import { toast } from "@/hooks/use-toast"
 import { cn } from "@/lib/utils"
+
+const DAYS_OF_WEEK = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday']
 
 export function MaintenancePlanner({ 
   tasks, 
@@ -60,11 +73,14 @@ export function MaintenancePlanner({
 }) {
   const [isCreateModalOpen, setIsCreateModalOpen] = React.useState(false)
   const [isEditModalOpen, setIsEditModalOpen] = React.useState(false)
+  const [isDeleteDialogOpen, setIsDeleteDialogOpen] = React.useState(false)
+  const [taskToDelete, setTaskToDelete] = React.useState<string | null>(null)
+  
   const [selectedTaskId, setSelectedTaskId] = React.useState<string>("")
   const [editableTaskName, setEditableTaskName] = React.useState("")
   const [scheduleForm, setScheduleForm] = React.useState<ScheduleConfig>({
     frequency: 'Daily',
-    dayOfWeek: 'Monday',
+    daysOfWeek: ['Monday'],
     dayOfMonth: 1,
     startDate: new Date().toISOString().split('T')[0],
     endDate: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString().split('T')[0]
@@ -76,11 +92,31 @@ export function MaintenancePlanner({
   const handleFinalizeSchedule = () => {
     if (selectedTaskId) {
       const task = tasks.find(t => t.id === selectedTaskId)
+      
+      // Validation
+      const today = new Date().toISOString().split('T')[0]
+      if (scheduleForm.startDate < today) {
+        toast({
+          variant: "destructive",
+          title: "Invalid Start Date",
+          description: "Start date cannot be in the past."
+        })
+        return
+      }
+      if (scheduleForm.endDate < scheduleForm.startDate) {
+        toast({
+          variant: "destructive",
+          title: "Invalid End Date",
+          description: "End date cannot be before the start date."
+        })
+        return
+      }
+
       onUpdateTask(selectedTaskId, {
-        name: task?.name,
         status: 'scheduled',
         schedule: scheduleForm
       })
+      
       setIsCreateModalOpen(false)
       setIsEditModalOpen(false)
       setSelectedTaskId("")
@@ -101,10 +137,34 @@ export function MaintenancePlanner({
     setIsEditModalOpen(true)
   }
 
+  const confirmDelete = (taskId: string) => {
+    setTaskToDelete(taskId)
+    setIsDeleteDialogOpen(true)
+  }
+
+  const handleDelete = () => {
+    if (taskToDelete) {
+      onDeleteTask(taskToDelete)
+      setIsDeleteDialogOpen(false)
+      setTaskToDelete(null)
+    }
+  }
+
+  const toggleDay = (day: string) => {
+    setScheduleForm(prev => {
+      const days = prev.daysOfWeek || []
+      if (days.includes(day)) {
+        return { ...prev, daysOfWeek: days.filter(d => d !== day) }
+      } else {
+        return { ...prev, daysOfWeek: [...days, day] }
+      }
+    })
+  }
+
   const resetForm = () => {
     setScheduleForm({
       frequency: 'Daily',
-      dayOfWeek: 'Monday',
+      daysOfWeek: ['Monday'],
       dayOfMonth: 1,
       startDate: new Date().toISOString().split('T')[0],
       endDate: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString().split('T')[0]
@@ -192,7 +252,7 @@ export function MaintenancePlanner({
                     <TableCell>
                       <span className="text-xs font-bold text-slate-600 italic">
                         {task.schedule?.frequency === 'Daily' ? 'Every day' :
-                         task.schedule?.frequency === 'Weekly' ? `Every ${task.schedule?.dayOfWeek}` :
+                         task.schedule?.frequency === 'Weekly' ? `Run: ${task.schedule?.daysOfWeek?.join(', ')}` :
                          `On the ${task.schedule?.dayOfMonth}${task.schedule?.dayOfMonth === 1 ? 'st' : task.schedule?.dayOfMonth === 2 ? 'nd' : 'th'} of month`}
                       </span>
                     </TableCell>
@@ -225,7 +285,7 @@ export function MaintenancePlanner({
                           variant="ghost" 
                           size="icon" 
                           className="h-8 w-8 text-slate-400 hover:text-rose-500 rounded-lg"
-                          onClick={() => onDeleteTask(task.id)}
+                          onClick={() => confirmDelete(task.id)}
                         >
                           <Trash2 className="h-4 w-4" />
                         </Button>
@@ -284,21 +344,24 @@ export function MaintenancePlanner({
             </div>
 
             {scheduleForm.frequency === 'Weekly' && (
-              <div className="space-y-2 animate-in fade-in slide-in-from-top-2">
-                <Label className="text-sm font-semibold">Run on day</Label>
-                <Select 
-                  value={scheduleForm.dayOfWeek || "Monday"} 
-                  onValueChange={(v) => setScheduleForm(prev => ({ ...prev, dayOfWeek: v }))}
-                >
-                  <SelectTrigger className="h-11 border-slate-200">
-                    <SelectValue placeholder="Select day" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'].map(day => (
-                      <SelectItem key={day} value={day}>{day}</SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
+              <div className="space-y-3 animate-in fade-in slide-in-from-top-2">
+                <Label className="text-sm font-semibold">Run on days</Label>
+                <div className="flex flex-wrap gap-2">
+                  {DAYS_OF_WEEK.map(day => (
+                    <Button
+                      key={day}
+                      variant="outline"
+                      size="sm"
+                      onClick={() => toggleDay(day)}
+                      className={cn(
+                        "h-8 text-[10px] font-bold uppercase",
+                        scheduleForm.daysOfWeek?.includes(day) && "bg-primary text-white hover:bg-primary/90"
+                      )}
+                    >
+                      {day.substring(0, 3)}
+                    </Button>
+                  ))}
+                </div>
               </div>
             )}
 
@@ -322,6 +385,7 @@ export function MaintenancePlanner({
                 <Input 
                   type="date" 
                   value={scheduleForm.startDate}
+                  min={new Date().toISOString().split('T')[0]}
                   onChange={(e) => setScheduleForm(prev => ({ ...prev, startDate: e.target.value }))}
                   className="h-11 border-slate-200"
                 />
@@ -331,6 +395,7 @@ export function MaintenancePlanner({
                 <Input 
                   type="date" 
                   value={scheduleForm.endDate}
+                  min={scheduleForm.startDate}
                   onChange={(e) => setScheduleForm(prev => ({ ...prev, endDate: e.target.value }))}
                   className="h-11 border-slate-200"
                 />
@@ -391,21 +456,24 @@ export function MaintenancePlanner({
             </div>
 
             {scheduleForm.frequency === 'Weekly' && (
-              <div className="space-y-2 animate-in fade-in slide-in-from-top-2">
-                <Label className="text-sm font-semibold">Run on day</Label>
-                <Select 
-                  value={scheduleForm.dayOfWeek || "Monday"} 
-                  onValueChange={(v) => setScheduleForm(prev => ({ ...prev, dayOfWeek: v }))}
-                >
-                  <SelectTrigger className="h-11 border-slate-200">
-                    <SelectValue placeholder="Select day" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'].map(day => (
-                      <SelectItem key={day} value={day}>{day}</SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
+              <div className="space-y-3 animate-in fade-in slide-in-from-top-2">
+                <Label className="text-sm font-semibold">Run on days</Label>
+                <div className="flex flex-wrap gap-2">
+                  {DAYS_OF_WEEK.map(day => (
+                    <Button
+                      key={day}
+                      variant="outline"
+                      size="sm"
+                      onClick={() => toggleDay(day)}
+                      className={cn(
+                        "h-8 text-[10px] font-bold uppercase",
+                        scheduleForm.daysOfWeek?.includes(day) && "bg-primary text-white hover:bg-primary/90"
+                      )}
+                    >
+                      {day.substring(0, 3)}
+                    </Button>
+                  ))}
+                </div>
               </div>
             )}
 
@@ -429,6 +497,7 @@ export function MaintenancePlanner({
                 <Input 
                   type="date" 
                   value={scheduleForm.startDate}
+                  min={new Date().toISOString().split('T')[0]}
                   onChange={(e) => setScheduleForm(prev => ({ ...prev, startDate: e.target.value }))}
                   className="h-11 border-slate-200"
                 />
@@ -438,6 +507,7 @@ export function MaintenancePlanner({
                 <Input 
                   type="date" 
                   value={scheduleForm.endDate}
+                  min={scheduleForm.startDate}
                   onChange={(e) => setScheduleForm(prev => ({ ...prev, endDate: e.target.value }))}
                   className="h-11 border-slate-200"
                 />
@@ -455,6 +525,29 @@ export function MaintenancePlanner({
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      <AlertDialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>
+        <AlertDialogContent className="rounded-2xl">
+          <AlertDialogHeader>
+            <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-rose-50 mb-4">
+              <AlertTriangle className="h-6 w-6 text-rose-600" />
+            </div>
+            <AlertDialogTitle className="text-center font-bold">Delete Maintenance Task?</AlertDialogTitle>
+            <AlertDialogDescription className="text-center">
+              This action cannot be undone. This will permanently delete the maintenance task and its schedule.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter className="sm:justify-center gap-3">
+            <AlertDialogCancel className="rounded-xl font-bold">Cancel</AlertDialogCancel>
+            <AlertDialogAction 
+              onClick={handleDelete}
+              className="bg-rose-600 hover:bg-rose-700 text-white rounded-xl font-bold"
+            >
+              Confirm Delete
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   )
 }
