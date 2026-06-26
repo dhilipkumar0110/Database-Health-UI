@@ -15,7 +15,8 @@ import {
   Activity,
   Plus,
   Clock,
-  ShieldAlert
+  ShieldAlert,
+  History
 } from "lucide-react"
 import { Card, CardContent } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
@@ -63,21 +64,22 @@ export type TableData = {
   lastRead: string
   deadlocks: number
   slowQ: number
+  lastArchivedOn: string
+  archivedTill: string
+  usageContext: string
 }
 
 const ALL_MOCK_TABLES: TableData[] = [
-  { name: "Auth_Consult_Notes", schema: "dbo", status: "Healthy", statusVariant: "healthy", rowCount: "609,251", size: "420 MB", fragmentation: 8, lastRead: "1h ago", deadlocks: 0, slowQ: 2 },
-  { name: "Claims_inquiry_Response", schema: "dbo", status: "Healthy", statusVariant: "healthy", rowCount: "44,738", size: "85 MB", fragmentation: 12, lastRead: "2h ago", deadlocks: 0, slowQ: 0 },
-  { name: "POST_DISMISSALS", schema: "dbo", status: "Warning", statusVariant: "warning", rowCount: "1,586,110", size: "2.1 GB", fragmentation: 24, lastRead: "30m ago", deadlocks: 2, slowQ: 14 },
-  { name: "PROV_CONSULT_NOTES", schema: "dbo", status: "Critical", statusVariant: "critical", rowCount: "5,570,747", size: "12.4 GB", fragmentation: 52, lastRead: "15m ago", deadlocks: 8, slowQ: 42 },
-  { name: "REQUEST_LOG", schema: "audit", status: "Healthy", statusVariant: "healthy", rowCount: "331,196", size: "180 MB", fragmentation: 5, lastRead: "5m ago", deadlocks: 0, slowQ: 1 },
-  { name: "USERS", schema: "auth", status: "Healthy", statusVariant: "healthy", rowCount: "154,494", size: "45 MB", fragmentation: 4, lastRead: "1m ago", deadlocks: 0, slowQ: 1 },
-  { name: "WEB_AUDIT_TRAIL", schema: "audit", status: "Critical", statusVariant: "critical", rowCount: "58,548,194", size: "142 GB", fragmentation: 62, lastRead: "Now", deadlocks: 24, slowQ: 182 },
-  { name: "WEB_AUTH_DETAILS", schema: "auth", status: "Critical", statusVariant: "critical", rowCount: "22,069,814", size: "32.1 GB", fragmentation: 59, lastRead: "Now", deadlocks: 18, slowQ: 110 },
-  { name: "WEB_AUTH_NOTES", schema: "auth", status: "Critical", statusVariant: "critical", rowCount: "31,693,191", size: "88.4 GB", fragmentation: 68, lastRead: "Now", deadlocks: 32, slowQ: 243 },
-  { name: "USER_PROVIDERS", schema: "auth", status: "Critical", statusVariant: "critical", rowCount: "9,098,052", size: "8.2 GB", fragmentation: 48, lastRead: "2m ago", deadlocks: 12, slowQ: 55 },
-  { name: "WEB_AUTH_DIAGS", schema: "auth", status: "Critical", statusVariant: "critical", rowCount: "31,330,066", size: "12.8 GB", fragmentation: 64, lastRead: "Now", deadlocks: 21, slowQ: 145 },
-  { name: "WEB_AUTH_CHANGES", schema: "auth", status: "Critical", statusVariant: "critical", rowCount: "14,886,733", size: "18.4 GB", fragmentation: 55, lastRead: "1m ago", deadlocks: 15, slowQ: 92 },
+  { name: "Auth_Consult_Notes", schema: "dbo", status: "Healthy", statusVariant: "healthy", rowCount: "609,251", size: "420 MB", fragmentation: 8, lastRead: "1h ago", deadlocks: 0, slowQ: 2, lastArchivedOn: "2024-03-01", archivedTill: "2023-12-31", usageContext: "Accessed 14 times in last 2 scans" },
+  { name: "Claims_inquiry_Response", schema: "dbo", status: "Healthy", statusVariant: "healthy", rowCount: "44,738", size: "85 MB", fragmentation: 12, lastRead: "2h ago", deadlocks: 0, slowQ: 0, lastArchivedOn: "2024-02-15", archivedTill: "2023-10-01", usageContext: "Accessed 8 times in last 2 scans" },
+  { name: "POST_DISMISSALS", schema: "dbo", status: "Warning", statusVariant: "warning", rowCount: "1,586,110", size: "2.1 GB", fragmentation: 24, lastRead: "30m ago", deadlocks: 2, slowQ: 14, lastArchivedOn: "2024-01-20", archivedTill: "2023-09-01", usageContext: "Accessed 42 times in last 2 scans" },
+  { name: "PROV_CONSULT_NOTES", schema: "dbo", status: "Critical", statusVariant: "critical", rowCount: "5,570,747", size: "12.4 GB", fragmentation: 52, lastRead: "15m ago", deadlocks: 8, slowQ: 42, lastArchivedOn: "2024-03-08", archivedTill: "2024-01-01", usageContext: "Accessed 112 times in last 2 scans" },
+  { name: "REQUEST_LOG", schema: "audit", status: "Healthy", statusVariant: "healthy", rowCount: "331,196", size: "180 MB", fragmentation: 5, lastRead: "5m ago", deadlocks: 0, slowQ: 1, lastArchivedOn: "Never", archivedTill: "N/A", usageContext: "Accessed 210 times in last 2 scans" },
+  { name: "USERS", schema: "auth", status: "Healthy", statusVariant: "healthy", rowCount: "154,494", size: "45 MB", fragmentation: 4, lastRead: "1m ago", deadlocks: 0, slowQ: 1, lastArchivedOn: "Never", archivedTill: "N/A", usageContext: "Accessed 450 times in last 2 scans" },
+  { name: "WEB_AUDIT_TRAIL", schema: "audit", status: "Critical", statusVariant: "critical", rowCount: "58,548,194", size: "142 GB", fragmentation: 62, lastRead: "Now", deadlocks: 24, slowQ: 182, lastArchivedOn: "2024-03-10", archivedTill: "2023-12-01", usageContext: "Accessed 890 times in last 2 scans" },
+  { name: "WEB_AUTH_DETAILS", schema: "auth", status: "Critical", statusVariant: "critical", rowCount: "22,069,814", size: "32.1 GB", fragmentation: 59, lastRead: "Now", deadlocks: 18, slowQ: 110, lastArchivedOn: "2024-03-12", archivedTill: "2024-02-01", usageContext: "Accessed 640 times in last 2 scans" },
+  { name: "WEB_AUTH_NOTES", schema: "auth", status: "Critical", statusVariant: "critical", rowCount: "31,693,191", size: "88.4 GB", fragmentation: 68, lastRead: "Now", deadlocks: 32, slowQ: 243, lastArchivedOn: "2024-03-14", archivedTill: "2024-02-15", usageContext: "Accessed 2 times in last 2 scans" },
+  { name: "USER_PROVIDERS", schema: "auth", status: "Critical", statusVariant: "critical", rowCount: "9,098,052", size: "8.2 GB", fragmentation: 48, lastRead: "2m ago", deadlocks: 12, slowQ: 55, lastArchivedOn: "2024-02-28", archivedTill: "2024-01-01", usageContext: "Accessed 180 times in last 2 scans" },
 ]
 
 export function TableManager({ 
@@ -217,24 +219,6 @@ export function TableManager({
   return (
     <div className="space-y-8 animate-in fade-in duration-500 pb-20">
       <div className="space-y-6">
-        <div className="bg-amber-50/50 border border-amber-100 rounded-xl p-3 px-6 flex items-center justify-between shadow-sm">
-          <div className="flex items-center gap-6">
-            <div className="flex items-center gap-2">
-              <div className="h-2 w-2 rounded-full bg-amber-500" />
-              <span className="text-xs font-bold text-amber-900"><strong className="font-extrabold text-amber-950">3 tables</strong> fragmentation {'>'}30%</span>
-            </div>
-            <div className="flex items-center gap-2">
-              <div className="h-2 w-2 rounded-full bg-amber-500" />
-              <span className="text-xs font-bold text-amber-900"><strong className="font-extrabold text-amber-950">2 tables</strong> no access in 60+ days</span>
-            </div>
-            <div className="flex items-center gap-2 border-l border-amber-200 pl-6">
-              <span className="text-xs font-bold text-amber-700 uppercase tracking-tight">Pattern detection:</span>
-              <span className="text-xs font-medium text-amber-900 italic">Matches for _2011, _2014 archive patterns</span>
-            </div>
-          </div>
-          <X className="h-4 w-4 text-amber-400 cursor-pointer hover:text-amber-600" onClick={() => {}} />
-        </div>
-
         <div className="grid grid-cols-1 md:grid-cols-5 gap-4">
           <Card className="bg-white border-none shadow-sm rounded-2xl p-6">
             <div className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-2">Tables</div>
@@ -315,87 +299,71 @@ export function TableManager({
           </div>
         )}
 
-        {filteredTables.length === 0 ? (
-          <Card className="border-dashed border-2 bg-slate-50/50 py-20">
-            <CardContent className="flex flex-col items-center justify-center text-center space-y-4">
-              <div className="h-16 w-16 rounded-full bg-white shadow-sm flex items-center justify-center">
-                <TableIcon className="h-8 w-8 text-slate-200" />
-              </div>
-              <div className="space-y-1">
-                <h3 className="text-lg font-bold text-slate-700">No tables monitored</h3>
-                <p className="text-sm text-slate-400 max-w-sm mx-auto">
-                  Use the "Configure Tables" screen on the dashboard to select tables for monitoring in {activeDb}.
-                </p>
-              </div>
-            </CardContent>
-          </Card>
-        ) : (
-          <div className="bg-white rounded-2xl border border-slate-100 shadow-sm overflow-hidden">
-            <Table>
-              <TableHeader className="bg-slate-50/50">
-                <TableRow className="hover:bg-transparent">
-                  <TableHead className="w-12 text-center">
-                    <Checkbox checked={isAllSelected} onCheckedChange={handleToggleAll} className="h-4 w-4" />
-                  </TableHead>
-                  <TableHead className="text-[10px] font-bold uppercase text-slate-400">Table name</TableHead>
-                  <TableHead className="text-[10px] font-bold uppercase text-slate-400">Status</TableHead>
-                  <TableHead className="text-[10px] font-bold uppercase text-slate-400">Row count</TableHead>
-                  <TableHead className="text-[10px] font-bold uppercase text-slate-400">Size</TableHead>
-                  <TableHead className="text-[10px] font-bold uppercase text-slate-400">Fragmentation</TableHead>
-                  <TableHead className="text-[10px] font-bold uppercase text-slate-400 text-center">Deadlocks</TableHead>
-                  <TableHead className="text-[10px] font-bold uppercase text-slate-400 text-center">Slow Qs</TableHead>
-                  <TableHead className="text-[10px] font-bold uppercase text-slate-400">Last read</TableHead>
-                  <TableHead className="text-right text-[10px] font-bold uppercase text-slate-400 pr-8">Action</TableHead>
+        <div className="bg-white rounded-2xl border border-slate-100 shadow-sm overflow-hidden">
+          <Table>
+            <TableHeader className="bg-slate-50/50">
+              <TableRow className="hover:bg-transparent">
+                <TableHead className="w-12 text-center">
+                  <Checkbox checked={isAllSelected} onCheckedChange={handleToggleAll} className="h-4 w-4" />
+                </TableHead>
+                <TableHead className="text-[10px] font-bold uppercase text-slate-400">Table name</TableHead>
+                <TableHead className="text-[10px] font-bold uppercase text-slate-400">Health</TableHead>
+                <TableHead className="text-[10px] font-bold uppercase text-slate-400">Frag %</TableHead>
+                <TableHead className="text-[10px] font-bold uppercase text-slate-400">Deadlocks</TableHead>
+                <TableHead className="text-[10px] font-bold uppercase text-slate-400">Last Archive</TableHead>
+                <TableHead className="text-[10px] font-bold uppercase text-slate-400">Archived Till</TableHead>
+                <TableHead className="text-right text-[10px] font-bold uppercase text-slate-400 pr-8">Action</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {filteredTables.map((table, i) => (
+                <TableRow key={i} className={cn("group hover:bg-slate-50/50 transition-colors border-b border-slate-50 last:border-0", selectedTables.includes(table.name) && "bg-slate-50/80")}>
+                  <TableCell className="text-center">
+                    <Checkbox checked={selectedTables.includes(table.name)} onCheckedChange={() => handleToggleOne(table.name)} className="h-4 w-4" />
+                  </TableCell>
+                  <TableCell>
+                    <div className="flex flex-col">
+                      <span className="text-sm font-bold text-slate-800">{table.name}</span>
+                      <span className="text-[9px] text-slate-400 font-bold uppercase">{table.size} · {table.rowCount} rows</span>
+                    </div>
+                  </TableCell>
+                  <TableCell>
+                    <Badge className={cn("font-bold text-[9px] px-2 py-0.5 rounded border-none shadow-none", table.statusVariant === "critical" ? "bg-rose-50 text-rose-500" : table.statusVariant === "warning" ? "bg-amber-50 text-amber-600" : "bg-emerald-50 text-emerald-600")}>
+                      {table.status}
+                    </Badge>
+                  </TableCell>
+                  <TableCell>
+                    <span className={cn("text-xs font-bold", table.fragmentation > 30 ? "text-amber-600" : "text-slate-600")}>
+                      {table.fragmentation}%
+                    </span>
+                  </TableCell>
+                  <TableCell>
+                    <div className="flex items-center gap-1 text-xs font-bold text-slate-700">
+                      <Activity className="h-3 w-3 text-slate-300" />
+                      {table.deadlocks}
+                    </div>
+                  </TableCell>
+                  <TableCell>
+                    <div className="flex items-center gap-1.5 text-xs font-bold text-slate-500">
+                      <History className="h-3 w-3 text-primary opacity-50" />
+                      {table.lastArchivedOn}
+                    </div>
+                  </TableCell>
+                  <TableCell>
+                    <span className="text-xs font-bold text-slate-400">
+                      {table.archivedTill}
+                    </span>
+                  </TableCell>
+                  <TableCell className="text-right pr-8">
+                    <Button variant="outline" size="sm" onClick={() => { setSelectedTableForDetails(table); setViewMode('details'); }} className="h-7 text-[10px] font-bold rounded-lg border-slate-200 text-slate-600 hover:bg-white hover:border-slate-300">
+                      Details
+                    </Button>
+                  </TableCell>
                 </TableRow>
-              </TableHeader>
-              <TableBody>
-                {filteredTables.map((table, i) => (
-                  <TableRow key={i} className={cn("group hover:bg-slate-50/50 transition-colors border-b border-slate-50 last:border-0", selectedTables.includes(table.name) && "bg-slate-50/80")}>
-                    <TableCell className="text-center">
-                      <Checkbox checked={selectedTables.includes(table.name)} onCheckedChange={() => handleToggleOne(table.name)} className="h-4 w-4" />
-                    </TableCell>
-                    <TableCell><span className="text-sm font-bold text-slate-800">{table.name}</span></TableCell>
-                    <TableCell>
-                      <Badge className={cn("font-bold text-[9px] px-2 py-0.5 rounded border-none shadow-none", table.statusVariant === "critical" ? "bg-rose-50 text-rose-500" : table.statusVariant === "warning" ? "bg-amber-50 text-amber-600" : "bg-emerald-50 text-emerald-600")}>
-                        {table.status}
-                      </Badge>
-                    </TableCell>
-                    <TableCell className="text-xs font-bold text-slate-600">{table.rowCount}</TableCell>
-                    <TableCell className="text-xs font-bold text-slate-600">{table.size}</TableCell>
-                    <TableCell className="min-w-[140px]">
-                      <div className="flex items-center gap-3">
-                        <div className="flex-1 h-1.5 bg-slate-100 rounded-full overflow-hidden">
-                          <div className={cn("h-full rounded-full", table.fragmentation > 50 ? "bg-rose-500" : table.fragmentation > 20 ? "bg-amber-500" : "bg-emerald-500")} style={{ width: `${table.fragmentation}%` }} />
-                        </div>
-                        <span className={cn("text-[10px] font-bold w-7 text-right", table.fragmentation > 50 ? "text-rose-500" : table.fragmentation > 20 ? "text-amber-500" : "text-emerald-500")}>
-                          {table.fragmentation}%
-                        </span>
-                      </div>
-                    </TableCell>
-                    <TableCell className="text-center">
-                      <div className="flex items-center justify-center gap-1 text-[10px] font-bold text-slate-700">
-                        <Activity className="h-3 w-3 text-slate-300" />
-                        {table.deadlocks}
-                      </div>
-                    </TableCell>
-                    <TableCell className="text-center">
-                      <div className="flex items-center justify-center gap-1 text-[10px] font-bold text-orange-500">
-                        <Zap className="h-3 w-3 text-orange-300" />
-                        {table.slowQ}
-                      </div>
-                    </TableCell>
-                    <TableCell className="text-[10px] font-bold text-slate-500">{table.lastRead}</TableCell>
-                    <TableCell className="text-right pr-8">
-                      <Button variant="outline" size="sm" onClick={() => { setSelectedTableForDetails(table); setViewMode('details'); }} className="h-7 text-[10px] font-bold rounded-lg border-slate-200 text-slate-600 hover:bg-white hover:border-slate-300">
-                        Details
-                      </Button>
-                    </TableCell>
-                  </TableRow>
-                ))}
-              </TableBody>
-            </Table>
-          </div>
-        )}
+              ))}
+            </TableBody>
+          </Table>
+        </div>
       </div>
 
       <Dialog open={isTaskModalOpen} onOpenChange={setIsTaskModalOpen}>
