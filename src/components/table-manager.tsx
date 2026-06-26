@@ -1,4 +1,3 @@
-
 "use client"
 
 import * as React from "react"
@@ -63,23 +62,22 @@ export type TableData = {
   fragmentation: number
   lastRead: string
   deadlocks: number
-  slowQ: number
   lastArchivedOn: string
   archivedTill: string
   usageContext: string
 }
 
 const ALL_MOCK_TABLES: TableData[] = [
-  { name: "Auth_Consult_Notes", schema: "dbo", status: "Healthy", statusVariant: "healthy", rowCount: "609,251", size: "420 MB", fragmentation: 8, lastRead: "1h ago", deadlocks: 0, slowQ: 2, lastArchivedOn: "2024-03-01", archivedTill: "2023-12-31", usageContext: "Accessed 14 times in last 2 scans" },
-  { name: "Claims_inquiry_Response", schema: "dbo", status: "Healthy", statusVariant: "healthy", rowCount: "44,738", size: "85 MB", fragmentation: 12, lastRead: "2h ago", deadlocks: 0, slowQ: 0, lastArchivedOn: "2024-02-15", archivedTill: "2023-10-01", usageContext: "Accessed 8 times in last 2 scans" },
-  { name: "POST_DISMISSALS", schema: "dbo", status: "Warning", statusVariant: "warning", rowCount: "1,586,110", size: "2.1 GB", fragmentation: 24, lastRead: "30m ago", deadlocks: 2, slowQ: 14, lastArchivedOn: "2024-01-20", archivedTill: "2023-09-01", usageContext: "Accessed 42 times in last 2 scans" },
-  { name: "PROV_CONSULT_NOTES", schema: "dbo", status: "Critical", statusVariant: "critical", rowCount: "5,570,747", size: "12.4 GB", fragmentation: 52, lastRead: "15m ago", deadlocks: 8, slowQ: 42, lastArchivedOn: "2024-03-08", archivedTill: "2024-01-01", usageContext: "Accessed 112 times in last 2 scans" },
-  { name: "REQUEST_LOG", schema: "audit", status: "Healthy", statusVariant: "healthy", rowCount: "331,196", size: "180 MB", fragmentation: 5, lastRead: "5m ago", deadlocks: 0, slowQ: 1, lastArchivedOn: "Never", archivedTill: "N/A", usageContext: "Accessed 210 times in last 2 scans" },
-  { name: "USERS", schema: "auth", status: "Healthy", statusVariant: "healthy", rowCount: "154,494", size: "45 MB", fragmentation: 4, lastRead: "1m ago", deadlocks: 0, slowQ: 1, lastArchivedOn: "Never", archivedTill: "N/A", usageContext: "Accessed 450 times in last 2 scans" },
-  { name: "WEB_AUDIT_TRAIL", schema: "audit", status: "Critical", statusVariant: "critical", rowCount: "58,548,194", size: "142 GB", fragmentation: 62, lastRead: "Now", deadlocks: 24, slowQ: 182, lastArchivedOn: "2024-03-10", archivedTill: "2023-12-01", usageContext: "Accessed 890 times in last 2 scans" },
-  { name: "WEB_AUTH_DETAILS", schema: "auth", status: "Critical", statusVariant: "critical", rowCount: "22,069,814", size: "32.1 GB", fragmentation: 59, lastRead: "Now", deadlocks: 18, slowQ: 110, lastArchivedOn: "2024-03-12", archivedTill: "2024-02-01", usageContext: "Accessed 640 times in last 2 scans" },
-  { name: "WEB_AUTH_NOTES", schema: "auth", status: "Critical", statusVariant: "critical", rowCount: "31,693,191", size: "88.4 GB", fragmentation: 68, lastRead: "Now", deadlocks: 32, slowQ: 243, lastArchivedOn: "2024-03-14", archivedTill: "2024-02-15", usageContext: "Accessed 2 times in last 2 scans" },
-  { name: "USER_PROVIDERS", schema: "auth", status: "Critical", statusVariant: "critical", rowCount: "9,098,052", size: "8.2 GB", fragmentation: 48, lastRead: "2m ago", deadlocks: 12, slowQ: 55, lastArchivedOn: "2024-02-28", archivedTill: "2024-01-01", usageContext: "Accessed 180 times in last 2 scans" },
+  { name: "Auth_Consult_Notes", schema: "dbo", status: "Healthy", statusVariant: "healthy", rowCount: "609,251", size: "420 MB", fragmentation: 8, lastRead: "1h ago", deadlocks: 0, lastArchivedOn: "2024-03-01", archivedTill: "2023-12-31", usageContext: "Last two scans - this table was accessed 14 times" },
+  { name: "Claims_inquiry_Response", schema: "dbo", status: "Healthy", statusVariant: "healthy", rowCount: "44,738", size: "85 MB", fragmentation: 12, lastRead: "2h ago", deadlocks: 0, lastArchivedOn: "2024-02-15", archivedTill: "2023-10-01", usageContext: "Last two scans - this table was accessed 8 times" },
+  { name: "POST_DISMISSALS", schema: "dbo", status: "Warning", statusVariant: "warning", rowCount: "1,586,110", size: "2.1 GB", fragmentation: 24, lastRead: "30m ago", deadlocks: 2, lastArchivedOn: "2024-01-20", archivedTill: "2023-09-01", usageContext: "Last two scans - this table was accessed 42 times" },
+  { name: "PROV_CONSULT_NOTES", schema: "dbo", status: "Critical", statusVariant: "critical", rowCount: "5,570,747", size: "12.4 GB", fragmentation: 52, lastRead: "15m ago", deadlocks: 8, lastArchivedOn: "2024-03-08", archivedTill: "2024-01-01", usageContext: "Last two scans - this table was accessed 112 times" },
+  { name: "REQUEST_LOG", schema: "audit", status: "Healthy", statusVariant: "healthy", rowCount: "331,196", size: "180 MB", fragmentation: 5, lastRead: "5m ago", deadlocks: 0, lastArchivedOn: "Never", archivedTill: "N/A", usageContext: "Last two scans - this table was accessed 210 times" },
+  { name: "USERS", schema: "auth", status: "Healthy", statusVariant: "healthy", rowCount: "154,494", size: "45 MB", fragmentation: 4, lastRead: "1m ago", deadlocks: 0, lastArchivedOn: "Never", archivedTill: "N/A", usageContext: "Last two scans - this table was accessed 450 times" },
+  { name: "WEB_AUDIT_TRAIL", schema: "audit", status: "Critical", statusVariant: "critical", rowCount: "58,548,194", size: "142 GB", fragmentation: 62, lastRead: "Now", deadlocks: 24, lastArchivedOn: "2024-03-10", archivedTill: "2023-12-01", usageContext: "Last two scans - this table was accessed 890 times" },
+  { name: "WEB_AUTH_DETAILS", schema: "auth", status: "Critical", statusVariant: "critical", rowCount: "22,069,814", size: "32.1 GB", fragmentation: 59, lastRead: "Now", deadlocks: 18, lastArchivedOn: "2024-03-12", archivedTill: "2024-02-01", usageContext: "Last two scans - this table was accessed 640 times" },
+  { name: "WEB_AUTH_NOTES", schema: "auth", status: "Critical", statusVariant: "critical", rowCount: "31,693,191", size: "88.4 GB", fragmentation: 68, lastRead: "Now", deadlocks: 32, lastArchivedOn: "2024-03-14", archivedTill: "2024-02-15", usageContext: "Last two scans - this table was accessed 2 times" },
+  { name: "USER_PROVIDERS", schema: "auth", status: "Critical", statusVariant: "critical", rowCount: "9,098,052", size: "8.2 GB", fragmentation: 48, lastRead: "2m ago", deadlocks: 12, lastArchivedOn: "2024-02-28", archivedTill: "2024-01-01", usageContext: "Last two scans - this table was accessed 180 times" },
 ]
 
 export function TableManager({ 
@@ -397,7 +395,7 @@ export function TableManager({
                     className={cn(
                       "h-10 px-4 rounded-xl border font-bold text-xs gap-2 transition-all",
                       selectedActions.includes(action.id) 
-                        ? `${action.bg} ${action.color} border-${action.id.split(' ')[0].toLowerCase()}-300 ring-2 ring-primary/10` 
+                        ? `${action.bg} ${action.color} border-primary/30 ring-2 ring-primary/10` 
                         : "bg-white text-slate-500 border-slate-200"
                     )}
                   >
