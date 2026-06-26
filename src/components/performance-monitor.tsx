@@ -3,19 +3,16 @@
 
 import * as React from "react"
 import { 
-  BarChart, 
   Activity, 
   Zap, 
-  Search, 
   Clock, 
-  RefreshCw, 
-  AlertTriangle,
-  ChevronRight,
-  Info,
-  MoreVertical,
   History,
-  FileCode,
-  Lock
+  ShieldAlert,
+  Code,
+  Lock,
+  ArrowDown,
+  RefreshCw,
+  CheckCircle2
 } from "lucide-react"
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
@@ -39,56 +36,47 @@ import {
 import { cn } from "@/lib/utils"
 
 const METRICS = [
-  { label: "Cache hit ratio", value: "91.4%", subtext: "Target >95%", color: "text-slate-800" },
-  { label: "Avg fragmentation", value: "24.3%", subtext: "6 tables >30%", color: "text-rose-600" },
-  { label: "Deadlocks (24h)", value: "7", subtext: "+3 vs yesterday", color: "text-rose-600" },
-  { label: "Slow queries", value: "243", subtext: "Avg 3.8s exec time", color: "text-rose-600" },
-  { label: "Missing indexes", value: "11", subtext: "Across 7 tables", color: "text-amber-600" },
-  { label: "Lock wait time", value: "1.2s", subtext: "Avg per request", color: "text-amber-600" },
+  { id: 'deadlocks', label: "Deadlocks (24h)", value: "7", subtext: "+3 vs yesterday", color: "text-rose-600" },
+  { id: 'lock-wait', label: "Lock wait time", value: "1.2s", subtext: "Avg per request", color: "text-amber-600" },
+  { id: 'cache', label: "Buffer Cache Hit Ratio", value: "91.4%", subtext: "Target >95%", color: "text-emerald-600" },
+  { id: 'frag', label: "Index Fragmentation", value: "24.3%", subtext: "6 tables >30%", color: "text-rose-600" },
+  { id: 'slow-q', label: "Slow queries", value: "243", subtext: "Threshold >1.0s", color: "text-amber-600" },
+  { id: 'missing-idx', label: "Missing indexes", value: "11", subtext: "Across 7 tables", color: "text-amber-600" },
 ]
 
 const ALL_FRAGMENTATION = [
-  { table: "WEB_AUTH_NOTES", index: "IX_notes_created", frag: 68, severity: "Critical" },
-  { table: "WEB_AUDIT_TRAIL", index: "IX_audit_ts", frag: 62, severity: "Critical" },
-  { table: "WEB_AUTH_DETAILS", index: "IX_auth_user", frag: 59, severity: "Critical" },
-  { table: "PROV_CONSULT_NOTES", index: "IX_consult_date", frag: 52, severity: "Critical" },
-  { table: "USER_PROVIDERS", index: "IX_prov_id", frag: 48, severity: "Warning" },
-  { table: "POST_DISMISSALS", index: "IX_dismissal_type", frag: 24, severity: "Warning" },
   { table: "REQUEST_LOG", index: "IX_req_log_id", frag: 5, severity: "Healthy" },
   { table: "Auth_Consult_Notes", index: "IX_auth_consult", frag: 8, severity: "Healthy" },
+  { table: "WEB_AUTH_NOTES", index: "IX_notes_created", frag: 68, severity: "Critical" },
+  { table: "WEB_AUDIT_TRAIL", index: "IX_audit_ts", frag: 62, severity: "Critical" },
 ]
 
 const ALL_SLOW_QUERIES = [
-  { query: "DELETE FROM WEB_AUTH_NOTES WHERE...", table: "WEB_AUTH_NOTES", avgTime: "12.5s", executions: "88", lastRun: "2m ago", fix: "Missing index" },
-  { query: "SELECT * FROM WEB_AUDIT_TRAIL WHERE...", table: "WEB_AUDIT_TRAIL", avgTime: "8.2s", executions: "412", lastRun: "5m ago", fix: "Missing index" },
-  { query: "UPDATE PROV_CONSULT_NOTES SET...", table: "PROV_CONSULT_NOTES", avgTime: "6.1s", executions: "203", lastRun: "12m ago", fix: "Rebuild index" },
-  { query: "SELECT * FROM USERS JOIN WEB_AUTH_DETAILS...", table: "USERS", avgTime: "4.4s", executions: "670", lastRun: "18m ago", fix: "Missing index" },
-  { query: "INSERT INTO REQUEST_LOG VALUES...", table: "REQUEST_LOG", avgTime: "3.2s", executions: "1,840", lastRun: "1m ago", fix: "Fragmentation" },
-  { query: "SELECT * FROM POST_DISMISSALS WHERE...", table: "POST_DISMISSALS", avgTime: "2.8s", executions: "920", lastRun: "3m ago", fix: "Missing index" },
-  { query: "UPDATE Auth_Consult_Notes SET...", table: "Auth_Consult_Notes", avgTime: "1.9s", executions: "445", lastRun: "8m ago", fix: "Fragmentation" },
+  { query: "SELECT * FROM WEB_AUTH_NOTES WHERE...", duration: "4.2s", reads: "1.2M", context: "sp_GetAuthDetails" },
+  { query: "UPDATE USERS SET last_login = ...", duration: "2.8s", reads: "450K", context: "sp_UserLoginUpdate" },
+  { query: "SELECT COUNT(*) FROM WEB_AUDIT_TRAIL...", duration: "8.5s", reads: "12M", context: "sp_GenerateAuditReport" },
+  { query: "DELETE FROM SESSION_LOGS WHERE...", duration: "3.1s", reads: "800K", context: "sp_CleanupExpiredSessions" },
+]
+
+const CONFLICT_EVENTS = [
+  { id: 'c1', time: '08:42 AM', type: 'Deadlock', victim: 'process_821', source: 'sp_AuthUserLogin', status: 'Rolled Back' },
+  { id: 'c2', time: '08:15 AM', type: 'Lock Wait', victim: 'process_1044', source: 'sp_UpdateInventory', duration: '4.2s', status: 'Resolved' },
+  { id: 'c3', time: '07:30 AM', type: 'Deadlock', victim: 'process_902', source: 'sp_BatchProcessing', status: 'Rolled Back' },
+  { id: 'c4', time: '06:12 AM', type: 'Lock Wait', victim: 'process_755', source: 'sp_FetchReports', duration: '12.8s', status: 'Timed Out' },
 ]
 
 const ALL_MISSING_INDEXES = [
-  { table: "WEB_AUDIT_TRAIL", columns: "[user_id, event_ts]", impact: "Very high" },
-  { table: "WEB_AUTH_DETAILS", columns: "[auth_id]", impact: "Very high" },
-  { table: "PROV_CONSULT_NOTES", columns: "[patient_id, consult_date]", impact: "High" },
-  { table: "REQUEST_LOG", columns: "[request_id]", impact: "Medium" },
-]
-
-const ALL_DEADLOCKS = [
-  { block: "USERS ↹ WEB_AUTH_DETAILS", info: "SPID 58 vs 61 · 14 min ago", time: "2.3s", tables: ["USERS", "WEB_AUTH_DETAILS"] },
-  { block: "WEB_AUDIT_TRAIL ↹ PROV_CONSULT_NOTES", info: "SPID 42 vs 77 · 1h 12m ago", time: "4.1s", tables: ["WEB_AUDIT_TRAIL", "PROV_CONSULT_NOTES"] },
-  { block: "Auth_Consult_Notes ↹ REQUEST_LOG", info: "SPID 12 vs 19 · 2h 45m ago", time: "1.8s", tables: ["Auth_Consult_Notes", "REQUEST_LOG"] },
+  { table: "WEB_AUDIT_TRAIL", columns: "[user_id, event_ts]", impact: "Very high", sp: "sp_GetAuditHistory" },
+  { table: "WEB_AUTH_DETAILS", columns: "[auth_id]", impact: "Very high", sp: "sp_ValidateAuthToken" },
+  { table: "PROV_CONSULT_NOTES", columns: "[patient_id, consult_date]", impact: "High", sp: "sp_FetchClinicalRecords" },
+  { table: "REQUEST_LOG", columns: "[request_id]", impact: "Medium", sp: "sp_AuditLogRequest" },
 ]
 
 export function PerformanceMonitor({ activeDb, monitoredTables }: { activeDb: string, monitoredTables: string[] }) {
-  const fragData = React.useMemo(() => 
-    ALL_FRAGMENTATION.filter(f => monitoredTables.includes(f.table)),
-    [monitoredTables]
-  )
+  const slowQueriesRef = React.useRef<HTMLDivElement>(null)
 
-  const slowQueries = React.useMemo(() => 
-    ALL_SLOW_QUERIES.filter(q => monitoredTables.includes(q.table)),
+  const fragData = React.useMemo(() => 
+    ALL_FRAGMENTATION.filter(f => monitoredTables.includes(f.table) || f.severity === "Healthy"),
     [monitoredTables]
   )
 
@@ -97,14 +85,12 @@ export function PerformanceMonitor({ activeDb, monitoredTables }: { activeDb: st
     [monitoredTables]
   )
 
-  const deadlocks = React.useMemo(() => 
-    ALL_DEADLOCKS.filter(d => d.tables.some(t => monitoredTables.includes(t))),
-    [monitoredTables]
-  )
+  const scrollToSlowQueries = () => {
+    slowQueriesRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' })
+  }
 
   return (
-    <div className="space-y-6 animate-in fade-in duration-500 pb-12">
-      {/* Header */}
+    <div className="space-y-8 animate-in fade-in duration-500 pb-20">
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-3">
           <h1 className="text-2xl font-bold text-slate-900">Performance Monitor</h1>
@@ -113,7 +99,6 @@ export function PerformanceMonitor({ activeDb, monitoredTables }: { activeDb: st
           </Badge>
         </div>
         <div className="flex items-center gap-3">
-          <span className="text-[10px] font-bold text-slate-400 uppercase tracking-tight">Last scan: today 08:42 AM</span>
           <Select defaultValue="24h">
             <SelectTrigger className="h-9 text-xs w-40 bg-white border-slate-200 rounded-lg shadow-none">
               <SelectValue placeholder="Time Range" />
@@ -122,7 +107,6 @@ export function PerformanceMonitor({ activeDb, monitoredTables }: { activeDb: st
               <SelectItem value="1h">Last 1 hour</SelectItem>
               <SelectItem value="24h">Last 24 hours</SelectItem>
               <SelectItem value="7d">Last 7 days</SelectItem>
-              <SelectItem value="30d">Last 30 days</SelectItem>
             </SelectContent>
           </Select>
           <Button className="h-9 bg-[#1E8E3E] hover:bg-[#1A7F37] text-white text-xs font-bold rounded-lg px-6 shadow-sm">
@@ -131,10 +115,16 @@ export function PerformanceMonitor({ activeDb, monitoredTables }: { activeDb: st
         </div>
       </div>
 
-      {/* Metrics Row */}
       <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-6 gap-3">
-        {METRICS.map((metric, i) => (
-          <Card key={i} className="bg-white border-none shadow-sm rounded-xl">
+        {METRICS.map((metric) => (
+          <Card 
+            key={metric.id} 
+            onClick={metric.id === 'slow-q' ? scrollToSlowQueries : undefined}
+            className={cn(
+              "bg-white border-none shadow-sm rounded-xl transition-all cursor-pointer hover:ring-1 hover:ring-primary/20",
+              metric.id === 'slow-q' && "hover:bg-amber-50/50"
+            )}
+          >
             <CardContent className="p-4 space-y-1">
               <span className="text-[9px] font-bold text-slate-400 uppercase tracking-tight">{metric.label}</span>
               <div className={cn("text-xl font-bold", metric.color)}>{metric.value}</div>
@@ -145,14 +135,13 @@ export function PerformanceMonitor({ activeDb, monitoredTables }: { activeDb: st
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
-        {/* Left Column: Index Fragmentation */}
-        <Card className="lg:col-span-7 bg-white border-none shadow-sm rounded-2xl overflow-hidden">
-          <CardHeader className="p-6 pb-2 border-b border-slate-50 flex flex-row items-center justify-between space-y-0">
+        <Card className="lg:col-span-8 bg-white border-none shadow-sm rounded-3xl overflow-hidden">
+          <CardHeader className="p-8 pb-4 flex flex-row items-center justify-between border-b border-slate-50">
             <div>
-              <CardTitle className="text-sm font-bold text-slate-900">Index fragmentation</CardTitle>
-              <CardDescription className="text-[10px] font-bold text-slate-400 uppercase mt-0.5">Tables above 10% threshold</CardDescription>
+              <CardTitle className="text-xl font-bold text-slate-900">Index fragmentation</CardTitle>
+              <CardDescription className="text-[10px] font-bold text-slate-400 uppercase mt-1 tracking-widest">TABLES ABOVE 10% THRESHOLD</CardDescription>
             </div>
-            <Button variant="outline" size="sm" className="h-8 text-[10px] font-bold text-slate-600 border-slate-200 rounded-lg">
+            <Button variant="outline" size="sm" className="bg-slate-50 border-slate-200 text-slate-600 font-bold text-[10px] rounded-xl px-4 h-10 hover:bg-slate-100">
               Rebuild all {'>'}30%
             </Button>
           </CardHeader>
@@ -160,271 +149,245 @@ export function PerformanceMonitor({ activeDb, monitoredTables }: { activeDb: st
             <Table>
               <TableHeader className="bg-slate-50/50">
                 <TableRow className="hover:bg-transparent border-none">
-                  <TableHead className="h-10 text-[9px] font-bold uppercase text-slate-400 px-6">Table</TableHead>
-                  <TableHead className="h-10 text-[9px] font-bold uppercase text-slate-400">Index</TableHead>
-                  <TableHead className="h-10 text-[9px] font-bold uppercase text-slate-400">Fragmentation</TableHead>
-                  <TableHead className="h-10 text-[9px] font-bold uppercase text-slate-400 text-center">Severity</TableHead>
-                  <TableHead className="h-10 text-[9px] font-bold uppercase text-slate-400 text-right px-6">Action</TableHead>
+                  <TableHead className="h-12 px-8 text-[10px] font-bold uppercase text-slate-400">TABLE</TableHead>
+                  <TableHead className="h-12 text-[10px] font-bold uppercase text-slate-400">INDEX</TableHead>
+                  <TableHead className="h-12 text-[10px] font-bold uppercase text-slate-400">FRAGMENTATION</TableHead>
+                  <TableHead className="h-12 text-[10px] font-bold uppercase text-slate-400">SEVERITY</TableHead>
+                  <TableHead className="h-12 px-8 text-right text-[10px] font-bold uppercase text-slate-400">ACTION</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {fragData.length > 0 ? fragData.map((item, i) => (
-                  <TableRow key={i} className="group hover:bg-slate-50/50 transition-colors border-b border-slate-50 last:border-0">
-                    <TableCell className="py-2.5 px-6">
-                      <span className="text-xs font-bold text-slate-800">{item.table}</span>
+                {fragData.map((item, i) => (
+                  <TableRow key={i} className="hover:bg-slate-50/50 border-b border-slate-50 last:border-0 transition-colors">
+                    <TableCell className="py-4 px-8">
+                      <span className="text-sm font-bold text-slate-900">{item.table}</span>
                     </TableCell>
-                    <TableCell className="py-2.5">
-                      <span className="text-[10px] font-mono text-slate-400">{item.index}</span>
+                    <TableCell>
+                      <span className="text-[11px] font-mono text-slate-400">{item.index}</span>
                     </TableCell>
-                    <TableCell className="py-2.5 min-w-[140px]">
-                      <div className="flex items-center gap-3">
-                        <div className="flex-1 h-1.5 bg-slate-100 rounded-full overflow-hidden">
+                    <TableCell>
+                      <div className="flex items-center gap-4">
+                        <div className="flex-1 h-1.5 bg-slate-100 rounded-full overflow-hidden min-w-[120px]">
                           <div 
                             className={cn(
-                              "h-full rounded-full transition-all duration-1000",
-                              item.frag > 50 ? "bg-rose-500" : item.frag > 20 ? "bg-amber-500" : "bg-emerald-500"
-                            )}
-                            style={{ width: `${item.frag}%` }}
+                              "h-full rounded-full transition-all", 
+                              item.frag > 30 ? "bg-rose-500" : "bg-emerald-500"
+                            )} 
+                            style={{ width: `${item.frag}%` }} 
                           />
                         </div>
-                        <span className={cn(
-                          "text-[10px] font-bold w-7 text-right",
-                          item.frag > 50 ? "text-rose-500" : item.frag > 20 ? "text-amber-500" : "text-emerald-500"
-                        )}>
+                        <span className={cn("text-xs font-bold w-10", item.frag > 30 ? "text-rose-500" : "text-emerald-500")}>
                           {item.frag}%
                         </span>
                       </div>
                     </TableCell>
-                    <TableCell className="py-2.5 text-center">
-                      <Badge 
-                        className={cn(
-                          "font-bold text-[8px] px-1.5 py-0 rounded border-none shadow-none uppercase tracking-tighter",
-                          item.severity === "Critical" && "bg-rose-50 text-rose-500",
-                          item.severity === "Warning" && "bg-amber-50 text-amber-500"
-                        )}
-                      >
+                    <TableCell>
+                      <Badge className={cn(
+                        "font-bold text-[9px] uppercase border-none px-2 py-0.5 rounded",
+                        item.severity === "Critical" ? "bg-rose-50 text-rose-600" : "bg-[#1E8E3E] text-white"
+                      )}>
                         {item.severity}
                       </Badge>
                     </TableCell>
-                    <TableCell className="py-2.5 text-right px-6">
-                      <Button variant="outline" size="sm" className="h-6 text-[9px] font-bold text-slate-500 border-slate-200 rounded px-3 hover:bg-white hover:border-slate-300">
+                    <TableCell className="px-8 text-right">
+                      <Button variant="outline" size="sm" className="h-8 text-[10px] font-bold text-slate-500 border-slate-200 rounded-lg px-4 bg-white hover:bg-slate-50">
                         Rebuild
                       </Button>
                     </TableCell>
                   </TableRow>
-                )) : (
-                  <TableRow>
-                    <TableCell colSpan={5} className="py-12 text-center text-slate-400 font-medium">
-                      No fragmentation issues detected for monitored tables.
-                    </TableCell>
-                  </TableRow>
-                )}
+                ))}
               </TableBody>
             </Table>
           </CardContent>
         </Card>
 
-        {/* Right Column: Cache Hit Ratio */}
-        <div className="lg:col-span-5 space-y-6">
-          <Card className="bg-white border-none shadow-sm rounded-2xl overflow-hidden h-full">
-            <CardHeader className="p-6 pb-2 border-b border-slate-50">
-              <CardTitle className="text-sm font-bold text-slate-900">Cache hit ratio</CardTitle>
-              <CardDescription className="text-[10px] font-bold text-slate-400 uppercase mt-0.5">Buffer pool efficiency — sys.dm_os_performance_counters</CardDescription>
-            </CardHeader>
-            <CardContent className="p-6 flex flex-col items-center justify-center space-y-8">
-              {/* Gauge */}
-              <div className="relative w-64 h-32 overflow-hidden mt-4">
-                <svg className="w-full h-full" viewBox="0 0 200 100">
-                  <path 
-                    d="M20,100 A80,80 0 0,1 180,100" 
-                    fill="none" 
-                    stroke="#F1F3ED" 
-                    strokeWidth="12" 
-                    strokeLinecap="round"
-                  />
-                  <path 
-                    d="M20,100 A80,80 0 0,1 180,100" 
-                    fill="none" 
-                    stroke="#1E8E3E" 
-                    strokeWidth="12" 
-                    strokeLinecap="round"
-                    strokeDasharray="251.3"
-                    strokeDashoffset={251.3 * (1 - 0.914)}
-                  />
-                  <text x="100" y="75" textAnchor="middle" className="text-4xl font-bold fill-slate-800">91.4%</text>
-                  <text x="100" y="95" textAnchor="middle" className="text-[8px] font-bold fill-slate-400 uppercase tracking-widest">Buffer cache hit ratio</text>
-                </svg>
+        <Card className="lg:col-span-4 bg-white border-none shadow-sm rounded-3xl overflow-hidden flex flex-col">
+          <CardHeader className="p-8 pb-4">
+            <CardTitle className="text-xl font-bold text-slate-900">Cache hit ratio</CardTitle>
+            <CardDescription className="text-[10px] font-bold text-slate-400 uppercase mt-1 tracking-tight">BUFFER POOL EFFICIENCY — SYS.DM_OS_PERFORMANCE_COUNTERS</CardDescription>
+          </CardHeader>
+          <CardContent className="p-8 flex-1 flex flex-col">
+            <div className="relative flex flex-col items-center justify-center py-10">
+              <svg className="w-48 h-24" viewBox="0 0 100 50">
+                <path
+                  d="M 10 50 A 40 40 0 0 1 90 50"
+                  fill="none"
+                  stroke="#f1f5f9"
+                  strokeWidth="8"
+                  strokeLinecap="round"
+                />
+                <path
+                  d="M 10 50 A 40 40 0 0 1 90 50"
+                  fill="none"
+                  stroke="#1E8E3E"
+                  strokeWidth="8"
+                  strokeLinecap="round"
+                  strokeDasharray="125.6"
+                  strokeDashoffset={125.6 * (1 - 0.914)}
+                />
+              </svg>
+              <div className="absolute inset-0 flex flex-col items-center justify-center pt-8">
+                <span className="text-4xl font-black text-slate-900 tracking-tighter">91.4%</span>
+                <span className="text-[9px] font-bold text-slate-400 uppercase tracking-widest mt-1">BUFFER CACHE HIT RATIO</span>
               </div>
+            </div>
 
-              {/* Stats Table */}
-              <div className="w-full space-y-4 pt-4">
-                <div className="flex items-center justify-between border-b border-slate-50 pb-2">
-                  <span className="text-xs text-slate-500 font-medium">Reads from buffer pool</span>
-                  <span className="text-xs font-bold text-slate-900">2,841,220</span>
-                </div>
-                <div className="flex items-center justify-between border-b border-slate-50 pb-2">
-                  <span className="text-xs text-slate-500 font-medium">Physical disk reads</span>
-                  <span className="text-xs font-bold text-rose-500">244,108</span>
-                </div>
-                <div className="flex items-center justify-between">
-                  <span className="text-xs text-slate-500 font-medium">Status</span>
-                  <Badge className="bg-amber-50 text-amber-600 font-bold border-none text-[8px] px-2 py-0.5 rounded uppercase tracking-tighter">Below target</Badge>
-                </div>
+            <div className="mt-auto space-y-4 pt-8">
+              <div className="flex items-center justify-between group">
+                <span className="text-xs font-medium text-slate-500">Reads from buffer pool</span>
+                <span className="text-sm font-bold text-slate-900">2,841,220</span>
               </div>
-            </CardContent>
-          </Card>
-        </div>
+              <div className="flex items-center justify-between group">
+                <span className="text-xs font-medium text-slate-500">Physical disk reads</span>
+                <span className="text-sm font-bold text-rose-500">244,108</span>
+              </div>
+              <div className="flex items-center justify-between pt-4 border-t border-slate-50">
+                <span className="text-xs font-medium text-slate-500">Status</span>
+                <span className="text-[10px] font-black text-amber-500 uppercase tracking-widest bg-amber-50 px-2 py-0.5 rounded">BELOW TARGET</span>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
       </div>
 
-      {/* Slow Queries Dashboard */}
-      <Card className="bg-white border-none shadow-sm rounded-2xl overflow-hidden">
-        <CardHeader className="p-6 pb-2 flex flex-row items-center justify-between space-y-0">
-          <div>
-            <CardTitle className="text-sm font-bold text-slate-900">Slow queries</CardTitle>
-            <CardDescription className="text-[10px] font-bold text-slate-400 uppercase mt-0.5">Queries exceeding 1s — monitored tables only</CardDescription>
-          </div>
-          <div className="flex items-center gap-2">
-            <div className="flex bg-slate-100 rounded-lg p-0.5 mr-2">
-              <Button variant="ghost" className="h-7 text-[10px] font-bold bg-white shadow-sm px-3 rounded-md">All</Button>
-              <Button variant="ghost" className="h-7 text-[10px] font-bold text-slate-400 px-3">Critical ({'>'}5s)</Button>
-              <Button variant="ghost" className="h-7 text-[10px] font-bold text-slate-400 px-3">Missing index</Button>
-            </div>
-            <Button variant="outline" size="sm" className="h-8 text-[10px] font-bold text-slate-600 border-slate-200 rounded-lg bg-white">
-              View full log
-            </Button>
-          </div>
-        </CardHeader>
-        <CardContent className="p-0">
-          <Table>
-            <TableHeader className="bg-slate-50/50">
-              <TableRow className="hover:bg-transparent border-none">
-                <TableHead className="h-10 text-[9px] font-bold uppercase text-slate-400 px-6">Query</TableHead>
-                <TableHead className="h-10 text-[9px] font-bold uppercase text-slate-400">Table</TableHead>
-                <TableHead className="h-10 text-[9px] font-bold uppercase text-slate-400">Avg time</TableHead>
-                <TableHead className="h-10 text-[9px] font-bold uppercase text-slate-400">Executions</TableHead>
-                <TableHead className="h-10 text-[9px] font-bold uppercase text-slate-400">Last run</TableHead>
-                <TableHead className="h-10 text-[9px] font-bold uppercase text-slate-400">Fix available</TableHead>
-                <TableHead className="h-10 text-[9px] font-bold uppercase text-slate-400 text-right px-6">Action</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {slowQueries.length > 0 ? slowQueries.map((q, i) => (
-                <TableRow key={i} className="group hover:bg-slate-50/50 transition-colors border-b border-slate-50 last:border-0">
-                  <TableCell className="py-3 px-6">
-                    <span className="text-[10px] font-mono text-slate-400 block max-w-[300px] truncate">{q.query}</span>
-                  </TableCell>
-                  <TableCell className="py-3">
-                    <span className="text-xs font-bold text-slate-800">{q.table}</span>
-                  </TableCell>
-                  <TableCell className="py-3">
-                    <span className="text-xs font-bold text-rose-500">{q.avgTime}</span>
-                  </TableCell>
-                  <TableCell className="py-3 text-xs font-medium text-slate-500">{q.executions}</TableCell>
-                  <TableCell className="py-3 text-xs font-medium text-slate-400">{q.lastRun}</TableCell>
-                  <TableCell className="py-3">
-                    <Badge 
-                      className={cn(
-                        "font-bold text-[8px] px-2 py-0.5 rounded border-none shadow-none uppercase tracking-tighter",
-                        q.fix === "Missing index" && "bg-rose-50 text-rose-500",
-                        q.fix === "Fragmentation" && "bg-amber-50 text-amber-600",
-                        q.fix === "Rebuild index" && "bg-orange-50 text-orange-500"
-                      )}
-                    >
-                      {q.fix}
-                    </Badge>
-                  </TableCell>
-                  <TableCell className="py-3 text-right px-6">
-                    <Button variant="outline" size="sm" className="h-7 text-[10px] font-bold text-slate-500 border-slate-200 rounded-lg px-4 hover:bg-white">
-                      Fix
-                    </Button>
-                  </TableCell>
-                </TableRow>
-              )) : (
-                <TableRow>
-                  <TableCell colSpan={7} className="py-12 text-center text-slate-400 font-medium">
-                    No slow queries detected for monitored tables.
-                  </TableCell>
-                </TableRow>
-              )}
-            </TableBody>
-          </Table>
-        </CardContent>
-      </Card>
-
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        {/* Missing index recommendations */}
-        <Card className="bg-white border-none shadow-sm rounded-2xl overflow-hidden">
-          <CardHeader className="p-6 pb-2 flex flex-row items-center justify-between space-y-0">
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
+        <Card className="lg:col-span-8 bg-white border-none shadow-sm rounded-2xl overflow-hidden">
+          <CardHeader className="p-6 pb-2 border-b border-slate-50 flex flex-row items-center justify-between">
             <div>
-              <CardTitle className="text-sm font-bold text-slate-900">Missing index recommendations</CardTitle>
-              <CardDescription className="text-[10px] font-bold text-slate-400 uppercase mt-0.5">Monitored tables insights</CardDescription>
+              <CardTitle className="text-sm font-bold text-slate-900 flex items-center gap-2">
+                <ShieldAlert className="h-4 w-4 text-rose-500" />
+                Recent Conflict Events
+              </CardTitle>
+              <CardDescription className="text-[10px] font-bold text-slate-400 uppercase mt-0.5 tracking-tight">Lock waits & Deadlocks tracked in {activeDb}</CardDescription>
             </div>
-            <Button className="h-8 bg-[#1E8E3E] hover:bg-[#1A7F37] text-white text-[10px] font-bold rounded-full px-4">
-              Generate scripts
-            </Button>
+            <History className="h-4 w-4 text-slate-300" />
           </CardHeader>
           <CardContent className="p-0">
             <Table>
               <TableHeader className="bg-slate-50/50">
-                <TableRow className="hover:bg-transparent border-none">
-                  <TableHead className="h-10 text-[9px] font-bold uppercase text-slate-400 px-6">Table</TableHead>
-                  <TableHead className="h-10 text-[9px] font-bold uppercase text-slate-400">Columns</TableHead>
-                  <TableHead className="h-10 text-[9px] font-bold uppercase text-slate-400">Est. impact</TableHead>
-                  <TableHead className="h-10 text-[9px] font-bold uppercase text-slate-400 text-right px-6">Action</TableHead>
+                <TableRow className="hover:bg-transparent">
+                  <TableHead className="h-10 text-[9px] font-bold uppercase text-slate-400 px-6">Event Time</TableHead>
+                  <TableHead className="h-10 text-[9px] font-bold uppercase text-slate-400">Type</TableHead>
+                  <TableHead className="h-10 text-[9px] font-bold uppercase text-slate-400">Victim ID</TableHead>
+                  <TableHead className="h-10 text-[9px] font-bold uppercase text-slate-400">Source (SP)</TableHead>
+                  <TableHead className="h-10 text-[9px] font-bold uppercase text-slate-400 text-right px-6">Result</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {missingIndexes.length > 0 ? missingIndexes.map((idx, i) => (
-                  <TableRow key={i} className="hover:bg-slate-50/50 transition-colors border-b border-slate-50 last:border-0">
-                    <TableCell className="py-3 px-6">
-                      <span className="text-xs font-bold text-slate-800">{idx.table}</span>
+                {CONFLICT_EVENTS.map((event) => (
+                  <TableRow key={event.id} className="hover:bg-slate-50/50 border-b border-slate-50 last:border-0">
+                    <TableCell className="py-3 px-6 text-xs font-bold text-slate-500">{event.time}</TableCell>
+                    <TableCell>
+                      <Badge className={cn(
+                        "text-[9px] font-bold uppercase border-none",
+                        event.type === 'Deadlock' ? "bg-rose-50 text-rose-600" : "bg-amber-50 text-amber-600"
+                      )}>{event.type}</Badge>
                     </TableCell>
-                    <TableCell className="py-3">
-                      <span className="text-[10px] font-mono text-slate-400">{idx.columns}</span>
+                    <TableCell className="text-[10px] font-mono font-bold text-slate-700">{event.victim}</TableCell>
+                    <TableCell>
+                      <span className="text-[10px] font-bold text-slate-400 italic">({event.source})</span>
                     </TableCell>
-                    <TableCell className="py-3">
-                      <Badge className="bg-rose-50 text-rose-500 border-none font-bold text-[8px] uppercase">{idx.impact}</Badge>
-                    </TableCell>
-                    <TableCell className="py-3 text-right px-6">
-                      <Button variant="outline" size="sm" className="h-7 text-[10px] font-bold text-slate-500 border-slate-200 rounded-lg px-4 hover:bg-white">
-                        Script
-                      </Button>
+                    <TableCell className="py-3 px-6 text-right">
+                      <div className="flex flex-col items-end">
+                        <span className={cn(
+                          "text-[10px] font-bold uppercase",
+                          event.status === 'Rolled Back' || event.status === 'Timed Out' ? "text-rose-500" : "text-emerald-600"
+                        )}>{event.status}</span>
+                        {event.duration && <span className="text-[9px] text-slate-400">{event.duration} wait</span>}
+                      </div>
                     </TableCell>
                   </TableRow>
-                )) : (
-                  <TableRow>
-                    <TableCell colSpan={4} className="py-12 text-center text-slate-400 font-medium">
-                      No index recommendations for current monitored scope.
-                    </TableCell>
-                  </TableRow>
-                )}
+                ))}
               </TableBody>
             </Table>
           </CardContent>
         </Card>
 
-        {/* Lock waits & deadlocks */}
-        <Card className="bg-white border-none shadow-sm rounded-2xl overflow-hidden">
-          <CardHeader className="p-6 pb-2 flex flex-row items-center justify-between space-y-0">
-            <div>
-              <CardTitle className="text-sm font-bold text-slate-900">Lock waits & deadlocks</CardTitle>
-              <CardDescription className="text-[10px] font-bold text-slate-400 uppercase mt-0.5">Recent conflict events</CardDescription>
-            </div>
+        <Card className="lg:col-span-4 bg-white border-none shadow-sm rounded-2xl overflow-hidden">
+          <CardHeader className="p-6 pb-2 border-b border-slate-50">
+            <CardTitle className="text-sm font-bold text-slate-900">Missing Index Recommendations</CardTitle>
           </CardHeader>
-          <CardContent className="px-6 py-4 space-y-4">
-            {deadlocks.length > 0 ? deadlocks.map((dl, i) => (
-              <div key={i} className="flex items-center justify-between group cursor-pointer border-b border-slate-50 pb-3 last:border-0 last:pb-0">
-                <div className="space-y-1">
-                  <div className="text-xs font-bold text-slate-800">{dl.block}</div>
-                  <div className="text-[10px] font-medium text-slate-400">{dl.info}</div>
-                </div>
-                <div className="text-xs font-bold text-rose-500">{dl.time}</div>
-              </div>
-            )) : (
-              <div className="py-10 text-center text-slate-400 font-medium text-sm">
-                No recent deadlocks involving monitored tables.
-              </div>
-            )}
+          <CardContent className="p-0">
+            <Table>
+              <TableHeader className="bg-slate-50/50">
+                <TableRow>
+                  <TableHead className="h-10 text-[9px] font-bold uppercase text-slate-400 px-6">Table & Recommended Columns</TableHead>
+                  <TableHead className="h-10 text-[9px] font-bold uppercase text-slate-400">Impact</TableHead>
+                  <TableHead className="h-10 text-[9px] font-bold uppercase text-slate-400 text-right px-6">Action</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {missingIndexes.slice(0, 4).map((idx, i) => (
+                  <TableRow key={i} className="hover:bg-slate-50/50 border-b border-slate-50 last:border-0">
+                    <TableCell className="py-3 px-6">
+                      <div className="flex flex-col">
+                        <span className="text-xs font-bold text-slate-800">{idx.table}</span>
+                        <span className="text-[10px] font-mono text-slate-400">{idx.columns}</span>
+                        <span className="text-[9px] font-bold text-slate-300 italic">({idx.sp})</span>
+                      </div>
+                    </TableCell>
+                    <TableCell>
+                      <Badge className="bg-rose-50 text-rose-500 border-none font-bold text-[8px] uppercase">{idx.impact}</Badge>
+                    </TableCell>
+                    <TableCell className="py-3 text-right px-6">
+                      <Button variant="outline" size="sm" className="h-7 text-[10px] font-bold text-slate-500 border-slate-200 px-4">
+                        Script
+                      </Button>
+                    </TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+          </CardContent>
+        </Card>
+      </div>
+
+      <div ref={slowQueriesRef}>
+        <Card className="bg-white border-none shadow-sm rounded-2xl overflow-hidden">
+          <CardHeader className="p-6 pb-2 border-b border-slate-50 flex flex-row items-center justify-between">
+            <div>
+              <CardTitle className="text-sm font-bold text-slate-900">Slow Queries Analysis</CardTitle>
+              <CardDescription className="text-[10px] font-bold text-slate-400 uppercase mt-0.5">Top queries exceeding 1.0s execution time</CardDescription>
+            </div>
+            <Code className="h-5 w-5 text-amber-500" />
+          </CardHeader>
+          <CardContent className="p-0">
+            <Table>
+              <TableHeader className="bg-slate-50/50">
+                <TableRow>
+                  <TableHead className="h-10 text-[9px] font-bold uppercase text-slate-400 px-6">Query Definition</TableHead>
+                  <TableHead className="h-10 text-[9px] font-bold uppercase text-slate-400">Duration</TableHead>
+                  <TableHead className="h-10 text-[9px] font-bold uppercase text-slate-400">Logical Reads</TableHead>
+                  <TableHead className="h-10 text-[9px] font-bold uppercase text-slate-400">Context (SP)</TableHead>
+                  <TableHead className="h-10 text-[9px] font-bold uppercase text-slate-400 text-right px-6">Action</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {ALL_SLOW_QUERIES.map((q, i) => (
+                  <TableRow key={i} className="hover:bg-slate-50/50 border-b border-slate-50 last:border-0">
+                    <TableCell className="py-4 px-6">
+                      <div className="flex flex-col">
+                        <span className="text-[10px] font-mono text-slate-600 truncate max-w-[300px]">{q.query}</span>
+                      </div>
+                    </TableCell>
+                    <TableCell>
+                      <span className="text-xs font-bold text-amber-600">{q.duration}</span>
+                    </TableCell>
+                    <TableCell>
+                      <span className="text-xs font-bold text-slate-700">{q.reads}</span>
+                    </TableCell>
+                    <TableCell>
+                      <span className="text-[10px] font-bold text-slate-400 italic">({q.context})</span>
+                    </TableCell>
+                    <TableCell className="py-4 text-right px-6">
+                      <Button variant="ghost" size="sm" className="h-7 text-[10px] font-bold text-primary hover:bg-emerald-50 px-4">
+                        Analyze
+                      </Button>
+                    </TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
           </CardContent>
         </Card>
       </div>

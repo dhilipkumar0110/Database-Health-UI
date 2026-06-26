@@ -1,4 +1,3 @@
-
 "use client"
 
 import * as React from "react"
@@ -15,7 +14,8 @@ import {
   MoreVertical,
   Settings,
   Table as TableIcon,
-  Bell
+  Bell,
+  ArrowRight
 } from "lucide-react"
 import {
   Card,
@@ -42,7 +42,6 @@ export function DashboardOverview({
 }) {
   const [isConnectModalOpen, setIsConnectModalOpen] = React.useState(false)
 
-  // Calculate dynamic stats
   const totalDatabases = databases.length
   const criticalCount = databases.filter(db => db.statusVariant === "critical").length
   const warningCount = databases.filter(db => db.statusVariant === "warning").length
@@ -79,12 +78,19 @@ export function DashboardOverview({
     }
   ]
 
-  const handleConfigTables = (dbName: string) => {
+  const handleDbClick = (dbName: string) => {
+    onDbChange(dbName);
+    onViewChange("table-manager");
+  }
+
+  const handleConfigTables = (e: React.MouseEvent, dbName: string) => {
+    e.stopPropagation();
     onDbChange(dbName);
     onViewChange("config-tables");
   }
 
-  const handleConfigAlerts = (dbName: string) => {
+  const handleConfigAlerts = (e: React.MouseEvent, dbName: string) => {
+    e.stopPropagation();
     onDbChange(dbName);
     onViewChange("config-alerts");
   }
@@ -95,12 +101,12 @@ export function DashboardOverview({
         <div className="flex items-center gap-3">
           <h1 className="text-2xl font-bold text-slate-900">All Databases</h1>
           <Badge className="bg-[#E6F4EA] text-[#1E8E3E] hover:bg-[#E6F4EA] border-none font-medium px-2 py-0.5 text-[10px]">
-            SQL Server
+            SQL Server Instances
           </Badge>
         </div>
         <div className="flex items-center gap-4">
-          <div className="text-xs text-slate-400">
-            Last scan: today 08:42 AM
+          <div className="text-[10px] font-bold text-slate-400 uppercase">
+            Global Health: Stable
           </div>
           <Button variant="outline" size="sm" className="h-8 text-xs border-slate-300 rounded-full px-4 bg-white font-bold">
             Run Scan
@@ -124,7 +130,7 @@ export function DashboardOverview({
 
       <div className="space-y-4 pt-2">
         <div className="flex items-center justify-between">
-          <h2 className="text-sm font-bold text-slate-900">Connected SQL Server databases</h2>
+          <h2 className="text-sm font-bold text-slate-900 uppercase tracking-widest">Active Connections</h2>
           <Button 
             onClick={() => setIsConnectModalOpen(true)}
             variant="link" 
@@ -139,15 +145,19 @@ export function DashboardOverview({
           {databases.map((db, i) => (
             <Card 
               key={i} 
+              onClick={() => handleDbClick(db.name)}
               className={cn(
-                "relative overflow-hidden transition-all duration-300 bg-white border shadow-sm rounded-2xl flex flex-col",
+                "relative overflow-hidden transition-all duration-300 bg-white border shadow-sm rounded-2xl flex flex-col group cursor-pointer hover:shadow-lg hover:border-primary/50",
                 db.isActive ? "border-[#1E8E3E] ring-1 ring-[#1E8E3E]" : "border-slate-200"
               )}
             >
               <CardHeader className="p-6 pb-2">
                 <div className="flex items-start justify-between">
                   <div className="space-y-1">
-                    <CardTitle className="text-base font-bold text-slate-900">{db.name}</CardTitle>
+                    <CardTitle className="text-base font-bold text-slate-900 flex items-center gap-2">
+                      {db.name}
+                      <ArrowRight className="h-3.5 w-3.5 opacity-0 group-hover:opacity-100 transition-all text-primary" />
+                    </CardTitle>
                     <div className="text-[10px] text-slate-400 font-bold tracking-tight uppercase">{db.server}</div>
                   </div>
                   <Badge 
@@ -187,20 +197,20 @@ export function DashboardOverview({
                   <Button 
                     variant="outline" 
                     size="sm" 
-                    onClick={() => handleConfigTables(db.name)}
+                    onClick={(e) => handleConfigTables(e, db.name)}
                     className="h-8 text-[10px] font-bold text-slate-600 border-slate-200 rounded-lg hover:bg-slate-50 gap-1.5"
                   >
                     <TableIcon className="h-3 w-3" />
-                    Configure Tables
+                    Config Tables
                   </Button>
                   <Button 
                     variant="outline" 
                     size="sm" 
-                    onClick={() => handleConfigAlerts(db.name)}
+                    onClick={(e) => handleConfigAlerts(e, db.name)}
                     className="h-8 text-[10px] font-bold text-slate-600 border-slate-200 rounded-lg hover:bg-slate-50 gap-1.5"
                   >
                     <Bell className="h-3 w-3" />
-                    Configure Alerts
+                    Alerts
                   </Button>
                 </div>
               </CardContent>
