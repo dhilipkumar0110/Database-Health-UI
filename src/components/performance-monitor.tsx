@@ -10,7 +10,9 @@ import {
   ShieldAlert,
   Code,
   Lock,
-  ArrowDown
+  ArrowDown,
+  RefreshCw,
+  CheckCircle2
 } from "lucide-react"
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
@@ -43,11 +45,10 @@ const METRICS = [
 ]
 
 const ALL_FRAGMENTATION = [
+  { table: "REQUEST_LOG", index: "IX_req_log_id", frag: 5, severity: "Healthy" },
+  { table: "Auth_Consult_Notes", index: "IX_auth_consult", frag: 8, severity: "Healthy" },
   { table: "WEB_AUTH_NOTES", index: "IX_notes_created", frag: 68, severity: "Critical" },
   { table: "WEB_AUDIT_TRAIL", index: "IX_audit_ts", frag: 62, severity: "Critical" },
-  { table: "WEB_AUTH_DETAILS", index: "IX_auth_user", frag: 59, severity: "Critical" },
-  { table: "PROV_CONSULT_NOTES", index: "IX_consult_date", frag: 52, severity: "Critical" },
-  { table: "USER_PROVIDERS", index: "IX_prov_id", frag: 48, severity: "Warning" },
 ]
 
 const ALL_SLOW_QUERIES = [
@@ -75,7 +76,7 @@ export function PerformanceMonitor({ activeDb, monitoredTables }: { activeDb: st
   const slowQueriesRef = React.useRef<HTMLDivElement>(null)
 
   const fragData = React.useMemo(() => 
-    ALL_FRAGMENTATION.filter(f => monitoredTables.includes(f.table)),
+    ALL_FRAGMENTATION.filter(f => monitoredTables.includes(f.table) || f.severity === "Healthy"),
     [monitoredTables]
   )
 
@@ -89,7 +90,7 @@ export function PerformanceMonitor({ activeDb, monitoredTables }: { activeDb: st
   }
 
   return (
-    <div className="space-y-6 animate-in fade-in duration-500 pb-12">
+    <div className="space-y-8 animate-in fade-in duration-500 pb-20">
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-3">
           <h1 className="text-2xl font-bold text-slate-900">Performance Monitor</h1>
@@ -131,6 +132,122 @@ export function PerformanceMonitor({ activeDb, monitoredTables }: { activeDb: st
             </CardContent>
           </Card>
         ))}
+      </div>
+
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
+        <Card className="lg:col-span-8 bg-white border-none shadow-sm rounded-3xl overflow-hidden">
+          <CardHeader className="p-8 pb-4 flex flex-row items-center justify-between border-b border-slate-50">
+            <div>
+              <CardTitle className="text-xl font-bold text-slate-900">Index fragmentation</CardTitle>
+              <CardDescription className="text-[10px] font-bold text-slate-400 uppercase mt-1 tracking-widest">TABLES ABOVE 10% THRESHOLD</CardDescription>
+            </div>
+            <Button variant="outline" size="sm" className="bg-slate-50 border-slate-200 text-slate-600 font-bold text-[10px] rounded-xl px-4 h-10 hover:bg-slate-100">
+              Rebuild all {'>'}30%
+            </Button>
+          </CardHeader>
+          <CardContent className="p-0">
+            <Table>
+              <TableHeader className="bg-slate-50/50">
+                <TableRow className="hover:bg-transparent border-none">
+                  <TableHead className="h-12 px-8 text-[10px] font-bold uppercase text-slate-400">TABLE</TableHead>
+                  <TableHead className="h-12 text-[10px] font-bold uppercase text-slate-400">INDEX</TableHead>
+                  <TableHead className="h-12 text-[10px] font-bold uppercase text-slate-400">FRAGMENTATION</TableHead>
+                  <TableHead className="h-12 text-[10px] font-bold uppercase text-slate-400">SEVERITY</TableHead>
+                  <TableHead className="h-12 px-8 text-right text-[10px] font-bold uppercase text-slate-400">ACTION</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {fragData.map((item, i) => (
+                  <TableRow key={i} className="hover:bg-slate-50/50 border-b border-slate-50 last:border-0 transition-colors">
+                    <TableCell className="py-4 px-8">
+                      <span className="text-sm font-bold text-slate-900">{item.table}</span>
+                    </TableCell>
+                    <TableCell>
+                      <span className="text-[11px] font-mono text-slate-400">{item.index}</span>
+                    </TableCell>
+                    <TableCell>
+                      <div className="flex items-center gap-4">
+                        <div className="flex-1 h-1.5 bg-slate-100 rounded-full overflow-hidden min-w-[120px]">
+                          <div 
+                            className={cn(
+                              "h-full rounded-full transition-all", 
+                              item.frag > 30 ? "bg-rose-500" : "bg-emerald-500"
+                            )} 
+                            style={{ width: `${item.frag}%` }} 
+                          />
+                        </div>
+                        <span className={cn("text-xs font-bold w-10", item.frag > 30 ? "text-rose-500" : "text-emerald-500")}>
+                          {item.frag}%
+                        </span>
+                      </div>
+                    </TableCell>
+                    <TableCell>
+                      <Badge className={cn(
+                        "font-bold text-[9px] uppercase border-none px-2 py-0.5 rounded",
+                        item.severity === "Critical" ? "bg-rose-50 text-rose-600" : "bg-[#1E8E3E] text-white"
+                      )}>
+                        {item.severity}
+                      </Badge>
+                    </TableCell>
+                    <TableCell className="px-8 text-right">
+                      <Button variant="outline" size="sm" className="h-8 text-[10px] font-bold text-slate-500 border-slate-200 rounded-lg px-4 bg-white hover:bg-slate-50">
+                        Rebuild
+                      </Button>
+                    </TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+          </CardContent>
+        </Card>
+
+        <Card className="lg:col-span-4 bg-white border-none shadow-sm rounded-3xl overflow-hidden flex flex-col">
+          <CardHeader className="p-8 pb-4">
+            <CardTitle className="text-xl font-bold text-slate-900">Cache hit ratio</CardTitle>
+            <CardDescription className="text-[10px] font-bold text-slate-400 uppercase mt-1 tracking-tight">BUFFER POOL EFFICIENCY — SYS.DM_OS_PERFORMANCE_COUNTERS</CardDescription>
+          </CardHeader>
+          <CardContent className="p-8 flex-1 flex flex-col">
+            <div className="relative flex flex-col items-center justify-center py-10">
+              <svg className="w-48 h-24" viewBox="0 0 100 50">
+                <path
+                  d="M 10 50 A 40 40 0 0 1 90 50"
+                  fill="none"
+                  stroke="#f1f5f9"
+                  strokeWidth="8"
+                  strokeLinecap="round"
+                />
+                <path
+                  d="M 10 50 A 40 40 0 0 1 90 50"
+                  fill="none"
+                  stroke="#1E8E3E"
+                  strokeWidth="8"
+                  strokeLinecap="round"
+                  strokeDasharray="125.6"
+                  strokeDashoffset={125.6 * (1 - 0.914)}
+                />
+              </svg>
+              <div className="absolute inset-0 flex flex-col items-center justify-center pt-8">
+                <span className="text-4xl font-black text-slate-900 tracking-tighter">91.4%</span>
+                <span className="text-[9px] font-bold text-slate-400 uppercase tracking-widest mt-1">BUFFER CACHE HIT RATIO</span>
+              </div>
+            </div>
+
+            <div className="mt-auto space-y-4 pt-8">
+              <div className="flex items-center justify-between group">
+                <span className="text-xs font-medium text-slate-500">Reads from buffer pool</span>
+                <span className="text-sm font-bold text-slate-900">2,841,220</span>
+              </div>
+              <div className="flex items-center justify-between group">
+                <span className="text-xs font-medium text-slate-500">Physical disk reads</span>
+                <span className="text-sm font-bold text-rose-500">244,108</span>
+              </div>
+              <div className="flex items-center justify-between pt-4 border-t border-slate-50">
+                <span className="text-xs font-medium text-slate-500">Status</span>
+                <span className="text-[10px] font-black text-amber-500 uppercase tracking-widest bg-amber-50 px-2 py-0.5 rounded">BELOW TARGET</span>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
@@ -187,91 +304,6 @@ export function PerformanceMonitor({ activeDb, monitoredTables }: { activeDb: st
         </Card>
 
         <Card className="lg:col-span-4 bg-white border-none shadow-sm rounded-2xl overflow-hidden">
-          <CardHeader className="p-6 pb-2 border-b border-slate-50">
-            <CardTitle className="text-sm font-bold text-slate-900">Resource Utilization</CardTitle>
-          </CardHeader>
-          <CardContent className="p-6 space-y-6">
-            <div className="space-y-2">
-              <div className="flex justify-between text-xs font-bold">
-                <span className="text-slate-500">Buffer Cache Hit Ratio</span>
-                <span className="text-emerald-600">91.4%</span>
-              </div>
-              <Progress value={91.4} className="h-2 bg-slate-100" />
-            </div>
-            
-            <div className="space-y-4 pt-4 border-t border-slate-50">
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-2">
-                  <Activity className="h-3.5 w-3.5 text-rose-500" />
-                  <span className="text-xs text-slate-500 font-medium">Deadlocks (24h)</span>
-                </div>
-                <span className="text-xs font-bold text-rose-600">7 Detected</span>
-              </div>
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-2">
-                  <Lock className="h-3.5 w-3.5 text-amber-500" />
-                  <span className="text-xs text-slate-500 font-medium">Avg Lock Wait Time</span>
-                </div>
-                <span className="text-xs font-bold text-amber-600">1.2s</span>
-              </div>
-              <div className="flex items-center justify-between">
-                <span className="text-xs text-slate-500 font-medium">Page Splits / sec</span>
-                <span className="text-xs font-bold text-slate-900">42.8</span>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-      </div>
-
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        <Card className="bg-white border-none shadow-sm rounded-2xl overflow-hidden">
-          <CardHeader className="p-6 pb-2 border-b border-slate-50 flex flex-row items-center justify-between space-y-0">
-            <div>
-              <CardTitle className="text-sm font-bold text-slate-900">Index Fragmentation</CardTitle>
-              <CardDescription className="text-[10px] font-bold text-slate-400 uppercase mt-0.5">Critical tables above 30%</CardDescription>
-            </div>
-          </CardHeader>
-          <CardContent className="p-0">
-            <Table>
-              <TableHeader className="bg-slate-50/50">
-                <TableRow className="hover:bg-transparent border-none">
-                  <TableHead className="h-10 text-[9px] font-bold uppercase text-slate-400 px-6">Table</TableHead>
-                  <TableHead className="h-10 text-[9px] font-bold uppercase text-slate-400">Fragmentation</TableHead>
-                  <TableHead className="h-10 text-[9px] font-bold uppercase text-slate-400 text-right px-6">Action</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {fragData.slice(0, 4).map((item, i) => (
-                  <TableRow key={i} className="hover:bg-slate-50/50 border-b border-slate-50 last:border-0">
-                    <TableCell className="py-3 px-6">
-                      <div className="flex flex-col">
-                        <span className="text-xs font-bold text-slate-800">{item.table}</span>
-                        <span className="text-[9px] font-mono text-slate-400">{item.index}</span>
-                      </div>
-                    </TableCell>
-                    <TableCell className="py-3">
-                      <div className="flex items-center gap-3">
-                        <div className="flex-1 h-1 bg-slate-100 rounded-full overflow-hidden w-24">
-                          <div className={cn("h-full rounded-full", item.frag > 50 ? "bg-rose-500" : "bg-amber-500")} style={{ width: `${item.frag}%` }} />
-                        </div>
-                        <span className={cn("text-[10px] font-bold w-7 text-right", item.frag > 50 ? "text-rose-500" : "text-amber-500")}>
-                          {item.frag}%
-                        </span>
-                      </div>
-                    </TableCell>
-                    <TableCell className="py-3 text-right px-6">
-                      <Button variant="outline" size="sm" className="h-6 text-[9px] font-bold text-slate-500 border-slate-200 rounded px-3">
-                        Rebuild
-                      </Button>
-                    </TableCell>
-                  </TableRow>
-                ))}
-              </TableBody>
-            </Table>
-          </CardContent>
-        </Card>
-
-        <Card className="bg-white border-none shadow-sm rounded-2xl overflow-hidden">
           <CardHeader className="p-6 pb-2 border-b border-slate-50">
             <CardTitle className="text-sm font-bold text-slate-900">Missing Index Recommendations</CardTitle>
           </CardHeader>

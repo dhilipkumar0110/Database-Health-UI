@@ -1,3 +1,4 @@
+
 "use client"
 
 import * as React from "react"
@@ -100,7 +101,7 @@ export function TableDetailsView({ table }: { table: TableData }) {
             </div>
             <div className="text-2xl font-bold text-white">Low Usage</div>
             <div className="text-[9px] font-medium text-slate-400 italic">
-              {table.usageContext}
+              last two scans - this table was accessed 2 times
             </div>
           </div>
           <div>
